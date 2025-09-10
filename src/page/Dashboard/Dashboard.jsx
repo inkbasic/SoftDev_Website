@@ -4,15 +4,12 @@
 import * as React from "react";
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import {
-    // ChartConfig,
     ChartContainer,
     ChartLegend,
     ChartLegendContent,
     ChartTooltip,
     ChartTooltipContent,
 } from "@/components/ui/chart";
-
-export const description = "An interactive area chart";
 
 const chartData = [
     { date: "2024-04-01", desktop: 222, mobile: 150 },
@@ -122,7 +119,7 @@ const chartConfig = {
     },
 };
 
-export function ChartAreaInteractive() {
+export function ChartAreaInteractive({ title, description }) {
     const [timeRange, setTimeRange] = React.useState("90d");
 
     const filteredData = chartData.filter((item) => {
@@ -143,8 +140,8 @@ export function ChartAreaInteractive() {
         <Card className="pt-0">
             <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
                 <div className="grid flex-1 gap-1">
-                    <CardTitle>จำนวนผู้เยี่ยมชมทั้งหมด</CardTitle>
-                    <CardDescription>แสดงจำนวนผู้เยี่ยมชมทั้งหมดในช่วง 3 เดือนที่ผ่านมา</CardDescription>
+                    <CardTitle>{title}</CardTitle>
+                    <CardDescription>{description}</CardDescription>
                 </div>
                 <Select value={timeRange} onValueChange={setTimeRange}>
                     <SelectTrigger
@@ -234,87 +231,60 @@ export function ChartAreaInteractive() {
 import {
     Table,
     TableBody,
-    TableCaption,
     TableCell,
-    TableFooter,
     TableHead,
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
 
-const invoices = [
+const tableData = [
     {
-        invoice: "INV001",
-        paymentStatus: "Paid",
-        totalAmount: "$250.00",
-        paymentMethod: "Credit Card",
+        place: "วัดพระธาตุดอยสุเทพ",
+        adStatus: "✅ กำลังทำงาน",
+        dateRange: "15 ส.ค. 2025 - 15 ก.ย. 2025",
+        budget: "฿12,000",
     },
     {
-        invoice: "INV002",
-        paymentStatus: "Pending",
-        totalAmount: "$150.00",
-        paymentMethod: "PayPal",
+        place: "หาดป่าตอง ภูเก็ต",
+        adStatus: "⏳ รอตรวจสอบ",
+        dateRange: "10 ก.ย. 2025 - 10 ต.ค. 2025",
+        budget: "฿18,500",
     },
     {
-        invoice: "INV003",
-        paymentStatus: "Unpaid",
-        totalAmount: "$350.00",
-        paymentMethod: "Bank Transfer",
-    },
-    {
-        invoice: "INV004",
-        paymentStatus: "Paid",
-        totalAmount: "$450.00",
-        paymentMethod: "Credit Card",
-    },
-    {
-        invoice: "INV005",
-        paymentStatus: "Paid",
-        totalAmount: "$550.00",
-        paymentMethod: "PayPal",
-    },
-    {
-        invoice: "INV006",
-        paymentStatus: "Pending",
-        totalAmount: "$200.00",
-        paymentMethod: "Bank Transfer",
-    },
-    {
-        invoice: "INV007",
-        paymentStatus: "Unpaid",
-        totalAmount: "$300.00",
-        paymentMethod: "Credit Card",
+        place: "ตลาดนัดจตุจักร",
+        adStatus: "❌ หมดอายุ",
+        dateRange: "01 ก.ค. 2025 - 31 ก.ค. 2025",
+        budget: "฿8,000",
     },
 ];
 
 export function TableDemo() {
     return (
         <Table>
-            <TableCaption>A list of your recent invoices.</TableCaption>
             <TableHeader>
                 <TableRow>
-                    <TableHead className="w-[100px]">Invoice</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Method</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead className="w-[300px]">สถานะโฆษณา</TableHead>
+                    <TableHead>สถานะโฆษณา</TableHead>
+                    <TableHead>วันเริ่มต้น / สิ้นสุด</TableHead>
+                    <TableHead>ค่าใช้จ่าย</TableHead>
+                    <TableHead></TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {invoices.map((invoice) => (
+                {tableData.map((invoice) => (
                     <TableRow key={invoice.invoice}>
-                        <TableCell className="font-medium">{invoice.invoice}</TableCell>
-                        <TableCell>{invoice.paymentStatus}</TableCell>
-                        <TableCell>{invoice.paymentMethod}</TableCell>
-                        <TableCell className="text-right">{invoice.totalAmount}</TableCell>
+                        <TableCell className="font-medium">{invoice.place}</TableCell>
+                        <TableCell>{invoice.adStatus}</TableCell>
+                        <TableCell>{invoice.dateRange}</TableCell>
+                        <TableCell>{invoice.budget}</TableCell>
+                        <TableCell>
+                            <Button variant="ghost" size="icon" className="size-8">
+                                <Trash2 />
+                            </Button>
+                        </TableCell>
                     </TableRow>
                 ))}
             </TableBody>
-            <TableFooter>
-                <TableRow>
-                    <TableCell colSpan={3}>Total</TableCell>
-                    <TableCell className="text-right">$2,500.00</TableCell>
-                </TableRow>
-            </TableFooter>
         </Table>
     );
 }
@@ -360,8 +330,9 @@ export function PaginationDemo() {
 }
 
 // main
+import { Plus, TrendingUp, TrendingDown, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Plus, TrendingUp } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import {
     Card,
     CardAction,
@@ -371,9 +342,6 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import {
     Select,
     SelectContent,
@@ -385,9 +353,61 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+function StatCard({ title, value, change, trend, description, isUp = true }) {
+    return (
+        <Card className="w-full p-6 gap-2">
+            <div className="flex justify-between">
+                <p className="text-sm text-neutral-500">{title}</p>
+                <Badge variant="outline">
+                    {isUp ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                    {change}
+                </Badge>
+            </div>
+            <h2 className="text-2xl">{value}</h2>
+            <div className="flex flex-col pt-4 gap-1">
+                <p className="text-sm text-black">{trend}</p>
+                <p className="text-sm text-neutral-500">{description}</p>
+            </div>
+        </Card>
+    );
+}
+
+const chartTabs = [
+    {
+        value: "view",
+        label: "ยอดเข้าชมโฆษณา",
+        title: "ยอดเข้าชมโฆษณา",
+        description: "จำนวนครั้งที่โฆษณาของคุณถูกแสดงให้ผู้ใช้เห็นในช่วงเวลาที่กำหนด",
+    },
+    {
+        value: "click",
+        label: "จำนวนคลิก",
+        title: "จำนวนคลิก",
+        description: "จำนวนครั้งที่ผู้ใช้คลิกที่โฆษณาของคุณเพื่อดูรายละเอียดเพิ่มเติม",
+    },
+    {
+        value: "ctr",
+        label: "อัตรา CTR",
+        title: "อัตรา CTR",
+        description: "เปอร์เซ็นต์การคลิกเมื่อเทียบกับยอดเข้าชมทั้งหมด ยิ่งสูงแสดงว่าโฆษณาดึงดูดมากขึ้น",
+    },
+    {
+        value: "contact",
+        label: "การติดต่อ",
+        title: "การติดต่อ",
+        description: "จำนวนครั้งที่ผู้ใช้ติดต่อคุณผ่านโฆษณา เช่น โทร อีเมล หรือข้อความ",
+    },
+    {
+        value: "booking",
+        label: "ยอดจองผ่านโฆษณา",
+        title: "ยอดจองผ่านโฆษณา",
+        description: "จำนวนการจองที่เกิดจากผู้ใช้ที่เข้ามาจากโฆษณาโดยตรง",
+    },
+];
+
 export default function Dashboard() {
     return (
-        <div className="w-screen py-20 px-4 flex flex-col gap-9 justify-center items-center">
+        <div className="w-screen py-20 px-4 flex flex-col gap-6 justify-center items-center">
             {/* header */}
             <div className="flex justify-between items-center w-full max-w-5xl">
                 <h2 className="text-2xl font-semibold">Dashboard</h2>
@@ -397,64 +417,40 @@ export default function Dashboard() {
                 </Button>
             </div>
 
-            {/* grid 2*2 */}
+            {/* stat */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-5xl">
-                <Card className="w-full p-6 gap-2">
-                    <div className="flex justify-between">
-                        <p className="text-sm text-neutral-500">ยอดเข้าชมโฆษณา (Views)</p>
-                        <Badge variant="outline">
-                            <TrendingUp />
-                            +12.5%
-                        </Badge>
-                    </div>
-                    <h2 className="text-2xl">12,540 ครั้ง</h2>
-                    <div className="flex flex-col pt-4 gap-1">
-                        <p className="text-sm text-black">แนวโน้มขึ้นในเดือนนี้</p>
-                        <p className="text-sm text-neutral-500">ผู้เยี่ยมชมในช่วง 6 เดือนที่ผ่านมา</p>
-                    </div>
-                </Card>
-                <Card className="w-full p-6 gap-2">
-                    <div className="flex justify-between">
-                        <p className="text-sm text-neutral-500">ยอดเข้าชมโฆษณา (Views)</p>
-                        <Badge variant="outline">
-                            <TrendingUp />
-                            +12.5%
-                        </Badge>
-                    </div>
-                    <h2 className="text-2xl">12,540 ครั้ง</h2>
-                    <div className="flex flex-col pt-4 gap-1">
-                        <p className="text-sm text-black">แนวโน้มขึ้นในเดือนนี้</p>
-                        <p className="text-sm text-neutral-500">ผู้เยี่ยมชมในช่วง 6 เดือนที่ผ่านมา</p>
-                    </div>
-                </Card>
-                <Card className="w-full p-6 gap-2">
-                    <div className="flex justify-between">
-                        <p className="text-sm text-neutral-500">ยอดเข้าชมโฆษณา (Views)</p>
-                        <Badge variant="outline">
-                            <TrendingUp />
-                            +12.5%
-                        </Badge>
-                    </div>
-                    <h2 className="text-2xl">12,540 ครั้ง</h2>
-                    <div className="flex flex-col pt-4 gap-1">
-                        <p className="text-sm text-black">แนวโน้มขึ้นในเดือนนี้</p>
-                        <p className="text-sm text-neutral-500">ผู้เยี่ยมชมในช่วง 6 เดือนที่ผ่านมา</p>
-                    </div>
-                </Card>
-                <Card className="w-full p-6 gap-2">
-                    <div className="flex justify-between">
-                        <p className="text-sm text-neutral-500">ยอดเข้าชมโฆษณา (Views)</p>
-                        <Badge variant="outline">
-                            <TrendingUp />
-                            +12.5%
-                        </Badge>
-                    </div>
-                    <h2 className="text-2xl">12,540 ครั้ง</h2>
-                    <div className="flex flex-col pt-4 gap-1">
-                        <p className="text-sm text-black">แนวโน้มขึ้นในเดือนนี้</p>
-                        <p className="text-sm text-neutral-500">ผู้เยี่ยมชมในช่วง 6 เดือนที่ผ่านมา</p>
-                    </div>
-                </Card>
+                <StatCard
+                    title="ยอดเข้าชมโฆษณา (Views)"
+                    value="12,540 ครั้ง"
+                    change="+12.5%"
+                    trend="แนวโน้มขึ้นในเดือนนี้"
+                    description="ผู้เยี่ยมชมในช่วง 6 เดือนที่ผ่านมา"
+                    isUp={true}
+                />
+                <StatCard
+                    title="จำนวนการคลิก (Clicks)"
+                    value="4,320 คลิก"
+                    change="-5.2%"
+                    trend="แนวโน้มลดลงในเดือนนี้"
+                    description="อัตราการคลิกในช่วง 6 เดือนที่ผ่านมา"
+                    isUp={false}
+                />
+                <StatCard
+                    title="การติดต่อ (Contacts)"
+                    value="1,250 ครั้ง"
+                    change="+8.7%"
+                    trend="แนวโน้มเพิ่มขึ้นในเดือนนี้"
+                    description="จำนวนการติดต่อผ่านโฆษณาในช่วง 6 เดือนที่ผ่านมา"
+                    isUp={true}
+                />
+                <StatCard
+                    title="ยอดจองผ่านโฆษณา (Bookings)"
+                    value="320 การจอง"
+                    change="+15.3%"
+                    trend="แนวโน้มเพิ่มขึ้นต่อเนื่อง"
+                    description="จำนวนการจองที่เกิดจากการกดผ่านโฆษณาในช่วง 6 เดือนที่ผ่านมา"
+                    isUp={true}
+                />
             </div>
 
             {/* tab */}
@@ -462,40 +458,32 @@ export default function Dashboard() {
                 <Tabs defaultValue="view" className="gap-6">
                     <Select>
                         <SelectTrigger className="w-[180px] sm:hidden">
-                            <SelectValue placeholder="ยอดเข้าชมโฆษณา" />
+                            <SelectValue placeholder="เลือกหัวข้อ" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectGroup>
-                                <SelectItem value="view">ยอดเข้าชมโฆษณา</SelectItem>
-                                <SelectItem value="click">จำนวนคลิก</SelectItem>
-                                <SelectItem value="ctr">อัตรา CTR</SelectItem>
-                                <SelectItem value="contact">การติดต่อ</SelectItem>
-                                <SelectItem value="booking">ยอดจองผ่านโฆษณา</SelectItem>
+                                {chartTabs.map((tab) => (
+                                    <SelectItem key={tab.value} value={tab.value}>
+                                        {tab.label}
+                                    </SelectItem>
+                                ))}
                             </SelectGroup>
                         </SelectContent>
                     </Select>
+
                     <TabsList className="hidden sm:block">
-                        <TabsTrigger value="view">ยอดเข้าชมโฆษณา</TabsTrigger>
-                        <TabsTrigger value="click">จำนวนคลิก</TabsTrigger>
-                        <TabsTrigger value="ctr">อัตรา CTR</TabsTrigger>
-                        <TabsTrigger value="contact">การติดต่อ</TabsTrigger>
-                        <TabsTrigger value="booking">ยอดจองผ่านโฆษณา</TabsTrigger>
+                        {chartTabs.map((tab) => (
+                            <TabsTrigger key={tab.value} value={tab.value}>
+                                {tab.label}
+                            </TabsTrigger>
+                        ))}
                     </TabsList>
-                    <TabsContent value="view">
-                        <ChartAreaInteractive />
-                    </TabsContent>
-                    <TabsContent value="click">
-                        <ChartAreaInteractive />
-                    </TabsContent>
-                    <TabsContent value="ctr">
-                        <ChartAreaInteractive />
-                    </TabsContent>
-                    <TabsContent value="contact">
-                        <ChartAreaInteractive />
-                    </TabsContent>
-                    <TabsContent value="booking">
-                        <ChartAreaInteractive />
-                    </TabsContent>
+
+                    {chartTabs.map((tab) => (
+                        <TabsContent key={tab.value} value={tab.value}>
+                            <ChartAreaInteractive title={tab.title} description={tab.description} />
+                        </TabsContent>
+                    ))}
                 </Tabs>
             </div>
 

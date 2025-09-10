@@ -27,7 +27,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 
-export function DialogSubscription() {
+function DialogSubscription() {
     return (
         <Dialog>
             <form>
@@ -93,6 +93,83 @@ export function DialogSubscription() {
     );
 }
 
+function SubscriptionCard({ title, features, price, per = "/เดือน", isCurrent = false, action }) {
+    return (
+        <Card className="p-6 gap-4 justify-between flex flex-col">
+            <h2 className="text-2xl font-semibold">{title}</h2>
+
+            <div>
+                <p>ฟีเจอร์:</p>
+                <ul className="list-disc list-inside">
+                    {features.map((f, i) => (
+                        <li key={i}>{f}</li>
+                    ))}
+                </ul>
+            </div>
+
+            <h2 className="text-2xl font-semibold">
+                {price} <span className="text-base text-neutral-500 font-medium">{per}</span>
+            </h2>
+
+            {isCurrent ? <Button variant="outline">ตอนนี้คุณอยู่ในแผนนี้</Button> : action}
+        </Card>
+    );
+}
+
+function AboutSection({ aboutMe, interests, profile }) {
+    return (
+        <>
+            {/* card aboutme */}
+            <Card className="p-6 flex flex-col gap-4">
+                <h2 className="text-2xl">เกี่ยวกับฉัน</h2>
+                <p className="text-base">{aboutMe}</p>
+
+                <Separator />
+
+                <h2 className="text-2xl">ความสนใจ</h2>
+                <ul className="list-disc list-inside">
+                    {interests.map((item, idx) => (
+                        <li key={idx}>{item}</li>
+                    ))}
+                </ul>
+            </Card>
+
+            {/* card detail */}
+            <Card className="p-6 gap-3">
+                {profile.map((field, idx) => (
+                    <div key={idx}>
+                        <h4>{field.label}</h4>
+                        {Array.isArray(field.value) ? (
+                            field.value.map((v, i) => (
+                                <p key={i} className="text-sm text-neutral-500">
+                                    {v}
+                                </p>
+                            ))
+                        ) : (
+                            <p className="text-sm text-neutral-500">{field.value}</p>
+                        )}
+                    </div>
+                ))}
+            </Card>
+        </>
+    );
+}
+
+const aboutMeText =
+    "สวัสดีค่ะ ฉันชอบการท่องเที่ยว ถ่ายภาพ และอ่านหนังสือแนวจิตวิทยา กำลังเรียนรู้การพัฒนาเว็บด้วย Next.js และ TailwindCSS สนใจเรื่องพลังงานและโหราศาสตร์";
+
+const interestsData = ["เทคโนโลยี & การเขียนโค้ด", "จักรวาล & ดวงดาว", "การเดินทาง & ไลฟ์สไตล์", "หนังสือจิตวิทยา"];
+
+const profileData = [
+    { label: "ชื่อ-นามสกุล", value: "สุภัสสรา มีแก้ว" },
+    { label: "เบอร์โทรศัพท์", value: "089-123-4567" },
+    { label: "อีเมล", value: "supassara.m@example.com" },
+    {
+        label: "โซเชียลมีเดีย",
+        value: ["Facebook: facebook.com/namth", "Instagram: @namth_earthtone", "Twitter/X: @namth_dev"],
+    },
+];
+
 export default function Profile() {
     return (
         <div className="w-screen py-20 px-6 flex flex-col gap-12 justify-center items-center">
@@ -122,85 +199,40 @@ export default function Profile() {
 
             {/* user detail */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl">
-                <Card className="p-6">
-                    <h2 className="text-2xl">เกี่ยวกับฉัน</h2>
-                    <p className="text-base">
-                        สวัสดีค่ะ ฉันชอบการท่องเที่ยว ถ่ายภาพ และอ่านหนังสือแนวจิตวิทยา กำลังเรียนรู้การพัฒนาเว็บด้วย
-                        Next.js และ TailwindCSS สนใจเรื่องพลังงานและโหราศาสตร์
-                    </p>
-                    <Separator />
-                    <h2 className="text-2xl">ความสนใจ</h2>
-                    <ul class="list-disc list-inside">
-                        <li>เทคโนโลยี & การเขียนโค้ด</li>
-                        <li>จักรวาล & ดวงดาว</li>
-                        <li>การเดินทาง & ไลฟ์สไตล์</li>
-                        <li>หนังสือจิตวิทยา</li>
-                    </ul>
-                </Card>
-                <Card className="p-6 gap-3">
-                    <h4>ชื่อ-นามสกุล</h4>
-                    <p className="text-sm text-neutral-500">สุภัสสรา มีแก้ว</p>
-                    <h4>เบอร์โทรศัพท์</h4>
-                    <p className="text-sm text-neutral-500">089-123-4567</p>
-                    <h4>อีเมล</h4>
-                    <p className="text-sm text-neutral-500">supassara.m@example.com</p>
-                    <h4>โซเชียลมีเดีย</h4>
-                    <p className="text-sm text-neutral-500">Facebook: facebook.com/namth</p>
-                    <p className="text-sm text-neutral-500">Instagram: @namth_earthtone</p>
-                    <p className="text-sm text-neutral-500">Twitter/X: @namth_dev</p>
-                </Card>
+                <AboutSection aboutMe={aboutMeText} interests={interestsData} profile={profileData} />
             </div>
 
             {/* Billing & Subscription */}
             <div className="flex flex-col w-full max-w-5xl gap-12">
                 <h1 className="text-2xl font-semibold">Billing & Subscription</h1>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl">
-                    <Card className="p-6 gap-4 justify-between">
-                        <h2 className="text-2xl font-semibold">Free Plan</h2>
-                        <div>
-                            <p>ฟีเจอร์:</p>
-                            <ul class="list-disc list-inside">
-                                <li>ใช้งานพื้นฐานได้ไม่จำกัด</li>
-                                <li>เข้าถึงเนื้อหาทั่วไป</li>
-                                <li>จำกัดการดาวน์โหลด 5 ครั้ง/วัน</li>
-                            </ul>
-                        </div>
-                        <h2 className="text-2xl font-semibold">
-                            0 บาท <span className="text-base text-neutral-500 font-medium">/เดือน</span>
-                        </h2>
-                        <Button variant="outline">ตอนนี้คุณอยู่ในแผนนี้</Button>
-                    </Card>
-                    <Card className="p-6 gap-4 justify-between">
-                        <h2 className="text-2xl font-semibold">Basic Plan</h2>
-                        <div>
-                            <p>ฟีเจอร์:</p>
-                            <ul class="list-disc list-inside">
-                                <li>ใช้งานได้ทุกฟังก์ชัน</li>
-                                <li>จัดเก็บข้อมูลสูงสุด 10GB</li>
-                                <li>รองรับการเชื่อมต่ออุปกรณ์ 2 เครื่อง</li>
-                            </ul>
-                        </div>
-                        <h2 className="text-2xl font-semibold">
-                            199 บาท <span className="text-base text-neutral-500 font-medium">/เดือน</span>
-                        </h2>
-                        <DialogSubscription />
-                    </Card>
-                    <Card className="p-6 gap-4 justify-between">
-                        <h2 className="text-2xl font-semibold">Pro Plan</h2>
-                        <div>
-                            <p>ฟีเจอร์:</p>
-                            <ul class="list-disc list-inside">
-                                <li>จัดเก็บข้อมูลสูงสุด 100GB</li>
-                                <li>รองรับการเชื่อมต่ออุปกรณ์ 5 เครื่อง</li>
-                                <li>Priority Support ตลอด 24 ชม.</li>
-                                <li>ฟีเจอร์พิเศษด้านการวิเคราะห์</li>
-                            </ul>
-                        </div>
-                        <h2 className="text-2xl font-semibold">
-                            499 บาท <span className="text-base text-neutral-500 font-medium">/เดือน</span>
-                        </h2>
-                        <DialogSubscription />
-                    </Card>
+                    <SubscriptionCard
+                        title="Free Plan"
+                        features={["ใช้งานพื้นฐานได้ไม่จำกัด", "เข้าถึงเนื้อหาทั่วไป", "จำกัดการดาวน์โหลด 5 ครั้ง/วัน"]}
+                        price="0 บาท"
+                        isCurrent
+                    />
+                    <SubscriptionCard
+                        title="Basic Plan"
+                        features={[
+                            "ใช้งานได้ทุกฟังก์ชัน",
+                            "จัดเก็บข้อมูลสูงสุด 10GB",
+                            "รองรับการเชื่อมต่ออุปกรณ์ 2 เครื่อง",
+                        ]}
+                        price="199 บาท"
+                        action={<DialogSubscription />}
+                    />
+                    <SubscriptionCard
+                        title="Pro Plan"
+                        features={[
+                            "จัดเก็บข้อมูลสูงสุด 100GB",
+                            "รองรับการเชื่อมต่ออุปกรณ์ 5 เครื่อง",
+                            "Priority Support ตลอด 24 ชม.",
+                            "ฟีเจอร์พิเศษด้านการวิเคราะห์",
+                        ]}
+                        price="499 บาท"
+                        action={<DialogSubscription />}
+                    />
                 </div>
             </div>
         </div>

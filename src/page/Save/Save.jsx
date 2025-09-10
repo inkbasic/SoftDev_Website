@@ -1,46 +1,37 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-    Card,
-    CardAction,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Funnel, ChevronDown, Ellipsis, Briefcase } from "lucide-react";
+import { Funnel, ChevronDown, Ellipsis, Briefcase, Users } from "lucide-react";
 
-export function TripCard() {
+export function TripCard({ title, date, badges, description, maxDescLength = 125 }) {
+    const shortDesc = description.length > maxDescLength ? description.slice(0, maxDescLength) + " ..." : description;
+
     return (
         <Card className="p-6">
             <div className="flex flex-col gap-2">
                 <div className="flex justify-between">
                     <div className="flex flex-col gap-1">
-                        <h4>📍 ทริปเชียงใหม่สามวันสามคืน</h4>
-                        <p className="text-neutral-500 text-sm">10–12 พฤศจิกายน 2025</p>
+                        <h4>{title}</h4>
+                        <p className="text-neutral-500 text-sm">{date}</p>
                     </div>
                     <Ellipsis />
                 </div>
-                <div className="flex gap-1">
-                    <Badge variant="secondary" className="bg-[#DDFAE7]">
-                        <Briefcase />
-                        เชียงใหม่
-                    </Badge>
-                    <Badge variant="secondary" className="bg-[#DDF2FF]">
-                        4 คน
-                    </Badge>
-                    <Badge variant="secondary" className="bg-[#CBFAF0]">
-                        คนชรา
-                    </Badge>
+
+                {/* Badge */}
+                <div className="flex gap-1 flex-wrap">
+                    {badges.map((b, idx) => (
+                        <Badge key={idx} variant="secondary" className={b.color ? `bg-[${b.color}]` : ""}>
+                            {b.isProvince && <Briefcase className="mr-1 h-4 w-4" />}
+                            {b.isPeople && <Users className="mr-1 h-4 w-4" />}
+                            {b.label}
+                        </Badge>
+                    ))}
                 </div>
             </div>
-            <p className="text-sm">
-                {" "}
-                ทริปเชียงใหม่ 3 วัน 2 คืน เหมาะสำหรับคนชอบธรรมชาติและวัฒนธรรม เที่ยววัดพระธาตุดอยสุเทพ ชมวิวเมือง
-                ปิดท้ายซื้อของฝากก่อนเดินทางกลับ กรุงเทพฯ ...{" "}
-            </p>
+
+            {/* detail */}
+            <p className="text-sm mt-1">{shortDesc}</p>
         </Card>
     );
 }
@@ -60,11 +51,19 @@ export default function Save() {
                 </Button>
             </header>
             <main className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-5xl">
-                <TripCard />
-                <TripCard />
-                <TripCard />
-                <TripCard />
-                <TripCard />
+                {Array.from({ length: 8 }).map((_, index) => (
+                    <TripCard
+                        key={index}
+                        title="📍 ทริปเชียงใหม่สามวันสามคืน"
+                        date="10–12 พฤศจิกายน 2025"
+                        description="ทริปเชียงใหม่ 3 วัน 2 คืน เหมาะสำหรับคนชอบธรรมชาติและวัฒนธรรม เที่ยววัดพระธาตุดอยสุเทพ ชมวิวเมือง ปิดท้ายซื้อของฝากก่อนเดินทางกลับ กรุงเทพฯ"
+                        badges={[
+                            { label: "เชียงใหม่", color: "#DDFAE7", isProvince: true },
+                            { label: "4 คน", color: "#DDF2FF", isPeople: true },
+                            { label: "คนชรา", color: "#CBFAF0" },
+                        ]}
+                    />
+                ))}
             </main>
         </div>
     );
