@@ -23,7 +23,7 @@ export function DialogSubscription() {
         <Dialog>
             <form>
                 <DialogTrigger asChild>
-                    <Button variant="destructive" className="w-full">
+                    <Button className="w-full bg-gradient-to-l from-[#FF7474] to-[#FF9F43]">
                         สมัครเลย
                     </Button>
                 </DialogTrigger>

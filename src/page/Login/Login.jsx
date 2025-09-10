@@ -1,3 +1,4 @@
+import BackgroundBlurs from "@/components/BackgroundBlurs";
 import { Button } from "@/components/ui/button";
 import {
     Card,
@@ -15,9 +16,10 @@ export default function Login() {
     return (
         <div className="w-screen h-screen flex justify-center items-center">
             {/* Background Glow Circle */}
+            <BackgroundBlurs />
 
             {/* Content */}
-            <Card className="w-full max-w-sm">
+            <Card className="w-full max-w-sm z-10">
                 <CardHeader>
                     <CardTitle>ยินดีต้อนรับกลับมา 👋</CardTitle>
                     <CardDescription>กรุณากรอกอีเมลและรหัสผ่านเพื่อเข้าสู่ระบบ</CardDescription>
@@ -32,7 +34,7 @@ export default function Login() {
                             <div className="grid gap-2">
                                 <div className="flex items-center">
                                     <Label htmlFor="password">รหัสผ่าน (Password)</Label>
-                                    <a href="#" className="ml-auto text-sm text-black no-underline">
+                                    <a href="#" className="ml-auto text-sm text-black no-underline hover:underline">
                                         ลืมรหัสผ่าน?
                                     </a>
                                 </div>
@@ -42,15 +44,15 @@ export default function Login() {
                     </form>
                 </CardContent>
                 <CardFooter className="flex-col gap-3">
-                    <Button type="submit" className="w-full text-sm">
+                    <Button type="submit" className="w-full text-sm bg-gradient-to-l from-[#FF7474] to-[#FF9F43]">
                         เข้าสู่ระบบ
                     </Button>
                     <Button variant="outline" className="w-full">
                         เข้าสู่ระบบด้วย ชื่อผู้ใช้
                     </Button>
-                    <div className="flex justify-center items-center gap-2 text-sm">
-                        ยังไม่มีบัญชี? 
-                        <a href="#" className="ml-auto text-sm text-black no-underline">
+                    <div className="flex justify-center items-center pt-3 gap-2 text-sm">
+                        ยังไม่มีบัญชี?
+                        <a href="#" className="ml-auto text-sm text-black no-underline hover:underline">
                             สมัครสมาชิก
                         </a>
                     </div>

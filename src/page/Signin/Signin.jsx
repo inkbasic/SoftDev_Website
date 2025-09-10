@@ -1,3 +1,4 @@
+import BackgroundBlurs from "@/components/BackgroundBlurs";
 import { Button } from "@/components/ui/button";
 import {
     Card,
@@ -15,9 +16,10 @@ export default function Signin() {
     return (
         <div className="w-screen h-screen flex justify-center items-center">
             {/* Background Glow Circle */}
+            <BackgroundBlurs />
 
             {/* Content */}
-            <Card className="w-full max-w-sm">
+            <Card className="w-full max-w-sm z-10">
                 <CardHeader>
                     <CardTitle>สร้างบัญชีใหม่เพื่อเริ่มต้นการใช้งาน 🚀</CardTitle>
                     <CardDescription>สมัครสมาชิกเพื่อเข้าถึงฟีเจอร์พิเศษและเก็บข้อมูลของคุณ</CardDescription>
@@ -45,17 +47,22 @@ export default function Signin() {
                     </form>
                 </CardContent>
                 <CardFooter className="flex-col gap-3">
-                    <Button type="submit" className="w-full text-sm">
+                    <Button type="submit" className="w-full text-sm bg-gradient-to-l from-[#FF7474] to-[#FF9F43]">
                         สมัครสมาชิก
                     </Button>
                     <div className="flex justify-center items-center gap-2 text-sm">
                         มีบัญชีแล้ว?  
-                        <a href="#" className="ml-auto text-sm text-black no-underline">
+                        <a href="#" className="ml-auto text-sm text-black no-underline hover:underline">
                             เข้าสู่ระบบ
                         </a>
                     </div>
                 </CardFooter>
             </Card>
+            {/* 
+            <div data-show-left-icon="false" data-show-right-icon="false" data-size="Regular" data-state="Default" data-variant="Primary" class="self-stretch min-h-9 px-4 py-2 bg-gradient-to-l from-primary to-orange-400 rounded-lg inline-flex justify-center items-center gap-2">
+    <div class="text-center justify-center text-white text-sm font-medium font-['Sarabun'] leading-tight tracking-tight">เข้าสู่ระบบ</div>
+</div> */}
         </div>
+        
     );
 }
