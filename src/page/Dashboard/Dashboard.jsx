@@ -379,10 +379,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Dashboard() {
     return (
-        <div className="w-screen pt-20 flex flex-col gap-9 justify-center items-center">
+        <div className="w-screen py-20 flex flex-col gap-9 justify-center items-center">
             {/* header */}
             <div className="flex justify-between items-center w-5xl">
-                <h2 className="text-2xl font-medium">Dashboard</h2>
+                <h2 className="text-2xl font-semibold">Dashboard</h2>
                 <Button>
                     <Plus />
                     เพิ่มสถานที่
@@ -451,7 +451,7 @@ export default function Dashboard() {
 
             {/* tab */}
             <div className="flex w-full max-w-5xl flex-col gap-6 pt-20">
-                <Tabs defaultValue="view">
+                <Tabs defaultValue="view" className="gap-6">
                     <TabsList>
                         <TabsTrigger value="view">ยอดเข้าชมโฆษณา</TabsTrigger>
                         <TabsTrigger value="click">จำนวนคลิก</TabsTrigger>
@@ -462,11 +462,23 @@ export default function Dashboard() {
                     <TabsContent value="view">
                         <ChartAreaInteractive />
                     </TabsContent>
+                    <TabsContent value="click">
+                        <ChartAreaInteractive />
+                    </TabsContent>
+                    <TabsContent value="ctr">
+                        <ChartAreaInteractive />
+                    </TabsContent>
+                    <TabsContent value="contact">
+                        <ChartAreaInteractive />
+                    </TabsContent>
+                    <TabsContent value="booking">
+                        <ChartAreaInteractive />
+                    </TabsContent>
                 </Tabs>
             </div>
 
             {/* table */}
-            <div className="flex flex-col w-full max-w-5xl pt-20 pb-20 gap-6">
+            <div className="flex flex-col w-full max-w-5xl pt-20 gap-6">
                 <div className="flex justify-end gap-3 w-full">
                     <Button variant="outline">
                         <Plus />
