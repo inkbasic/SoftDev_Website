@@ -4,7 +4,16 @@ import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Settings } from "lucide-react";
+import { Settings, Ellipsis } from "lucide-react";
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 // Dialog
 import {
@@ -23,11 +32,9 @@ export function DialogSubscription() {
         <Dialog>
             <form>
                 <DialogTrigger asChild>
-                    <Button className="w-full bg-gradient-to-l from-[#FF7474] to-[#FF9F43]">
-                        สมัครเลย
-                    </Button>
+                    <Button className="w-full bg-gradient-to-l from-[#FF7474] to-[#FF9F43]">สมัครเลย</Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="w-xs sm:w-md">
                     <DialogHeader>
                         <DialogTitle>อัพเกรดการสมัครสมาชิก</DialogTitle>
                         <DialogDescription>
@@ -46,14 +53,32 @@ export function DialogSubscription() {
                         <div className="grid gap-3">
                             <Label htmlFor="number-1">เลขบัตร</Label>
                             <div className="flex gap-4">
-                                <Input id="number-1" name="number" placeholder="1234 1234 1234 1234" />
-                                <Input id="number-1" name="number" placeholder="MM/YY" className="w-30" />
-                                <Input id="number-1" name="number" placeholder="CVC" className="w-20" />
+                                <Input id="card_number" name="card_number" placeholder="1234 1234 1234 1234" />
+                                <Input
+                                    id="expiration_date"
+                                    name="expiration_date"
+                                    placeholder="MM/YY"
+                                    className="w-30"
+                                />
+                                <Input id="cvv" name="cvv" placeholder="CVC" className="w-20" />
                             </div>
                         </div>
                         <div className="grid gap-3">
                             <Label htmlFor="number-1">วิธีการชำระเงิน</Label>
-                            <Input id="number-1" name="number" placeholder="บัตรเครดิต/เดบิต (Visa / MasterCard)" />
+                            <Select>
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="เช่น บัตรเครดิต / เดบิต" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        <SelectItem value="card">บัตรเครดิต / เดบิต</SelectItem>
+                                        <SelectItem value="promptPay">PromptPay / QR Payment</SelectItem>
+                                        <SelectItem value="wallet">Wallet</SelectItem>
+                                        <SelectItem value="payPal">PayPal</SelectItem>
+                                        <SelectItem value="trueMoney">TrueMoney</SelectItem>
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
                     <DialogFooter>
@@ -70,30 +95,33 @@ export function DialogSubscription() {
 
 export default function Profile() {
     return (
-        <div className="w-screen py-20 flex flex-col gap-12 justify-center items-center">
+        <div className="w-screen py-20 px-6 flex flex-col gap-12 justify-center items-center">
             <header className="flex justify-between items-center w-full max-w-5xl">
-                <div className="flex gap-7">
-                    <Avatar className="size-[150px]">
+                <div className="flex sm:flex-row gap-4 lg:gap-7">
+                    <Avatar className="size-[50px] lg:size-[150px]">
                         <AvatarImage src="https://github.com/shadcn.png" />
                         <AvatarFallback>CN</AvatarFallback>
                     </Avatar>
-                    <div className="flex flex-col justify-center gap-2">
-                        <h1 className="text-2xl font-semibold">ชื่อผู้ใช้</h1>
-                        <p className="text-base text-neutral-500">ไบโอของผู้ใช้</p>
+                    <div className="flex flex-col justify-center lg:gap-2">
+                        <h1 className="text-sm lg:text-2xl font-semibold">ชื่อผู้ใช้</h1>
+                        <p className="text-sm lg:text-base text-neutral-500">ไบโอของผู้ใช้</p>
                     </div>
                 </div>
-                <div className="flex gap-4 items-center">
-                    <Button variant="outline" size="icon" className="size-9">
+                <div className="flex gap-1 lg:gap-4 items-center">
+                    <Button variant="outline" size="icon" className="size-9 lg:hidden">
+                        <Ellipsis />
+                    </Button>
+                    <Button variant="outline" size="icon" className="size-9 hidden lg:flex">
                         <Settings />
                     </Button>
-                    <Button variant="outline" className="px-6">
+                    <Button variant="outline" className="px-6 hidden lg:flex">
                         แก้ไข
                     </Button>
                 </div>
             </header>
 
             {/* user detail */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-5xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl">
                 <Card className="p-6">
                     <h2 className="text-2xl">เกี่ยวกับฉัน</h2>
                     <p className="text-base">
@@ -126,7 +154,7 @@ export default function Profile() {
             {/* Billing & Subscription */}
             <div className="flex flex-col w-full max-w-5xl gap-12">
                 <h1 className="text-2xl font-semibold">Billing & Subscription</h1>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-5xl">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl">
                     <Card className="p-6 gap-4 justify-between">
                         <h2 className="text-2xl font-semibold">Free Plan</h2>
                         <div>

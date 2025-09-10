@@ -1,14 +1,6 @@
 import BackgroundBlurs from "@/components/BackgroundBlurs";
 import { Button } from "@/components/ui/button";
-import {
-    Card,
-    CardAction,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -51,18 +43,13 @@ export default function Signin() {
                         สมัครสมาชิก
                     </Button>
                     <div className="flex justify-center items-center gap-2 text-sm">
-                        มีบัญชีแล้ว?  
+                        มีบัญชีแล้ว?
                         <a href="#" className="ml-auto text-sm text-black no-underline hover:underline">
                             เข้าสู่ระบบ
                         </a>
                     </div>
                 </CardFooter>
             </Card>
-            {/* 
-            <div data-show-left-icon="false" data-show-right-icon="false" data-size="Regular" data-state="Default" data-variant="Primary" class="self-stretch min-h-9 px-4 py-2 bg-gradient-to-l from-primary to-orange-400 rounded-lg inline-flex justify-center items-center gap-2">
-    <div class="text-center justify-center text-white text-sm font-medium font-['Sarabun'] leading-tight tracking-tight">เข้าสู่ระบบ</div>
-</div> */}
         </div>
-        
     );
 }

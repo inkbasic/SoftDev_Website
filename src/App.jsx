@@ -9,7 +9,6 @@ import AddLocation from './page/AddLocation/AddLocation.jsx'
 import Save from './page/Save/Save.jsx'
 
 function App() {
-
 	return (
 		<>
 			<Routes>

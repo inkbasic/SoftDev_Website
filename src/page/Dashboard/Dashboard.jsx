@@ -11,7 +11,6 @@ import {
     ChartTooltip,
     ChartTooltipContent,
 } from "@/components/ui/chart";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const description = "An interactive area chart";
 
@@ -375,13 +374,22 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Dashboard() {
     return (
-        <div className="w-screen py-20 flex flex-col gap-9 justify-center items-center">
+        <div className="w-screen py-20 px-4 flex flex-col gap-9 justify-center items-center">
             {/* header */}
-            <div className="flex justify-between items-center w-5xl">
+            <div className="flex justify-between items-center w-full max-w-5xl">
                 <h2 className="text-2xl font-semibold">Dashboard</h2>
                 <Button>
                     <Plus />
@@ -390,7 +398,7 @@ export default function Dashboard() {
             </div>
 
             {/* grid 2*2 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-5xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-5xl">
                 <Card className="w-full p-6 gap-2">
                     <div className="flex justify-between">
                         <p className="text-sm text-neutral-500">ยอดเข้าชมโฆษณา (Views)</p>
@@ -452,7 +460,21 @@ export default function Dashboard() {
             {/* tab */}
             <div className="flex w-full max-w-5xl flex-col gap-6 pt-20">
                 <Tabs defaultValue="view" className="gap-6">
-                    <TabsList>
+                    <Select>
+                        <SelectTrigger className="w-[180px] sm:hidden">
+                            <SelectValue placeholder="ยอดเข้าชมโฆษณา" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectGroup>
+                                <SelectItem value="view">ยอดเข้าชมโฆษณา</SelectItem>
+                                <SelectItem value="click">จำนวนคลิก</SelectItem>
+                                <SelectItem value="ctr">อัตรา CTR</SelectItem>
+                                <SelectItem value="contact">การติดต่อ</SelectItem>
+                                <SelectItem value="booking">ยอดจองผ่านโฆษณา</SelectItem>
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                    <TabsList className="hidden sm:block">
                         <TabsTrigger value="view">ยอดเข้าชมโฆษณา</TabsTrigger>
                         <TabsTrigger value="click">จำนวนคลิก</TabsTrigger>
                         <TabsTrigger value="ctr">อัตรา CTR</TabsTrigger>

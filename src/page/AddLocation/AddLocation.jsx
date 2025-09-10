@@ -13,7 +13,7 @@ export function InputField({ label, value, id }) {
 
 export default function AddLocation() {
     return (
-        <div className="w-screen py-20 flex flex-col gap-12 justify-center items-center">
+        <div className="w-screen py-20 px-6 sm:px-20 flex flex-col gap-12 justify-center items-center">
             <h1 className="text-2xl font-semibold w-full max-w-5xl">เพิ่มข้อมูลสถานที่</h1>
             <div className="flex flex-col gap-20 w-full max-w-5xl">
                 <div className="flex flex-col gap-6 w-full">
