@@ -21,7 +21,11 @@ export function TripCard({ title, date, badges, description, maxDescLength = 125
                 {/* Badge */}
                 <div className="flex gap-1 flex-wrap">
                     {badges.map((b, idx) => (
-                        <Badge key={idx} variant="secondary" className={b.color ? `bg-[${b.color}]` : ""}>
+                        <Badge
+                            key={idx}
+                            variant="secondary"
+                            style={b.color ? { backgroundColor: b.color } : undefined} // ใช้ style แทน class
+                        >
                             {b.isProvince && <Briefcase className="mr-1 h-4 w-4" />}
                             {b.isPeople && <Users className="mr-1 h-4 w-4" />}
                             {b.label}

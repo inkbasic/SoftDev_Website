@@ -13,4 +13,14 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-})
+  server: {
+    proxy: {
+      // ทุก request ที่เริ่มด้วย /auth จะถูกส่งไป backend localhost:3000
+      "/auth": {
+        target: "http://localhost:3000", // backend URL
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
+});
