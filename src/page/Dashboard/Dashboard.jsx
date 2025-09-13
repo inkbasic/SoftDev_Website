@@ -173,7 +173,7 @@ export default function Dashboard() {
     };
 
     return (
-        <div className="w-screen py-20 px-4 flex flex-col gap-6 justify-center items-center">
+        <div className="py-20 px-4 flex flex-col gap-6 justify-center items-center">
             {/* header */}
             <div className="flex justify-between items-center w-full max-w-5xl pb-4">
                 <h2 className="text-2xl">Dashboard</h2>

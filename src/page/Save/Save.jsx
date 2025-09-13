@@ -42,7 +42,7 @@ export function TripCard({ title, date, badges, description, maxDescLength = 125
 
 export default function Save() {
     return (
-        <div className="w-screen py-20 px-6 flex flex-col gap-12 justify-center items-center">
+        <div className="py-20 px-6 flex flex-col gap-12 justify-center items-center">
             <header className="flex flex-col lg:flex-row gap-3 justify-between items-start lg:items-center w-full max-w-5xl">
                 <div className="flex flex-col sm:flex-row gap-2 lg:gap-6 w-full lg:max-w-xl">
                     <h1 className="text-2xl font-semibold text-nowrap">แผนท่องเที่ยวทั้งหมด</h1>
