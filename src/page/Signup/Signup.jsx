@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
+import "../global.css";
 import React, { useState } from "react";
 
 const REGISTER_ENDPOINT = "/auth/register";
@@ -73,9 +73,9 @@ export default function Signin() {
     };
 
     return (
-        <div className="w-screen py-20 flex justify-center items-center">
+        <div className="py-20 flex justify-center items-center background">
             {/* Background Glow Circle */}
-            <BackgroundBlurs />
+            {/* <BackgroundBlurs /> */}
 
             {/* Content */}
             <Card className="w-full max-w-sm z-10">
