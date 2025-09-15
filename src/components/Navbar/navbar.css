@@ -1,0 +1,5 @@
+@import "tailwindcss";
+@config "../../../tailwind.config.js";
+a {
+    @apply text-[16px] px-6 py-2 cursor-pointer;
+}

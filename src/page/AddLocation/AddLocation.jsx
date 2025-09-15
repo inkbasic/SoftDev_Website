@@ -181,7 +181,7 @@ export default function AddLocation() {
     }, [submitCount, status, showToast]);
 
     return (
-        <div className="w-screen py-20 px-6 sm:px-20 flex flex-col gap-12 justify-center items-center">
+        <div className="py-20 px-6 sm:px-20 flex flex-col gap-12 justify-center items-center">
             <h1 className="text-2xl font-semibold w-full max-w-5xl">เพิ่มข้อมูลสถานที่</h1>
 
             {/* เลือกประเภทข้อมูล */}

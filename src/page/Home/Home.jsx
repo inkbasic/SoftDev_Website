@@ -1,3 +1,10 @@
+
 export default function Home() {
-    return <h1>Home</h1>;
+    return (
+        <div className="w-full h-full flex justify-center items-center">
+            <h1>
+                Home
+            </h1>
+        </div>
+    );
 }

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import React, { useState } from "react";
+import "../global.css";
 
 const LOGIN_ENDPOINT = "/auth/login";
 
@@ -54,9 +55,9 @@ export default function Login() {
     };
 
     return (
-        <div className="w-screen h-screen flex justify-center items-center">
+        <div className="h-screen flex justify-center items-center background">
             {/* Background Glow Circle */}
-            <BackgroundBlurs />
+            {/* <BackgroundBlurs /> */}
 
             {/* Content */}
             <Card className="w-full max-w-sm z-10">

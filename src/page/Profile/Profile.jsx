@@ -84,7 +84,7 @@ const profileData = [
 
 export default function Profile() {
     return (
-        <div className="w-screen py-20 px-6 flex flex-col gap-12 justify-center items-center">
+        <div className="py-20 px-6 flex flex-col gap-12 justify-center items-center">
             <header className="flex justify-between items-center w-full max-w-5xl">
                 <div className="flex sm:flex-row gap-4 lg:gap-7">
                     <Avatar className="size-[50px] lg:size-[150px]">
