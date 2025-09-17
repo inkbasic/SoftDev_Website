@@ -12,6 +12,8 @@ export default function Navbar() {
 
             <div className="flex flex-row items-center gap-6">
                 <div className="flex flex-row items-center gap-3">
+                    <a className="" onClick={() => navigate("/")}>Home</a>
+                    <a className="" onClick={() => navigate("/plan")}>Plan</a>
                     <a className="" onClick={() => navigate("/dashboard")}>Dashboard</a>
                     <a className="" onClick={() => navigate("/profile")}>Profile</a>
                     <a className="" onClick={() => navigate("/addlocation")}>Add Location</a>

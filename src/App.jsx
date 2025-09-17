@@ -9,6 +9,7 @@ import Profile from "./page/Profile/Profile.jsx";
 import AddLocation from "./page/AddLocation/AddLocation.jsx";
 import Save from "./page/Save/Save.jsx";
 import Layout from "./components/Layout.jsx";
+import Plan from "./page/Plan/Plan.jsx";
 
 function App() {
     return (
@@ -21,6 +22,7 @@ function App() {
 					<Route index element={<Home />} />
 					<Route path="/login" element={<Login />} />
 					<Route path="/signup" element={<Signin />} />
+					<Route path="/plan" element={<Plan />} />
 					<Route path="/dashboard" element={<Dashboard />} />
 					<Route path="/profile" element={<Profile />} />
 					<Route path="/addlocation" element={<AddLocation />} />
