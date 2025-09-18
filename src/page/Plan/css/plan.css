@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+@config "@/../tailwind.config.js";
+.btnBackground {
+    @apply bg-gradient-to-br from-secondary to-amber-300
+}

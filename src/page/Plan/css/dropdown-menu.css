@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@config "@/../tailwind.config.js";
+
+.category {
+    @apply w-full bg-white rounded-[10px]
+}
+
+.button {
+    @apply flex items-center w-full px-4 py-3 text-left text-neutral-600 transition-all duration-200;
+}
+
+.active {
+    @apply text-white rounded-t-[10px];
+}
+
+.list {
+    @apply 
+    flex flex-col overflow-hidden
+    transition-[max-height] duration-500 ease-in-out
+}
+
+.dropdown_item {
+    @apply
+    cursor-pointer hover:text-primary
+}
