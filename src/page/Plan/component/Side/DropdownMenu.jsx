@@ -7,10 +7,10 @@ export default function DropdownMenu({ title, items }) {
     return (
         <div className="category whitespace-nowrap">
             <div
-                className={`button 
+                className={`button
                                         ${showOverviewMenu
-                        ? "active btnBackground"
-                        : "hover:text-neutral-700"
+                        ? "active btnHighlight"
+                        : "hover:text-neutral-700 bg-paper"
                     }
                                     `}
             >
@@ -21,7 +21,7 @@ export default function DropdownMenu({ title, items }) {
                 <p className="">{title}</p>
             </div>
 
-            <div className={`list ${showOverviewMenu ? "max-h-80" : "max-h-0 pointer-events-none"}`}>
+            <div className={`list bg-paper ${showOverviewMenu ? "max-h-80" : "max-h-0 pointer-events-none"}`}>
                 {items.map((item, index) => (
                     <a key={index}>{item}</a>
                 ))}
