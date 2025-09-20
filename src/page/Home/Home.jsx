@@ -1,6 +1,6 @@
 import "../global.css";
 import "./css/Home.css";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { DateRange } from "react-date-range";
 import "react-date-range/dist/styles.css"; // main style file
 import "react-date-range/dist/theme/default.css"; // theme css file
@@ -13,6 +13,7 @@ export default function Home() {
     const [selectedActivities, setSelectedActivities] = useState(null);
     const [selectedTravel, setSelectedTravel] = useState(null);
 
+    const pickerRef = useRef(null);
     // จำนวนคน
     const [people, setPeople] = useState(1);
     const MIN_PEOPLE = 1;
@@ -21,6 +22,7 @@ export default function Home() {
     const clamp = (n, min = MIN_PEOPLE, max = MAX_PEOPLE) => Math.max(min, Math.min(max, n));
     const incPeople = () => setPeople(p => clamp(p + 1));
     const decPeople = () => setPeople(p => clamp(p - 1));
+
     const handlePeopleChange = (e) => {
         const n = parseInt(e.target.value, 10);
         setPeople(isNaN(n) ? MIN_PEOPLE : clamp(n));
@@ -32,13 +34,30 @@ export default function Home() {
         key: "selection",
     });
 
-
-
     useEffect(() => {
-        if (range.startDate && range.endDate) {
+        if (range && range.startDate && range.endDate) {
+            console.log("Selected range:", range);
             setShowPicker(false);
         }
-    }, [range.startDate, range.endDate]);
+    }, [range]);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (pickerRef.current) {
+                if (!pickerRef.current.contains(event.target)) {
+                    setShowPicker(false);
+                }
+            }
+        };
+
+        if (showPicker) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showPicker]);
 
     const safeRange = {
         startDate: range.startDate || new Date(),
@@ -51,12 +70,15 @@ export default function Home() {
             if (!prev.startDate && !prev.endDate) {
                 return { startDate: selection.startDate, endDate: null, key: "selection" };
             }
+
             if (prev.startDate && !prev.endDate) {
                 let start = selection.startDate;
                 let end = selection.endDate;
                 if (end < start) [start, end] = [end, start];
-                return { startDate: start, endDate: end, key: "selection" };
+                return { startDate: prev.startDate, endDate: end, key: "selection" };
             }
+
+            return { startDate: selection.startDate, endDate: null, key: "selection" };
         });
     };
 
@@ -64,8 +86,8 @@ export default function Home() {
         date ? date.toLocaleDateString("th-TH", { year: "numeric", month: "short", day: "numeric" }) : "";
 
     return (
-        <div className="w-full h-full flex justify-center py-28 background">
-            <div className="bg-paper-white w-[800px] h-fit flex flex-col justify-center items-center gap-5 rounded-[20px] px-7 py-10 ">
+        <div className="w-full h-full flex justify-center py-28 background" >
+            <div className="bg-paper w-[800px] h-fit flex flex-col justify-center items-center gap-5 rounded-[20px] px-7 py-10 ">
                 <h1 className="font-krub text-[56px] font-bold">WannoGo!</h1>
                 <div className="flex justify-center gap-3">
                     <h2 className="text-[32px] font-bold">วางแผนการท่องเที่ยวของคุณ</h2>
@@ -80,11 +102,12 @@ export default function Home() {
 
                     <div className="flex gap-3">
                         <div
-                            className="relative flex px-5 justify-between items-center gap-3 w-full py-5 bg-white border border-gray-300 rounded-xl cursor-pointer"
-                            onClick={() => setShowPicker(!showPicker)}
+                            className="relative flex px-5 justify-between items-center gap-3 w-full bg-white border border-gray-300 rounded-xl cursor-pointer"
+                            onClick={() => setShowPicker(true)}
+                            ref={pickerRef}
                         >
                             {/* Start Date */}
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1 py-5">
                                 <CalendarDays className="w-6 h-6" />
                                 {range.startDate ? (
                                     <span className="text-gray-700 text-base">{formatDate(range.startDate)}</span>
@@ -93,7 +116,7 @@ export default function Home() {
                                 )}
                             </div>
                             {/* End Date */}
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1 py-5">
                                 <CalendarDays className="w-6 h-6" />
                                 {range.endDate ? (
                                     <span className="text-gray-700 text-base">{formatDate(range.endDate)}</span>
@@ -101,19 +124,19 @@ export default function Home() {
                                     <span className="text-gray-400 text-base">วันที่กลับ</span>
                                 )}
                             </div>
-                        {showPicker && (
-                            <div className="absolute left-0 top-[100%] z-50">
-                                <DateRange
-                                    editableDateInputs={true}
-                                    moveRangeOnFirstSelection={false}
-                                    minDate={new Date()}
-                                    ranges={[safeRange]}
-                                    onChange={handleRangeChange}
-                                    months={2}
-                                    direction="horizontal"
-                                />
-                            </div>
-                        )}
+                            {showPicker && (
+                                <div className="absolute left-0 top-[100%] z-50">
+                                    <DateRange
+                                        editableDateInputs={true}
+                                        moveRangeOnFirstSelection={false}
+                                        minDate={new Date()}
+                                        ranges={[safeRange]}
+                                        onChange={handleRangeChange}
+                                        months={2}
+                                        direction="horizontal"
+                                    />
+                                </div>
+                            )}
                         </div>
 
                         <div className="relative flex px-5 justify-between items-center gap-3 w-full py-5 bg-white border border-gray-300 rounded-xl">
