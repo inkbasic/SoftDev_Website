@@ -67,10 +67,13 @@ export default function Home() {
 
     const handleRangeChange = ({ selection }) => {
         setRange(prev => {
+            if (selection.startDate !== selection.endDate) {
+                return { startDate: selection.startDate, endDate: selection.endDate, key: "selection" };
+            }
+            
             if (!prev.startDate && !prev.endDate) {
                 return { startDate: selection.startDate, endDate: null, key: "selection" };
             }
-
             if (prev.startDate && !prev.endDate) {
                 let start = selection.startDate;
                 let end = selection.endDate;
