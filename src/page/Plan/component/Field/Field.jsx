@@ -1,6 +1,7 @@
 import Card from "./Card";
 import Info from "./Info";
 import BusinessCard from "./BusinessCard";
+import Itetary from "./Itetary";
 import { useRef } from "react";
 import { useAutoHideScrollbar } from "@/lib/useAutoHideScrollbar";
 export default function Field() {
@@ -41,22 +42,8 @@ export default function Field() {
                     </div>
                     <div className="btnBackground w-full text-center text-paper font-bold px-4 py-2 rounded-[8px]"><p>ดูเพิ่มเติม</p></div>
             </Card>
-            <div>
-                <h3>รถเช่า</h3>
-            </div>
-            <div>
 
-                <div>
-                    <h3>แผนการท่องเที่ยว</h3>
-                    <div>
-                        <div>วันจันทร์</div>
-                        <div>
-                            การ์ดเที่ยว
-                        </div>
-                        <div>เพิ่มสถานที่</div>
-                    </div>
-                </div>
-            </div>
+            <Itetary />
         </div>
     );
 }
