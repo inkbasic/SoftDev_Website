@@ -2,48 +2,135 @@ import Card from "./Card";
 import Info from "./Info";
 import BusinessCard from "./BusinessCard";
 import Itetary from "./Itetary";
-import { useRef } from "react";
+import { useState, useRef, forwardRef, useImperativeHandle } from "react";
 import { useAutoHideScrollbar } from "@/lib/useAutoHideScrollbar";
-export default function Field() {
+
+const Field = forwardRef((props, ref) => {
+    const [isEditing, setIsEditing] = useState(false);
+    const [data, setData] = useState({
+        title: "บางแสน...แสนสาหัส",
+        lastModified: "25 สิงหาคม 2568",
+        info: {},
+        hotels: [],
+        cars: [],
+        itinerary: {}
+    });
+
     const scrollRef = useRef(null);
     useAutoHideScrollbar(scrollRef);
+
+    // เพิ่ม refs สำหรับแต่ละส่วน
+    const overviewRef = useRef(null);
+    const hotelRef = useRef(null);
+    const carRef = useRef(null);
+    const itineraryRef = useRef(null);
+
+    // ฟังก์ชันสำหรับ scroll ไปยังส่วนต่างๆ
+    const scrollToSection = (sectionName) => {
+        let targetRef = null;
+        
+        switch(sectionName) {
+            case 'ภาพรวม':
+                targetRef = overviewRef;
+                break;
+            case 'ที่พัก':
+                targetRef = hotelRef;
+                break;
+            case 'เช่ารถ':
+                targetRef = carRef;
+                break;
+            case 'กำหนดการ':
+                targetRef = itineraryRef;
+                break;
+            default:
+                return;
+        }
+
+        if (targetRef && targetRef.current) {
+            targetRef.current.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+        }
+    };
+
+    // Expose functions ผ่าน ref
+    useImperativeHandle(ref, () => ({
+        scrollToSection
+    }));
+
+    const handleSave = () => {
+        console.log("Saving data:", data);
+        setIsEditing(false);
+    };
+
+    const handleCancel = () => {
+        setIsEditing(false);
+    };
+
+    const handleEdit = () => {
+        setIsEditing(true);
+    };
+
+    const updateData = (field, value) => {
+        setData(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
     return (
-        <div className="h-full w-full flex flex-col gap-5 px-20 py-5 justify-start items-center bg-paper overflow-x-clip scroll-auto-hide" 
-        ref={scrollRef}>
-            <div className="w-full flex flex-col gap-1">
+        <div 
+            className="h-full w-full flex flex-col gap-5 px-20 py-5 justify-start items-center bg-paper overflow-x-clip scroll-auto-hide" 
+            ref={scrollRef}
+        >
+            {/* Overview Section */}
+            <div ref={overviewRef} className="w-full flex flex-col gap-1">
                 <div className="flex justify-between items-center w-full">
                     <h3>บางแสน...แสนสาหัส</h3>
-                    <div>
-                        ปุ่ม
-                    </div>
+                    <div>ปุ่ม</div>
                 </div>
                 <p className="text-neutral-500">แก้ไขล่าสุด : 25 สิงหาคม 2568</p>
             </div>
+
             <Card>
                 <Info />
             </Card>
 
-            <Card >
-                    <p className="font-bold">โรงแรม</p>
-                    <div className="w-full flex justify-center items-center gap-3 py-2">
-                        <BusinessCard showStar={true}/>
-                        <BusinessCard showStar={true}/>
-                        <BusinessCard showStar={true}/>
-                    </div>
-                    <div className="btnBackground w-full text-center text-paper font-bold px-4 py-2 rounded-[8px]"><p>ดูเพิ่มเติม</p></div>
+            {/* Hotel Section */}
+            <Card ref={hotelRef}>
+                <p className="font-bold">โรงแรม</p>
+                <div className="w-full flex justify-center items-center gap-3 py-2">
+                    <BusinessCard showStar={true}/>
+                    <BusinessCard showStar={true}/>
+                    <BusinessCard showStar={true}/>
+                </div>
+                <div className="btnBackground w-full text-center text-paper font-bold px-4 py-2 rounded-[8px]">
+                    <p>ดูเพิ่มเติม</p>
+                </div>
             </Card>
 
-            <Card >
-                    <p className="font-bold">รถเช่า</p>
-                    <div className="w-full flex justify-center items-center gap-3 py-2">
-                        <BusinessCard showStar={false} />
-                        <BusinessCard showStar={false}/>
-                        <BusinessCard showStar={false}/>
-                    </div>
-                    <div className="btnBackground w-full text-center text-paper font-bold px-4 py-2 rounded-[8px]"><p>ดูเพิ่มเติม</p></div>
+            {/* Car Section */}
+            <Card ref={carRef}>
+                <p className="font-bold">รถเช่า</p>
+                <div className="w-full flex justify-center items-center gap-3 py-2">
+                    <BusinessCard showStar={false} />
+                    <BusinessCard showStar={false}/>
+                    <BusinessCard showStar={false}/>
+                </div>
+                <div className="btnBackground w-full text-center text-paper font-bold px-4 py-2 rounded-[8px]">
+                    <p>ดูเพิ่มเติม</p>
+                </div>
             </Card>
 
-            <Itetary />
+            {/* Itinerary Section */}
+            <div ref={itineraryRef}>
+                <Itetary />
+            </div>
         </div>
     );
-}
+});
+
+Field.displayName = 'Field';
+
+export default Field;

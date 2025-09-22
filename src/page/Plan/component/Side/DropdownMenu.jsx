@@ -2,8 +2,13 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import '../../css/dropdown-menu.css';
 import '@/page/Plan/css/plan.css';
-export default function DropdownMenu({ title, items }) {
+export default function DropdownMenu({ title, items, onItemClick }) {
     const [showOverviewMenu, setOverviewMenu] = useState(false);
+    const handleItemClick = (item) => {
+        if (onItemClick) {
+            onItemClick(item);
+        }
+    };
     return (
         <div className="category whitespace-nowrap">
             <div
@@ -15,7 +20,7 @@ export default function DropdownMenu({ title, items }) {
                                     `}
             >
                 <ChevronDown onClick={() => setOverviewMenu(!showOverviewMenu)}
-                    className={`w-6 h-6 transition-transform duration-200 ${showOverviewMenu ? 'brightness-0 invert' : '-rotate-90'
+                    className={`w-5 h-5 absolute left-1 top-[25%] transition-transform duration-200 ${showOverviewMenu ? 'brightness-0 invert' : '-rotate-90'
                         }`}
                 />
                 <p className="">{title}</p>
@@ -23,7 +28,7 @@ export default function DropdownMenu({ title, items }) {
 
             <div className={`list bg-paper ${showOverviewMenu ? "max-h-80" : "max-h-0 pointer-events-none"}`}>
                 {items.map((item, index) => (
-                    <a key={index}>{item}</a>
+                    <a key={index} onClick={() => handleItemClick(item)} >{item}</a>
                 ))}
             </div>
         </div>

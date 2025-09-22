@@ -16,9 +16,9 @@ export default function Itinerary() {
                 <div className="w-full">
                     <Location />
                 </div>
-                <div className="flex items-center gap-2 bg-neutral-200 rounded-[12px] px-5 py-5">
+                <div className="flex items-center gap-2 bg-neutral-100 border border-neutral-300 rounded-[12px] px-5 py-5">
                     <MapPin className="text-neutral-500" />
-                    <p className="text-neutral-500">เพิ่มสถานที่</p>
+                    <input type="text" className="flex-1 outline-none  text-[16px]" placeholder="เพิ่มสถานที่" />
                 </div>
             </div>
         </div>
