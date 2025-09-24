@@ -6,6 +6,11 @@
   font-family: 'Krub', sans-serif;
 }
 
+h1 {
+  @apply text-[48px] font-bold;
+  font-family: 'Sarabun', sans-serif;
+}
+
 h3 {
   @apply text-[32px] font-bold;
   font-family: 'Sarabun', sans-serif;

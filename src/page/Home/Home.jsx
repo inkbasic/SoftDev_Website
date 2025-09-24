@@ -9,24 +9,25 @@ import DropDownInput from "./component/DropDownInput";
 import { ACTIVITY, TRAVEL } from "@/const/userPick";
 
 export default function Home() {
-    const [showPicker, setShowPicker] = useState(false);
     const [selectedActivities, setSelectedActivities] = useState(null);
     const [selectedTravel, setSelectedTravel] = useState(null);
-
-    const pickerRef = useRef(null);
+    
     // จำนวนคน
     const [people, setPeople] = useState(1);
     const MIN_PEOPLE = 1;
     const MAX_PEOPLE = 20;
-
+    
     const clamp = (n, min = MIN_PEOPLE, max = MAX_PEOPLE) => Math.max(min, Math.min(max, n));
     const incPeople = () => setPeople(p => clamp(p + 1));
     const decPeople = () => setPeople(p => clamp(p - 1));
-
+    
     const handlePeopleChange = (e) => {
         const n = parseInt(e.target.value, 10);
         setPeople(isNaN(n) ? MIN_PEOPLE : clamp(n));
     };
+    
+    const [showPicker, setShowPicker] = useState(false);
+    const pickerRef = useRef(null);
 
     const [range, setRange] = useState({
         startDate: null,

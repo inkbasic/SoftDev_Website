@@ -1,3 +1,4 @@
+import Pool from "../../../../../public/img/pool.jpg";
 export default function Location() {
     return (
         <div className="flex gap-2 h-40 w-full bg-white">
@@ -10,8 +11,8 @@ export default function Location() {
                     และโรงภาพยนตร์มัลติเพล็กซ์</p>
                 <p className="absolute -left-3 text-sm text-paper bg-accent w-6 h-6 text-center rounded-full">1</p>
             </div>
-            <div className="flex items-center w-76 h-full bg-neutral-200 rounded-[8px] justify-center">
-                <p>รูปภาพ</p>
+            <div className="flex items-center w-76 h-full bg-neutral-200 rounded-[8px] justify-center overflow-hidden">
+                <img src={Pool} className="object-cover w-full h-full" />
             </div>
         </div>
     );

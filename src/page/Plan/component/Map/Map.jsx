@@ -66,11 +66,12 @@ export default function Map({
     style,
     children,
 }) {
-    // ถ้าไม่มี center กำหนดจาก marker แรก
+    useEffect(() => {center}, [center]);
+
     const initialCenter = useMemo(() => {
         if (center && Array.isArray(center)) return center;
         if (markers?.[0]?.position) return markers[0].position;
-        return [13.7563, 100.5018];
+        return center;
     }, [center, markers]);
 
     const containerStyle = useMemo(

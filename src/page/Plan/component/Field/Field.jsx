@@ -5,7 +5,7 @@ import Itetary from "./Itetary";
 import { CancelButton, SaveButton, MeatButton } from "./Button";
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useAutoHideScrollbar } from "@/lib/useAutoHideScrollbar";
-import { LucideX, LucideSave } from "lucide-react";
+
 
 const Field = forwardRef((props, ref) => {
     const [isEditing, setIsEditing] = useState(true);
@@ -71,7 +71,6 @@ const Field = forwardRef((props, ref) => {
         };
     }, [showMenu]);
 
-    // Expose functions ผ่าน ref
     useImperativeHandle(ref, () => ({
         scrollToSection
     }));

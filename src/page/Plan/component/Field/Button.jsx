@@ -40,3 +40,15 @@ export const MeatButton = ({ onClick, children, click = false, ...props }) => {
     );
 };
 
+export const CalendarButton = ({ onClick, children = "เพิ่มกำหนดการ", ...props }) => {
+    return (
+        <button
+            onClick={onClick}
+            className={`flex gap-1 cursor-pointer rounded-full p-1 hover:bg-neutral-200`}
+            {...props}
+        >
+            <LucideEllipsis />
+            <p>{children}</p>
+        </button>
+    );
+};
