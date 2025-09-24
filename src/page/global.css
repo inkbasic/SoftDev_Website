@@ -2,5 +2,5 @@
   background: 
     radial-gradient(2000px circle at 1400px 600px, rgba(255, 159, 67, 0.9) 0%, transparent 50%),
     radial-gradient(1200px circle at 400px 800px, rgba(255, 116, 116, 0.9) 0%, transparent 50%);
-    pointer-events: none;
+  overflow: auto;
 }

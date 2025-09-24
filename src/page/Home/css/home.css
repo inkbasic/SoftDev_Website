@@ -1,5 +1,16 @@
 @import 'tailwindcss';
+@config "@/../tailwind.config.js";
 
-.big {
-  @apply flex flex-col items-center justify-center gap-6 bg-amber-500;
+.highlight {
+  /* @apply flex flex-col items-center justify-center gap-6 bg-amber-500; */
+  background: linear-gradient(180deg, #FF9F43 -34.52%, #FF7474 100%);
+background-clip: text;
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+}
+
+.submitBtn {
+  @apply w-fit px-6 py-3 bg-gradient-to-l from-primary to-orange-400 rounded-[100px] inline-flex flex-col justify-center items-center gap-2.5
+  hover:from-orange-400 hover:to-primary transition-all duration-300 
+  text-center text-[#F9FBFF] text-xl font-bold font-['Sarabun'] cursor-pointer;
 }
