@@ -120,7 +120,7 @@ export default function Map({ center = [13.7563, 100.5018] }) {
         .addTo(mapInstanceRef.current)
 
         // เลื่อนแผนที่ไปยังตำแหน่งใหม่
-        mapInstanceRef.current.setView(center, 15);
+        // mapInstanceRef.current.setView(center, 15);
 
     }, [center]);
 
@@ -129,7 +129,7 @@ export default function Map({ center = [13.7563, 100.5018] }) {
             <div ref={mapRef} className="w-full h-full" />
             
             {/* CSS สำหรับ animation */}
-            <style jsx>{`
+            <style>{`
                 @keyframes pulse {
                     0% {
                         transform: scale(0.8);

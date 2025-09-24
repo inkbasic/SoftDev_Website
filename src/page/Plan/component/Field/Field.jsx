@@ -6,7 +6,6 @@ import { CancelButton, SaveButton, MeatButton } from "./Button";
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useAutoHideScrollbar } from "@/lib/useAutoHideScrollbar";
 
-
 const Field = forwardRef((props, ref) => {
     const [isEditing, setIsEditing] = useState(true);
     const [showMenu, setShowMenu] = useState(false);
@@ -23,14 +22,14 @@ const Field = forwardRef((props, ref) => {
     const menuRef = useRef(null);
     useAutoHideScrollbar(fieldRef);
 
-    // เพิ่ม refs สำหรับแต่ละส่วน
     const overviewRef = useRef(null);
     const hotelRef = useRef(null);
     const carRef = useRef(null);
     const itetaryRef = useRef(null);
+    const dateRefs = useRef(null);
 
-    // ฟังก์ชันสำหรับ scroll ไปยังส่วนต่างๆ
     const scrollToSection = (sectionName) => {
+        console.log("Scrolling to section:", sectionName);
         let targetRef = null;
 
         switch (sectionName) {
@@ -46,6 +45,13 @@ const Field = forwardRef((props, ref) => {
             case 'กำหนดการ':
                 targetRef = itetaryRef;
                 break;
+            case 'วันจันทร์ 25/8' :
+            case 'วันอังคาร 26/8':
+                console.log("Scrolling to date in Itinerary:", sectionName);
+                if (dateRefs && dateRefs.current && dateRefs.current.scrollToDate) {
+                    dateRefs.current.scrollToDate(sectionName);
+                }
+                return;
             default:
                 return;
         }
@@ -118,11 +124,11 @@ const Field = forwardRef((props, ref) => {
                         ) : (
                             <MeatButton onClick={handleToggleMenu} click={showMenu}>
                                 {showMenu && (
-                                <div ref={menuRef} className="absolute right-0 top-full mt-1 w-30 bg-white border border-neutral-200 rounded-md shadow-lg z-10 overflow-hidden z-50">
-                                    <p className="px-2 py-1 cursor-pointer hover:bg-neutral-200">แชร์</p>
-                                    <p onClick={handleEdit} className="px-2 py-1 cursor-pointer hover:bg-neutral-200">แก้ไข</p>
-                                    <p className="px-2 py-1 cursor-pointer hover:bg-neutral-200">ลบ</p>
-                                </div>
+                                    <div ref={menuRef} className="absolute right-0 top-full mt-1 w-30 bg-white border border-neutral-200 rounded-md shadow-lg z-10 overflow-hidden z-50">
+                                        <p className="px-2 py-1 cursor-pointer hover:bg-neutral-200">แชร์</p>
+                                        <p onClick={handleEdit} className="px-2 py-1 cursor-pointer hover:bg-neutral-200">แก้ไข</p>
+                                        <p className="px-2 py-1 cursor-pointer hover:bg-neutral-200">ลบ</p>
+                                    </div>
                                 )}
                             </MeatButton>
                         )}
@@ -163,7 +169,7 @@ const Field = forwardRef((props, ref) => {
 
             {/* Itinerary Section */}
             <div ref={itetaryRef}>
-                <Itetary />
+                <Itetary ref={dateRefs} />
             </div>
         </div>
     );

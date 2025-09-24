@@ -1,16 +1,43 @@
-import {  CalendarDays } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { CalendarDays } from "lucide-react";
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { DateRange } from "react-date-range";
 import DateContainer from "./DateList";
-export default function Itinerary() {
+const Itinerary = forwardRef((props, ref) => {
     const [showPicker, setShowPicker] = useState(false);
     const pickerRef = useRef(null);
+
+    const mondayRef = useRef(null);
+    const tuesdayRef = useRef(null);
 
     const [range, setRange] = useState({
         startDate: null,
         endDate: null,
         key: "selection",
     });
+
+    useImperativeHandle(ref, () => ({
+        scrollToDate: (dateString) => {
+            let targetRef = null;
+            console.log("Scrolling to date:", dateString);
+
+            // แปลงข้อความวันที่ใน sidebar ให้ตรงกับ component
+            switch (dateString) {
+                case 'วันจันทร์ 25/8':
+                    targetRef = mondayRef;
+                    break;
+                case 'วันอังคาร 26/8':
+                    targetRef = tuesdayRef;
+                    break;
+            }
+
+            if (targetRef && targetRef.current) {
+                targetRef.current.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        }
+    }));
 
     useEffect(() => {
         if (range && range.startDate && range.endDate) {
@@ -101,8 +128,21 @@ export default function Itinerary() {
                 </div>
             </div>
 
-            <DateContainer />
-            <DateContainer />
+            <div ref={mondayRef}>
+                <DateContainer title="วันจันทร์, 25 สิงหาคม" />
+            </div>
+            <div ref={tuesdayRef}>
+                <DateContainer title="วันอังคาร, 26 สิงหาคม" />
+            </div>
+            <DateContainer title="วันอังคาร, 26 สิงหาคม" />
+            <DateContainer title="วันอังคาร, 26 สิงหาคม" />
+            <DateContainer title="วันอังคาร, 26 สิงหาคม" />
+            <DateContainer title="วันอังคาร, 26 สิงหาคม" />
+            <DateContainer title="วันอังคาร, 26 สิงหาคม" />
         </div>
     );
-}
+});
+
+Itinerary.displayName = 'Itinerary';
+
+export default Itinerary;
