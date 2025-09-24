@@ -1,18 +1,14 @@
-import React, { useEffect, useMemo } from 'react';
-import 'leaflet/dist/leaflet.css';
-import { MapContainer, TileLayer, Marker, Popup, ZoomControl, ScaleControl, useMap } from 'react-leaflet';
+import { useEffect, useRef } from 'react';
 import L from 'leaflet';
-import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
-import iconUrl from 'leaflet/dist/images/marker-icon.png';
-import shadowUrl from 'leaflet/dist/images/marker-shadow.png';
+import 'leaflet/dist/leaflet.css';
 
-// src/page/Plan/component/Map.jsx
-// ติดตั้งแพ็กเกจก่อนใช้งาน:
-// npm i leaflet react-leaflet
-
-
-// แก้ปัญหา marker icon ไม่แสดงในบางบันเดล (เช่น CRA, Vite)
-L.Icon.Default.mergeOptions({ iconRetinaUrl, iconUrl, shadowUrl });
+// แก้ไข default icon ของ Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 // คลิกบนแผนที่แล้วส่ง latlng กลับ
 function MapClickHandler({ onClick }) {
@@ -54,65 +50,102 @@ function FitToMarkers({ markers, padding = [24, 24] }) {
  * - children: ReactNode (เช่น Layer อื่นๆ)
  */
 
-export default function Map({
-    center = [13.7563, 100.5018],
-    zoom = 13,
-    markers = [],
-    fitToMarkers = true,
-    tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    tileAttribution = '&copy; OpenStreetMap contributors',
-    onMapClick,
-    className,
-    style,
-    children,
-}) {
-    useEffect(() => {center}, [center]);
+export default function Map({ center = [13.7563, 100.5018] }) {
+    const mapRef = useRef(null);
+    const mapInstanceRef = useRef(null);
+    const currentLocationMarkerRef = useRef(null);
 
-    const initialCenter = useMemo(() => {
-        if (center && Array.isArray(center)) return center;
-        if (markers?.[0]?.position) return markers[0].position;
-        return center;
-    }, [center, markers]);
+    useEffect(() => {
+        if (!mapRef.current) return;
 
-    const containerStyle = useMemo(
-        () => ({
-            height: '100%',
-            width: '100%',
-            ...style,
-        }),
-        [style]
-    );
+        // สร้าง map instance
+        mapInstanceRef.current = L.map(mapRef.current).setView(center, 13);
+
+        // เพิ่ม tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(mapInstanceRef.current);
+
+        // Cleanup function
+        return () => {
+            if (mapInstanceRef.current) {
+                mapInstanceRef.current.remove();
+            }
+        };
+    }, []);
+
+    // อัพเดต marker ตำแหน่งปัจจุบันเมื่อ center เปลี่ยน
+    useEffect(() => {
+        if (!mapInstanceRef.current || !center) return;
+
+        // ลบ marker เก่า (ถ้ามี)
+        if (currentLocationMarkerRef.current) {
+            mapInstanceRef.current.removeLayer(currentLocationMarkerRef.current);
+        }
+
+        // สร้าง custom icon สำหรับตำแหน่งปัจจุบัน
+        const currentLocationIcon = L.divIcon({
+            className: 'current-location-marker',
+            html: `
+                <div style="
+                    background: #4285f4;
+                    border: 3px solid white;
+                    border-radius: 50%;
+                    width: 20px;
+                    height: 20px;
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+                    position: relative;
+                ">
+                    <div style="
+                        background: rgba(66, 133, 244, 0.2);
+                        border: 1px solid #4285f4;
+                        border-radius: 50%;
+                        width: 40px;
+                        height: 40px;
+                        position: absolute;
+                        top: -13px;
+                        left: -13px;
+                        animation: pulse 2s infinite;
+                    "></div>
+                </div>
+            `,
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+        });
+
+        // เพิ่ม marker ตำแหน่งปัจจุบัน
+        currentLocationMarkerRef.current = L.marker(center, {
+            icon: currentLocationIcon
+        })
+        .addTo(mapInstanceRef.current)
+
+        // เลื่อนแผนที่ไปยังตำแหน่งใหม่
+        mapInstanceRef.current.setView(center, 15);
+
+    }, [center]);
 
     return (
-        <MapContainer
-            center={initialCenter}
-            zoom={zoom}
-            className={className}
-            style={containerStyle}
-            zoomControl={false}
-            scrollWheelZoom
-        >
-            <TileLayer url={tileUrl} attribution={tileAttribution} />
-
-            {fitToMarkers && <FitToMarkers markers={markers} />}
-            {onMapClick && <MapClickHandler onClick={onMapClick} />}
-
-            <ZoomControl position="topright" />
-            <ScaleControl position="bottomleft" />
-
-            {markers.map((m, i) => (
-                <Marker
-                    key={i}
-                    position={m.position}
-                    draggable={!!m.draggable}
-                    icon={m.icon}
-                    eventHandlers={m.eventHandlers}
-                >
-                    {m.popup ? <Popup>{m.popup}</Popup> : null}
-                </Marker>
-            ))}
-
-            {children}
-        </MapContainer>
+        <div className="relative w-full h-full">
+            <div ref={mapRef} className="w-full h-full" />
+            
+            {/* CSS สำหรับ animation */}
+            <style jsx>{`
+                @keyframes pulse {
+                    0% {
+                        transform: scale(0.8);
+                        opacity: 1;
+                    }
+                    100% {
+                        transform: scale(2.0);
+                        opacity: 0;
+                    }
+                }
+                
+                .current-location-marker {
+                    background: transparent !important;
+                    border: none !important;
+                }
+            `}</style>
+        </div>
     );
 }
