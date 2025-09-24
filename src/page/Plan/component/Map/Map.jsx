@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import './map.css';
 
 // แก้ไข default icon ของ Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -87,25 +88,10 @@ export default function Map({ center = [13.7563, 100.5018] }) {
         const currentLocationIcon = L.divIcon({
             className: 'current-location-marker',
             html: `
-                <div style="
-                    background: #4285f4;
-                    border: 3px solid white;
-                    border-radius: 50%;
-                    width: 20px;
-                    height: 20px;
-                    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-                    position: relative;
+                <div class="current-location-dot
                 ">
-                    <div style="
-                        background: rgba(66, 133, 244, 0.2);
-                        border: 1px solid #4285f4;
-                        border-radius: 50%;
-                        width: 40px;
-                        height: 40px;
-                        position: absolute;
-                        top: -13px;
-                        left: -13px;
-                        animation: pulse 2s infinite;
+                    <div class="
+                        current-location-pulse
                     "></div>
                 </div>
             `,
@@ -127,25 +113,6 @@ export default function Map({ center = [13.7563, 100.5018] }) {
     return (
         <div className="relative w-full h-full">
             <div ref={mapRef} className="w-full h-full" />
-            
-            {/* CSS สำหรับ animation */}
-            <style>{`
-                @keyframes pulse {
-                    0% {
-                        transform: scale(0.8);
-                        opacity: 1;
-                    }
-                    100% {
-                        transform: scale(2.0);
-                        opacity: 0;
-                    }
-                }
-                
-                .current-location-marker {
-                    background: transparent !important;
-                    border: none !important;
-                }
-            `}</style>
         </div>
     );
 }
