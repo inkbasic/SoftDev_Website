@@ -1,6 +1,7 @@
 import "../global.css";
 import "./css/Home.css";
 import { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { DateRange } from "react-date-range";
 import "react-date-range/dist/styles.css"; // main style file
 import "react-date-range/dist/theme/default.css"; // theme css file
@@ -9,6 +10,7 @@ import DropDownInput from "./component/DropDownInput";
 import { ACTIVITY, TRAVEL } from "@/const/userPick";
 
 export default function Home() {
+    const navigate = useNavigate();
     const [selectedActivities, setSelectedActivities] = useState(null);
     const [selectedTravel, setSelectedTravel] = useState(null);
     
@@ -165,7 +167,7 @@ export default function Home() {
                         <DropDownInput placeholder="วิธีการเดินทาง" value={selectedTravel} onChange={setSelectedTravel} options={TRAVEL} />
                     </div>
                     <div className="flex justify-center">
-                        <button className="submitBtn" type="submit">
+                        <button className="submitBtn" type="submit" onClick={() => navigate("/plan")}>
                             เริ่มวางแผนเลย!
                         </button>
                     </div>
