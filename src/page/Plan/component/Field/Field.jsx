@@ -27,7 +27,7 @@ const Field = forwardRef((props, ref) => {
     const overviewRef = useRef(null);
     const hotelRef = useRef(null);
     const carRef = useRef(null);
-    const itineraryRef = useRef(null);
+    const itetaryRef = useRef(null);
 
     // ฟังก์ชันสำหรับ scroll ไปยังส่วนต่างๆ
     const scrollToSection = (sectionName) => {
@@ -44,7 +44,7 @@ const Field = forwardRef((props, ref) => {
                 targetRef = carRef;
                 break;
             case 'กำหนดการ':
-                targetRef = itineraryRef;
+                targetRef = itetaryRef;
                 break;
             default:
                 return;
@@ -162,7 +162,7 @@ const Field = forwardRef((props, ref) => {
             </Card>
 
             {/* Itinerary Section */}
-            <div ref={itineraryRef}>
+            <div ref={itetaryRef}>
                 <Itetary />
             </div>
         </div>

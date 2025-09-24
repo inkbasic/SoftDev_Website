@@ -8,17 +8,12 @@ export default function Plan() {
     const fieldRef = useRef(null);
     const { location, error, loading, getCurrentPosition } = useGeolocation();
 
-    useEffect(() => {
-        console.log("Current location:", location);
-    }, [location]);
-
     const handleSidebarItemClick = (item) => {
         if (fieldRef.current && fieldRef.current.scrollToSection) {
             fieldRef.current.scrollToSection(item);
         }
     };
 
-    // ส่ง location ไปยัง Map component
     return (
         <div className="w-full h-full flex justify-center">
             <div className="flex w-full">
