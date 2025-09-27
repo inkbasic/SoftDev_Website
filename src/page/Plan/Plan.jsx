@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useRef, useState } from "react";
 import Field from "./component/Field/Field.jsx";
 import Map from "./component/Map/Map.jsx";
 import Side from "./component/Side/Side.jsx";
@@ -7,6 +7,7 @@ import { PlanMock } from "./Mock.jsx";
 
 export default function Plan() {
     const fieldRef = useRef(null);
+    const [currentData, setCurrentData] = useState(PlanMock);
     const { location, error, loading, getCurrentPosition } = useGeolocation();
 
     const handleSidebarItemClick = (item) => {
@@ -15,13 +16,24 @@ export default function Plan() {
         }
     };
 
-    const data = PlanMock;
+    // รับการเปลี่ยนแปลงจาก Field โดยตรง
+    const handleDataChange = (updatedData) => {
+        setCurrentData(updatedData);
+    };
 
     return (
         <div className="w-full h-full flex justify-center">
             <div className="flex w-full">
-                <Side onItemClick={handleSidebarItemClick} />
-                <Field ref={fieldRef} planData={data} />
+                <Side 
+                    onItemClick={handleSidebarItemClick} 
+                    fieldRef={fieldRef} 
+                    planData={currentData}
+                />
+                <Field 
+                    ref={fieldRef} 
+                    planData={currentData}
+                    onDataChange={handleDataChange}
+                />
             </div>
 
             <div className="w-full h-full flex items-center justify-center">
@@ -38,7 +50,6 @@ export default function Plan() {
                         </button>
                     </div>
                 )}
-
             </div>
         </div>
     );

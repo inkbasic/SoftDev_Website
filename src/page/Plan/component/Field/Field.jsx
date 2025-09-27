@@ -6,15 +6,23 @@ import { CancelButton, SaveButton, MeatButton } from "./Button";
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useAutoHideScrollbar } from "@/lib/useAutoHideScrollbar";
 
-const Field = forwardRef(( { planData }, ref) => {
+const Field = forwardRef(({ planData, onDataChange }, ref) => {
     const [isEditing, setIsEditing] = useState(true);
     const [showMenu, setShowMenu] = useState(false);
-    const [data, setData] = useState(() => ({
-        title: planData?.title || "ไม่มีข้อมูล",
-        lastModified: planData?.lastModified || "ไม่มีข้อมูล",
-        // เพิ่มข้อมูลอื่นๆ จาก planData
-        ...planData
-    }));
+    const [data, setData] = useState(planData || {});
+
+    useEffect(() => {
+        setData(planData);
+    }, [planData]);
+
+    // เพิ่ม callback สำหรับรับการเปลี่ยนแปลงจาก Itinerary
+    const handleItineraryDataChange = (updatedData) => {
+        setData(updatedData);
+        // ส่งต่อไปยัง parent
+        if (onDataChange) {
+            onDataChange(updatedData);
+        }
+    };
 
     const fieldRef = useRef(null);
     const menuRef = useRef(null);
@@ -42,14 +50,11 @@ const Field = forwardRef(( { planData }, ref) => {
             case 'กำหนดการ':
                 targetRef = itetaryRef;
                 break;
-            case 'วันจันทร์ 25/8' :
-            case 'วันอังคาร 26/8':
+            default:
                 console.log("Scrolling to date in Itinerary:", sectionName);
                 if (dateRefs && dateRefs.current && dateRefs.current.scrollToDate) {
                     dateRefs.current.scrollToDate(sectionName);
                 }
-                return;
-            default:
                 return;
         }
 
@@ -74,10 +79,6 @@ const Field = forwardRef(( { planData }, ref) => {
         };
     }, [showMenu]);
 
-    useImperativeHandle(ref, () => ({
-        scrollToSection
-    }));
-
     const handleSave = () => {
         console.log("Saving data:", data);
         setIsEditing(false);
@@ -95,6 +96,12 @@ const Field = forwardRef(( { planData }, ref) => {
         setShowMenu(false)
         setIsEditing(true);
     };
+
+    useImperativeHandle(ref, () => ({
+        scrollToSection,
+        getItineraryRef: () => dateRefs.current
+        // ลบ getCurrentData ออก
+    }));
 
     return (
         <div
@@ -135,9 +142,15 @@ const Field = forwardRef(( { planData }, ref) => {
             <Card ref={hotelRef}>
                 <p className="font-bold">โรงแรม</p>
                 <div className="w-full flex justify-center items-center gap-3 py-2">
-                    <BusinessCard showStar={true} />
-                    <BusinessCard showStar={true} />
-                    <BusinessCard showStar={true} />
+                    {data.hotels?.map((hotel, index) => (
+                        <BusinessCard key={hotel.id} showStar={true} data={hotel} />
+                    )) || (
+                        <>
+                            <BusinessCard showStar={true} />
+                            <BusinessCard showStar={true} />
+                            <BusinessCard showStar={true} />
+                        </>
+                    )}
                 </div>
                 <div className="btnBackground w-full text-center text-paper font-bold px-4 py-2 rounded-[8px]">
                     <p>ดูเพิ่มเติม</p>
@@ -148,9 +161,15 @@ const Field = forwardRef(( { planData }, ref) => {
             <Card ref={carRef}>
                 <p className="font-bold">รถเช่า</p>
                 <div className="w-full flex justify-center items-center gap-3 py-2">
-                    <BusinessCard showStar={false} />
-                    <BusinessCard showStar={false} />
-                    <BusinessCard showStar={false} />
+                    {data.cars?.map((car, index) => (
+                        <BusinessCard key={car.id} showStar={false} data={car} />
+                    )) || (
+                        <>
+                            <BusinessCard showStar={false} />
+                            <BusinessCard showStar={false} />
+                            <BusinessCard showStar={false} />
+                        </>
+                    )}
                 </div>
                 <div className="btnBackground w-full text-center text-paper font-bold px-4 py-2 rounded-[8px]">
                     <p>ดูเพิ่มเติม</p>
@@ -158,8 +177,13 @@ const Field = forwardRef(( { planData }, ref) => {
             </Card>
 
             {/* Itinerary Section */}
-            <div ref={itetaryRef}>
-                <Itetary planData={data} isEditing={isEditing} ref={dateRefs} />
+            <div className="w-full" ref={itetaryRef}>
+                <Itetary 
+                    planData={data} 
+                    isEditing={isEditing} 
+                    ref={dateRefs}
+                    onDataChange={handleItineraryDataChange}
+                />
             </div>
         </div>
     );
