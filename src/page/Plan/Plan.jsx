@@ -3,6 +3,7 @@ import Field from "./component/Field/Field.jsx";
 import Map from "./component/Map/Map.jsx";
 import Side from "./component/Side/Side.jsx";
 import { useGeolocation } from "@/hooks/useGeolocation";
+import { PlanMock } from "./Mock.jsx";
 
 export default function Plan() {
     const fieldRef = useRef(null);
@@ -14,11 +15,13 @@ export default function Plan() {
         }
     };
 
+    const data = PlanMock;
+
     return (
         <div className="w-full h-full flex justify-center">
             <div className="flex w-full">
                 <Side onItemClick={handleSidebarItemClick} />
-                <Field ref={fieldRef} />
+                <Field ref={fieldRef} planData={data} />
             </div>
 
             <div className="w-full h-full flex items-center justify-center">

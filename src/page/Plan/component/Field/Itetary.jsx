@@ -3,23 +3,22 @@ import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "re
 import { DateRange } from "react-date-range";
 import DateContainer from "./DateList";
 
-const Itinerary = forwardRef((props, ref) => {
+const Itinerary = forwardRef(({planData, isEditing}, ref) => {
+    const [data, setData] = useState(planData || {});
     const [showPicker, setShowPicker] = useState(false);
     const pickerRef = useRef(null);
 
     const mondayRef = useRef(null);
     const tuesdayRef = useRef(null);
-
     const [range, setRange] = useState({
-        startDate: null,
-        endDate: null,
+        startDate: data.startDate ? new Date(data.startDate) : null,
+        endDate: data.endDate ? new Date(data.endDate) : null,
         key: "selection",
     });
 
     useImperativeHandle(ref, () => ({
         scrollToDate: (dateString) => {
             let targetRef = null;
-            console.log("Scrolling to date:", dateString);
 
             // แปลงข้อความวันที่ใน sidebar ให้ตรงกับ component
             switch (dateString) {
@@ -42,7 +41,6 @@ const Itinerary = forwardRef((props, ref) => {
 
     useEffect(() => {
         if (range && range.startDate && range.endDate) {
-            console.log("Selected range:", range);
             setShowPicker(false);
         }
     }, [range]);
@@ -72,7 +70,6 @@ const Itinerary = forwardRef((props, ref) => {
     };
 
     const handleRangeChange = ({ selection }) => {
-        console.log(range);
         setRange(prev => {
             if (selection.startDate !== selection.endDate) {
                 return { startDate: selection.startDate, endDate: selection.endDate, key: "selection" };
@@ -99,8 +96,8 @@ const Itinerary = forwardRef((props, ref) => {
                 <h3>แผนการท่องเที่ยว</h3>
                 <div className="flex gap-3">
                     <div
-                        className="relative flex items-center justify-between w-full gap-3 px-3 py-2 border cursor-pointer bg-neutral-100 border-neutral-200 rounded-xl"
-                        onClick={() => setShowPicker(true)}
+                        className={`relative flex items-center justify-between w-full gap-3 px-3 py-2 border ${isEditing ? 'cursor-pointer' : 'cursor-default'} bg-neutral-100 border-neutral-200 rounded-xl`}
+                        onClick={() => isEditing && setShowPicker(true)}
                         ref={pickerRef}
                     >
                         <CalendarDays className="w-5 h-5" />

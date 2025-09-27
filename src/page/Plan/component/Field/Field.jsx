@@ -6,17 +6,15 @@ import { CancelButton, SaveButton, MeatButton } from "./Button";
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useAutoHideScrollbar } from "@/lib/useAutoHideScrollbar";
 
-const Field = forwardRef((props, ref) => {
+const Field = forwardRef(( { planData }, ref) => {
     const [isEditing, setIsEditing] = useState(true);
     const [showMenu, setShowMenu] = useState(false);
-    const [data, setData] = useState({
-        title: "บางแสน...แสนสาหัส",
-        lastModified: "25 สิงหาคม 2568",
-        info: {},
-        hotels: [],
-        cars: [],
-        itinerary: {}
-    });
+    const [data, setData] = useState(() => ({
+        title: planData?.title || "ไม่มีข้อมูล",
+        lastModified: planData?.lastModified || "ไม่มีข้อมูล",
+        // เพิ่มข้อมูลอื่นๆ จาก planData
+        ...planData
+    }));
 
     const fieldRef = useRef(null);
     const menuRef = useRef(null);
@@ -29,7 +27,6 @@ const Field = forwardRef((props, ref) => {
     const dateRefs = useRef(null);
 
     const scrollToSection = (sectionName) => {
-        console.log("Scrolling to section:", sectionName);
         let targetRef = null;
 
         switch (sectionName) {
@@ -99,13 +96,6 @@ const Field = forwardRef((props, ref) => {
         setIsEditing(true);
     };
 
-    const updateData = (field, value) => {
-        setData(prev => ({
-            ...prev,
-            [field]: value
-        }));
-    };
-
     return (
         <div
             className="h-full w-full flex flex-col gap-5 px-20 py-5 justify-start items-center bg-paper overflow-x-clip scroll-auto-hide"
@@ -114,7 +104,7 @@ const Field = forwardRef((props, ref) => {
             {/* Overview Section */}
             <div ref={overviewRef} className="w-full flex flex-col gap-1">
                 <div className="flex justify-between items-center w-full">
-                    <h3>บางแสน...แสนสาหัส</h3>
+                    <h3>{data.title}</h3>
                     <div className="flex gap-3 relative">
                         {isEditing ? (
                             <>
@@ -134,11 +124,11 @@ const Field = forwardRef((props, ref) => {
                         )}
                     </div>
                 </div>
-                <p className="text-neutral-500">แก้ไขล่าสุด : 25 สิงหาคม 2568</p>
+                <p className="text-neutral-500">แก้ไขล่าสุด : {data.lastModified}</p>
             </div>
 
             <Card>
-                <Info />
+                <Info data={data} />
             </Card>
 
             {/* Hotel Section */}
@@ -169,7 +159,7 @@ const Field = forwardRef((props, ref) => {
 
             {/* Itinerary Section */}
             <div ref={itetaryRef}>
-                <Itetary ref={dateRefs} />
+                <Itetary planData={data} isEditing={isEditing} ref={dateRefs} />
             </div>
         </div>
     );
