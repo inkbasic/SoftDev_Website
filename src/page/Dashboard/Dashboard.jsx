@@ -70,24 +70,24 @@ export function PaginationDemo() {
     return (
         <Pagination>
             <PaginationContent>
-                <PaginationItem>
+                <PaginationItem className="!p-0">
                     <PaginationPrevious href="#" />
                 </PaginationItem>
-                <PaginationItem>
+                <PaginationItem className="!p-0">
                     <PaginationLink href="#">1</PaginationLink>
                 </PaginationItem>
-                <PaginationItem>
+                <PaginationItem className="!p-0">
                     <PaginationLink href="#" isActive>
                         2
                     </PaginationLink>
                 </PaginationItem>
-                <PaginationItem>
+                <PaginationItem className="!p-0">
                     <PaginationLink href="#">3</PaginationLink>
                 </PaginationItem>
-                <PaginationItem>
+                <PaginationItem className="!p-0">
                     <PaginationEllipsis />
                 </PaginationItem>
-                <PaginationItem>
+                <PaginationItem className="!p-0">
                     <PaginationNext href="#" />
                 </PaginationItem>
             </PaginationContent>
@@ -96,7 +96,6 @@ export function PaginationDemo() {
 }
 
 // main
-import * as React from "react";
 import { Plus, TrendingUp, TrendingDown, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -108,6 +107,8 @@ import { ChartAreaInteractive } from "@/components/Chart";
 import { chartData } from "@/mockdata/ChartData";
 import { generateChartConfig } from "@/components/generateChartConfig";
 
+import * as React from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const chartConfig = generateChartConfig(chartData);
@@ -167,9 +168,14 @@ const chartTabs = [
 export default function Dashboard() {
     const navigate = useNavigate(); // hook สำหรับ redirect
 
+    // ถ้ามี token อยู่แล้ว ให้เด้งไป home
+    useEffect(() => {
+        const token = localStorage.getItem("jwtToken") || sessionStorage.getItem("jwtToken");
+        if (!token) navigate("/login", { replace: true });
+    }, [navigate]);
+
     const handleAddLocation = () => {
-        // navigate("/addlocation");
-        window.open("/addlocation", "_blank");
+        navigate("/addlocation");
     };
 
     return (

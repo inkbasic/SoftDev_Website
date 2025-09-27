@@ -16,7 +16,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/auth": {
-        target: "http://localhost:3000", // backend URL
+        target: "http://localhost:3000",
         changeOrigin: true,
         secure: false,
       },
@@ -31,6 +31,10 @@ export default defineConfig({
         secure: false,
       },
       "/plans": {
+        target: "http://localhost:3000",
+        changeOrigin: true,
+      },
+      "/tags": {
         target: "http://localhost:3000",
         changeOrigin: true,
       },
