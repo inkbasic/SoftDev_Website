@@ -3,8 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
+import { useNavigate } from "react-router-dom";
 import "../global.css";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const REGISTER_ENDPOINT = "/auth/register";
 
@@ -16,7 +18,6 @@ export default function Signin() {
         userName: "",
         email: "",
         password: "",
-        confirmPassword: "",
         profileImage: "",
         phoneNumber: "",
     });
@@ -25,6 +26,14 @@ export default function Signin() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+
+    const navigate = useNavigate();
+
+    // ถ้ามี token อยู่แล้ว ให้เด้งไป home
+    useEffect(() => {
+        const token = localStorage.getItem("jwtToken") || sessionStorage.getItem("jwtToken");
+        if (token) navigate("/", { replace: true });
+    }, [navigate]);
 
     // ฟังก์ชันจัดการการเปลี่ยนแปลงค่าในฟอร์ม
     const handleChange = (e) => {
@@ -37,13 +46,6 @@ export default function Signin() {
         setLoading(true);
         setError("");
         setSuccess("");
-
-        // ตรวจสอบรหัสผ่านตรงกัน
-        if (formData.password !== formData.confirmPassword) {
-            setError("รหัสผ่านและยืนยันรหัสผ่านไม่ตรงกัน ❌");
-            setLoading(false);
-            return;
-        }
 
         try {
             const res = await fetch(REGISTER_ENDPOINT, {
@@ -64,6 +66,9 @@ export default function Signin() {
 
             setSuccess("สมัครสมาชิกสำเร็จ 🎉");
             console.log("API Response:", data);
+
+            // ✅ นำทางทันทีหลัง login
+            navigate("/", { replace: true });
         } catch (err) {
             setError(err.message); // แสดงข้อความ error
             console.error(err);
@@ -73,12 +78,12 @@ export default function Signin() {
     };
 
     return (
-        <div className="py-20 flex justify-center items-center background">
+        <div className="flex items-center justify-center py-20 background">
             {/* Background Glow Circle */}
             {/* <BackgroundBlurs /> */}
 
             {/* Content */}
-            <Card className="w-full max-w-sm z-10">
+            <Card className="z-10 w-full max-w-sm">
                 <CardHeader>
                     <CardTitle>สร้างบัญชีใหม่เพื่อเริ่มต้นการใช้งาน 🚀</CardTitle>
                     <CardDescription>สมัครสมาชิกเพื่อเข้าถึงฟีเจอร์พิเศษและเก็บข้อมูลของคุณ</CardDescription>
@@ -119,18 +124,6 @@ export default function Signin() {
                                     placeholder="อย่างน้อย 8 ตัวอักษร"
                                     required
                                     value={formData.password}
-                                    onChange={handleChange}
-                                />
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="confirmPassword">ยืนยันรหัสผ่าน (Confirm Password)</Label>
-                                <Input
-                                    id="confirmPassword"
-                                    type="password"
-                                    placeholder="พิมพ์รหัสผ่านอีกครั้ง"
-                                    required
-                                    value={formData.confirmPassword}
                                     onChange={handleChange}
                                 />
                             </div>
@@ -197,9 +190,9 @@ export default function Signin() {
                         สมัครสมาชิก
                     </Button>
 
-                    <div className="flex justify-center items-center gap-2 text-sm">
+                    <div className="flex items-center justify-center gap-2 text-sm">
                         มีบัญชีแล้ว?
-                        <a href="/login" className="ml-auto text-sm text-black no-underline hover:underline">
+                        <a href="/login" className="!px-0 ml-auto text-sm text-black no-underline  hover:underline">
                             เข้าสู่ระบบ
                         </a>
                     </div>

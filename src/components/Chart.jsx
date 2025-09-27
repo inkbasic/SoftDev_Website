@@ -28,7 +28,7 @@ export function ChartAreaInteractive({ title, description, chartData, chartConfi
 
     return (
         <Card className="pt-0">
-            <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
+            <CardHeader className="flex items-center gap-2 py-5 space-y-0 sm:flex-row">
                 <div className="grid flex-1 gap-1">
                     <CardTitle>{title}</CardTitle>
                     <CardDescription>{description}</CardDescription>

@@ -2,6 +2,7 @@ import { CalendarDays } from "lucide-react";
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { DateRange } from "react-date-range";
 import DateContainer from "./DateList";
+
 const Itinerary = forwardRef((props, ref) => {
     const [showPicker, setShowPicker] = useState(false);
     const pickerRef = useRef(null);
@@ -93,21 +94,21 @@ const Itinerary = forwardRef((props, ref) => {
     const formatDate = (date) =>
         date ? date.toLocaleDateString("th-TH", { day: "numeric", month: "numeric" }) : "";
     return (
-        <div className="w-full flex flex-col gap-5">
-            <div className="flex justify-between items-center w-full">
+        <div className="flex flex-col w-full gap-5">
+            <div className="flex items-center justify-between w-full">
                 <h3>แผนการท่องเที่ยว</h3>
                 <div className="flex gap-3">
                     <div
-                        className="relative flex px-3 py-2 justify-between items-center gap-3 w-full bg-neutral-100 border border-neutral-200 rounded-xl cursor-pointer"
+                        className="relative flex items-center justify-between w-full gap-3 px-3 py-2 border cursor-pointer bg-neutral-100 border-neutral-200 rounded-xl"
                         onClick={() => setShowPicker(true)}
                         ref={pickerRef}
                     >
                         <CalendarDays className="w-5 h-5" />
                         <div>
 
-                            <span className="text-gray-700 text-base font-bold">{formatDate(range.startDate)}-</span>
+                            <span className="text-base font-bold text-gray-700">{formatDate(range.startDate)}-</span>
 
-                            <span className="text-gray-700 text-base font-bold">{formatDate(range.endDate)}</span>
+                            <span className="text-base font-bold text-gray-700">{formatDate(range.endDate)}</span>
                         </div>
                         {showPicker && (
                             <div className="absolute right-0 top-[100%] z-50">

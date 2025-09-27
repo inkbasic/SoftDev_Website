@@ -29,7 +29,7 @@ export function TableDemo() {
         <Table>
             <TableHeader>
                 <TableRow>
-                    <TableHead className="w-[300px]">สถานะโฆษณา</TableHead>
+                    <TableHead className="w-[300px]">สถานที่</TableHead>
                     <TableHead>สถานะโฆษณา</TableHead>
                     <TableHead>วันเริ่มต้น / สิ้นสุด</TableHead>
                     <TableHead>ค่าใช้จ่าย</TableHead>
@@ -114,7 +114,7 @@ const chartConfig = generateChartConfig(chartData);
 
 function StatCard({ title, value, change, trend, description, isUp = true }) {
     return (
-        <Card className="w-full p-6 gap-2">
+        <Card className="w-full gap-2 p-6">
             <div className="flex justify-between">
                 <p className="text-sm text-neutral-500">{title}</p>
                 <Badge variant="outline">
@@ -123,7 +123,7 @@ function StatCard({ title, value, change, trend, description, isUp = true }) {
                 </Badge>
             </div>
             <h2 className="text-2xl">{value}</h2>
-            <div className="flex flex-col pt-4 gap-1">
+            <div className="flex flex-col gap-1 pt-4">
                 <p className="text-sm text-black">{trend}</p>
                 <p className="text-sm text-neutral-500">{description}</p>
             </div>
@@ -173,9 +173,9 @@ export default function Dashboard() {
     };
 
     return (
-        <div className="py-20 px-4 flex flex-col gap-6 justify-center items-center">
+        <div className="flex flex-col items-center justify-center gap-6 px-4 py-20">
             {/* header */}
-            <div className="flex justify-between items-center w-full max-w-5xl pb-4">
+            <div className="flex items-center justify-between w-full max-w-5xl pb-4">
                 <h2 className="text-2xl">Dashboard</h2>
                 {/* <Button>
                     <Plus />
@@ -184,7 +184,7 @@ export default function Dashboard() {
             </div>
 
             {/* stat */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-5xl">
+            <div className="grid w-full max-w-5xl grid-cols-1 gap-4 md:grid-cols-2">
                 <StatCard
                     title="ยอดเข้าชมโฆษณา (Views)"
                     value="12,540 ครั้ง"
@@ -220,7 +220,7 @@ export default function Dashboard() {
             </div>
 
             {/* tab */}
-            <div className="flex w-full max-w-5xl flex-col gap-6 pt-20">
+            <div className="flex flex-col w-full max-w-5xl gap-6 pt-20">
                 <Tabs defaultValue="view" className="gap-6">
                     <Select>
                         <SelectTrigger className="w-[180px] sm:hidden">
@@ -259,8 +259,8 @@ export default function Dashboard() {
             </div>
 
             {/* table */}
-            <div className="flex flex-col w-full max-w-5xl pt-20 gap-6">
-                <div className="flex justify-end gap-3 w-full">
+            <div className="flex flex-col w-full max-w-5xl gap-6 pt-20">
+                <div className="flex justify-end w-full gap-3">
                     <Button variant="outline" onClick={handleAddLocation}>
                         <Plus />
                         เพิ่มสถานที่

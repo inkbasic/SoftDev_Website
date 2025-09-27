@@ -15,11 +15,24 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      // ทุก request ที่เริ่มด้วย /auth จะถูกส่งไป backend localhost:3000
       "/auth": {
         target: "http://localhost:3000", // backend URL
         changeOrigin: true,
         secure: false,
+      },
+      '/places': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/users': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        secure: false,
+      },
+      "/plans": {
+        target: "http://localhost:3000",
+        changeOrigin: true,
       },
     },
   },

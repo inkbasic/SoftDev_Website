@@ -4,24 +4,34 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../global.css";
 
 const LOGIN_ENDPOINT = "/auth/login";
 
 export default function Login() {
-    // State สำหรับเก็บข้อมูลฟอร์ม
+    // State ฟอร์ม
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
-    // State สำหรับจัดการสถานะของ API
+    // State สถานะ API / UI
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+    const [isLoggedIn, setIsLoggedIn] = useState(false); // ✅ เติม state ที่ถูกเรียกใช้
 
-    // ฟังก์ชันสำหรับส่งคำร้องเข้าสู่ระบบ
+    const navigate = useNavigate();
+
+    // ถ้ามี token อยู่แล้ว ให้เด้งไป home
+    useEffect(() => {
+        const token = localStorage.getItem("jwtToken") || sessionStorage.getItem("jwtToken");
+        if (token) navigate("/", { replace: true });
+    }, [navigate]);
+
+    // เข้าสู่ระบบ
     const handleLogin = async (e) => {
-        e.preventDefault(); // ป้องกันการรีเฟรชหน้า
+        e.preventDefault();
         setLoading(true);
         setError("");
         setSuccess("");
@@ -29,42 +39,87 @@ export default function Login() {
         try {
             const res = await fetch(LOGIN_ENDPOINT, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ email, password }), // request_body
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password }),
             });
 
-            // ตรวจสอบว่า response ok หรือไม่
             if (!res.ok) {
-                // ดึงข้อความ error จาก API
-                const errorData = await res.json();
+                const errorData = await res.json().catch(() => ({}));
                 throw new Error(errorData.message || "เกิดข้อผิดพลาดในการเข้าสู่ระบบ ❌");
             }
 
-            const data = await res.json(); // parse response JSON
+            const data = await res.json();
+
+            // เก็บ token/message
+            localStorage.setItem("jwtToken", data.token);
+            localStorage.setItem("loginMessage", data.message || "Login success");
+
+            sessionStorage.setItem("jwtToken", data.token);
+            sessionStorage.setItem("loginMessage", data.message || "Login success");
 
             setSuccess("เข้าสู่ระบบสำเร็จ 🎉");
-            console.log("API Response:", data);
+            setIsLoggedIn(true);
+
+            // ✅ เรียก API /users เพื่อเอา _id
+            await fetchUserId(data.token);
+
+            // นำทาง
+            navigate("/dashboard", { replace: true });
         } catch (err) {
-            setError(err.message); // แสดงข้อความ error
+            setError(err.message || "เกิดข้อผิดพลาดในการเข้าสู่ระบบ ❌");
             console.error(err);
         } finally {
             setLoading(false);
         }
     };
 
+    // ฟังก์ชันเรียก /users
+    async function fetchUserId(token) {
+        try {
+            const res = await fetch("/users", {
+                method: "GET",
+                headers: {
+                    Accept: "application/json",
+                    "Cache-Control": "no-cache", // hint ฝั่ง client
+                    Pragma: "no-cache", // เผื่อ proxy เก่า
+                    Authorization: `Bearer ${token}`,
+                },
+                cache: "no-store", // สำคัญ: สั่ง fetch ไม่ใช้ cache
+            });
+
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.message || `${res.status} ${res.statusText}`);
+            }
+
+            const user = await res.json(); // ตอนนี้ควรได้ 200 + body
+            if (user) {
+                // ✅ แปลง object เป็น JSON string ก่อนเก็บ
+                localStorage.setItem("user", JSON.stringify(user));
+
+                // ถ้าอยากยังคงเก็บแค่ id แยกไว้ด้วยก็ได้
+                localStorage.setItem("userId", user._id);
+
+                console.log("เก็บ user ทั้ง object:", user);
+            }
+            
+            return user;
+        } catch (e) {
+            console.error("fetchUserId failed:", e);
+            return null;
+        }
+    }
+
     return (
-        <div className="h-screen flex justify-center items-center background">
-            {/* Background Glow Circle */}
+        <div className="flex items-center justify-center h-screen background">
             {/* <BackgroundBlurs /> */}
 
-            {/* Content */}
-            <Card className="w-full max-w-sm z-10">
+            <Card className="z-10 w-full max-w-sm">
                 <CardHeader>
                     <CardTitle>ยินดีต้อนรับกลับมา 👋</CardTitle>
                     <CardDescription>กรุณากรอกอีเมลและรหัสผ่านเพื่อเข้าสู่ระบบ</CardDescription>
                 </CardHeader>
+
                 <CardContent>
                     <form onSubmit={handleLogin}>
                         <div className="flex flex-col gap-6">
@@ -79,10 +134,14 @@ export default function Login() {
                                     onChange={(e) => setEmail(e.target.value)}
                                 />
                             </div>
+
                             <div className="grid gap-2">
                                 <div className="flex items-center">
                                     <Label htmlFor="password">รหัสผ่าน (Password)</Label>
-                                    <a href="#" className="ml-auto text-sm text-black no-underline hover:underline">
+                                    <a
+                                        href="#"
+                                        className="!px-0 ml-auto text-sm text-black no-underline hover:underline"
+                                    >
                                         ลืมรหัสผ่าน?
                                     </a>
                                 </div>
@@ -97,32 +156,45 @@ export default function Login() {
                             </div>
                         </div>
 
-                        {/* แสดงสถานะ Loading / Error / Success */}
+                        {/* สถานะ */}
                         {loading && <p className="mt-3 text-sm text-blue-500">กำลังเข้าสู่ระบบ...</p>}
                         {error && <p className="mt-3 text-sm text-red-500">{error}</p>}
                         {success && <p className="mt-3 text-sm text-green-500">{success}</p>}
+
+                        {/* ปุ่ม submit ในฟอร์ม (แนะนำให้มีปุ่มใน form ด้วย) */}
+                        <button type="submit" className="hidden" aria-hidden="true" />
                     </form>
                 </CardContent>
+
                 <CardFooter className="flex-col gap-3">
                     <Button
-                        type="submit"
+                        type="button"
                         className="w-full text-sm bg-gradient-to-l from-[#FF7474] to-[#FF9F43]"
-                        onClick={handleLogin} // เรียก API เมื่อกดปุ่ม
-                        disabled={loading} // ป้องกันการกดซ้ำ
+                        onClick={handleLogin}
+                        disabled={loading}
                     >
                         เข้าสู่ระบบ
                     </Button>
+
                     <Button variant="outline" className="w-full">
                         เข้าสู่ระบบด้วย ชื่อผู้ใช้
                     </Button>
-                    <div className="flex justify-center items-center pt-3 gap-2 text-sm">
+
+                    <div className="flex items-center justify-center gap-2 pt-3 text-sm">
                         ยังไม่มีบัญชี?
-                        <a href="/signin" className="ml-auto text-sm text-black no-underline hover:underline">
+                        <a href="/signup" className="!px-0 ml-auto text-sm text-black no-underline hover:underline">
                             สมัครสมาชิก
                         </a>
                     </div>
                 </CardFooter>
             </Card>
+            {/* <Button
+                type="button"
+                className="w-auto text-sm bg-gradient-to-l from-[#FF7474] to-[#FF9F43]"
+                onClick={fetchUserId}
+            >
+                fetchUserId
+            </Button> */}
         </div>
     );
 }
