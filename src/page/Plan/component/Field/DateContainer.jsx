@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
-import LocationList from "./LocationList";
-import AddLocationPanel from "./AddLocationPanel";
+import LocationList from "./LocationList.jsx";
+import AddLocationPanel from "./AddLocationPanel.jsx";
 
 export default function DateContainer({ title, dayData, isEditing = false, onUpdateLocations }) {
     const [showDetails, setShowDetails] = useState(true);
