@@ -13,9 +13,9 @@ export const PlanMock = {
     
     // เพิ่ม itinerary data
     "itinerary": {
-        "2025-08-25": {
+        "2025-09-28": {
             "dayName": "วันจันทร์",
-            "date": "25 สิงหาคม",
+            "date": "28 กันยายน",
             "description": "เริ่มต้นการเดินทาง",
             "locations": [
                 {
@@ -45,9 +45,9 @@ export const PlanMock = {
                 }
             ]
         },
-        "2025-08-26": {
+        "2025-09-29": {
             "dayName": "วันอังคาร",
-            "date": "26 สิงหาคม", 
+            "date": "26 กันยายน", 
             "description": "วันสำรวจวัฒนธรรม",
             "locations": [
                 {
