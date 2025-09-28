@@ -58,7 +58,7 @@ export const PlanMock = {
                     "openHours": "เปิด 08.30 - 15.30",
                     "description": "วัดที่สำคัญที่สุดของประเทศไทย ประดิษฐานพระพุทธมหามณีรัตนปฏิมากร",
                     "image": "/public/img/pool.jpg",
-                    "order": 1
+                    "order": 3
                 }
             ],
             "travelTimes": []

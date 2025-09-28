@@ -10,7 +10,7 @@
     border-radius: 50%;
     width: 20px;
     height: 20px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
     position: relative;
 }
 
@@ -31,6 +31,7 @@
         transform: scale(0.8);
         opacity: 1;
     }
+
     100% {
         transform: scale(2.0);
         opacity: 0;
@@ -49,7 +50,7 @@
     border-radius: 50%;
     width: 20px;
     height: 20px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
     position: relative;
 }
 
@@ -70,6 +71,7 @@
         transform: scale(0.8);
         opacity: 1;
     }
+
     100% {
         transform: scale(2.0);
         opacity: 0;
@@ -89,73 +91,81 @@
     padding: 8px;
     margin: 2px;
     cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: all 0.2s ease;
 }
 
 .map-control-button:hover {
     background: #f0f0f0;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .map-control-button:active {
     transform: translateY(1px);
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .place-label {
-  background: #ffffff;
-  color: #1f2937;          /* gray-800 */
-  border: 1px solid #e5e7eb; /* gray-200 */
-  border-radius: 6px;
-  padding: 2px 6px;
-  font-size: 12px;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(0,0,0,.08);
-  pointer-events: none;   /* ไม่บังการคลิกที่หมุด */
+    background: #ffffff;
+    color: #1f2937;
+    /* gray-800 */
+    border: 1px solid #e5e7eb;
+    /* gray-200 */
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-size: 12px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .08);
+    pointer-events: none;
+    /* ไม่บังการคลิกที่หมุด */
 }
+
 .leaflet-tooltip-top.place-label {
-  margin-top: -6px;
+    margin-top: -6px;
 }
 
 /* ...existing code... */
 .order-marker .order-pin {
-  width: 32px;
-  height: 32px;
-  border-radius: 999px;
-  background: #2563eb;           /* blue-600 */
-  color: #fff;
-  font-weight: 700;
-  font-size: 13px;
-  line-height: 32px;
-  text-align: center;
-  /* border: 2px solid #fff; */
-  box-shadow: 0 6px 14px rgba(0,0,0,.25);
-  position: relative;
-  transform: translateY(-2px);
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    background: #2563eb;
+    /* blue-600 */
+    color: #fff;
+    font-weight: 700;
+    font-size: 13px;
+    line-height: 32px;
+    text-align: center;
+    /* border: 2px solid #fff; */
+    box-shadow: 0 6px 14px rgba(0, 0, 0, .25);
+    position: relative;
+    transform: translateY(-2px);
 }
+
 .order-marker .order-pin::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: -7px;
-  transform: translateX(-50%);
-  width: 0; height: 0;
-  border-left: 12px solid transparent;
-  border-right: 12px solid transparent;
-  border-top: 12px solid #2563eb; /* หางหมุด */
-  filter: drop-shadow(0 2px 2px rgba(0,0,0,.15));
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -7px;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-top: 12px solid #2563eb;
+    /* หางหมุด */
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .15));
 }
 
 /* ป้ายชื่อค้าง */
 .place-label {
-  background: #fff;
-  color: #1f2937;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  padding: 2px 6px;
-  font-size: 12px;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(0,0,0,.08);
-  pointer-events: none;
+    background: #fff;
+    color: #1f2937;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-size: 12px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .08);
+    pointer-events: none;
 }
