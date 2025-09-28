@@ -9,7 +9,7 @@ export const PlanMock = {
     "startDate": "2025-09-28",
     "endDate": "2025-09-30",
     "lastModified": "28 กันยายน 2568",
-    
+
     // เพิ่ม itinerary data
     "itinerary": {
         "2025-09-28": {
@@ -19,6 +19,7 @@ export const PlanMock = {
             "locations": [
                 {
                     "id": "loc_001",
+                    "source": [13.7466, 100.5347],
                     "name": "Siam Paragon",
                     "openHours": "เปิด 10.00 - 22.00",
                     "description": "ห้างสรรพสินค้าขนาดใหญ่ที่มีร้านบูติกระดับไฮเอนด์และร้านทั่วไป ร้านอาหาร โบว์ลิ่ง และโรงภาพยนตร์มัลติเพล็กซ์",
@@ -26,7 +27,8 @@ export const PlanMock = {
                     "order": 1
                 },
                 {
-                    "id": "loc_002", 
+                    "id": "loc_003",
+                    "source": [13.7466, 100.5390],
                     "name": "CentralWorld",
                     "openHours": "เปิด 10.00 - 22.00",
                     "description": "ศูนย์การค้าขนาดใหญ่ใจกลางกรุงเทพ มีร้านค้า ร้านอาหาร และกิจกรรมมากมาย",
@@ -37,7 +39,7 @@ export const PlanMock = {
             "travelTimes": [
                 {
                     "from": "loc_001",
-                    "to": "loc_002",
+                    "to": "loc_003",
                     "duration": "7 นาที",
                     "distance": "5 กม.",
                     "method": "รถยนต์"
@@ -50,7 +52,8 @@ export const PlanMock = {
             "description": "วันสำรวจวัฒนธรรม",
             "locations": [
                 {
-                    "id": "loc_003",
+                    "id": "loc_002",
+                    "source": [13.7516, 100.4929],
                     "name": "วัดพระแก้ว",
                     "openHours": "เปิด 08.30 - 15.30",
                     "description": "วัดที่สำคัญที่สุดของประเทศไทย ประดิษฐานพระพุทธมหามณีรัตนปฏิมากร",
@@ -72,7 +75,7 @@ export const PlanMock = {
             "image": "/public/img/pool.jpg"
         },
         {
-            "id": "hotel_002", 
+            "id": "hotel_002",
             "name": "แกรนด์ ไฮแอท",
             "distance": "8 กม. จากตัวเมือง",
             "rating": 4.9,

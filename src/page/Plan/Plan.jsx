@@ -1,10 +1,11 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import Field from "./component/Field/Field.jsx";
-import Map from "./component/Map/Map.jsx";
+import MapView from "./component/Map/Map.jsx";
 import Side from "./component/Side/Side.jsx";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useLocation } from "react-router-dom";
 import { PlanMock } from "./mock/Mock.jsx";
+import { MockLocations } from "./mock/MockLocations.jsx";
 
 export default function Plan() {
     const location = useLocation();
@@ -20,8 +21,31 @@ export default function Plan() {
 
         }
     }, [isNewPlan, initialData]);
-    
+
     const [currentData, setCurrentData] = useState(initialData);
+
+    const markers = useMemo(() => {
+        const out = [];
+        const seen = new Set();
+        const idToSource = new globalThis.Map(MockLocations.map(m => [m.id, m.source]));
+        const iti = currentData?.itinerary || {};
+        Object.values(iti).forEach(day => {
+            (day?.locations || []).forEach((loc, idx) => {
+                const pos = loc.source || idToSource.get(loc.id);
+                if (!Array.isArray(pos)) return;
+                // ใช้ครั้งแรกที่พบ เพื่อไม่ซ้ำ
+                if (seen.has(`${loc.id}`)) return;
+                seen.add(`${loc.id}`);
+                out.push({
+                    id: loc.id,
+                    name: loc.name,
+                    position: pos,
+                    order: loc.order ?? (idx + 1) // ส่ง order ไปให้ Map
+                });
+            });
+        });
+        return out;
+    }, [currentData?.itinerary]);
 
     const handleSidebarItemClick = (item) => {
         if (fieldRef.current && fieldRef.current.scrollToSection) {
@@ -37,13 +61,13 @@ export default function Plan() {
     return (
         <div className="w-full h-full flex justify-center">
             <div className="flex w-full">
-                <Side 
-                    onItemClick={handleSidebarItemClick} 
-                    fieldRef={fieldRef} 
+                <Side
+                    onItemClick={handleSidebarItemClick}
+                    fieldRef={fieldRef}
                     planData={currentData}
                 />
-                <Field 
-                    ref={fieldRef} 
+                <Field
+                    ref={fieldRef}
                     planData={currentData}
                     onDataChange={handleDataChange}
                 />
@@ -51,7 +75,8 @@ export default function Plan() {
 
             <div className="w-full h-full flex items-center justify-center">
                 {loading ? <h1 className="p-4">กำลังโหลด...</h1>
-                    : <Map center={geoLocation ? [geoLocation.latitude, geoLocation.longitude] : [13.7563, 100.5018]} />}
+                    : <MapView center={geoLocation ? [geoLocation.latitude, geoLocation.longitude] : [13.7563, 100.5018]}
+                        markers={markers} />}
                 {error && (
                     <div className="p-4 text-red-500">
                         ไม่สามารถดึงตำแหน่งได้: {error}
