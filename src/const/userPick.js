@@ -5,7 +5,6 @@ export const ACTIVITY = [
 ]
 
 export const TRAVEL = [
-  'รถยนต์',
-  'จักรยาน',
-  'เดินเท้า'
+  'รถยนต์ส่วนตัว',
+  'รถสาธารณะ',
 ]

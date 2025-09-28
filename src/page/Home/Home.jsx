@@ -13,21 +13,28 @@ export default function Home() {
     const navigate = useNavigate();
     const [selectedActivities, setSelectedActivities] = useState(null);
     const [selectedTravel, setSelectedTravel] = useState(null);
-    
+
     // จำนวนคน
     const [people, setPeople] = useState(1);
     const MIN_PEOPLE = 1;
-    const MAX_PEOPLE = 20;
-    
+    const MAX_PEOPLE = 100;
+
     const clamp = (n, min = MIN_PEOPLE, max = MAX_PEOPLE) => Math.max(min, Math.min(max, n));
     const incPeople = () => setPeople(p => clamp(p + 1));
     const decPeople = () => setPeople(p => clamp(p - 1));
-    
+
     const handlePeopleChange = (e) => {
         const n = parseInt(e.target.value, 10);
         setPeople(isNaN(n) ? MIN_PEOPLE : clamp(n));
     };
-    
+
+    const handleBudgetChange = (e) => {
+        const n = parseInt(e.target.value, 10);
+        setBudget(isNaN(n) ? 0 : n);
+    };
+
+    const [budget, setBudget] = useState(0);
+
     const [showPicker, setShowPicker] = useState(false);
     const pickerRef = useRef(null);
 
@@ -73,7 +80,7 @@ export default function Home() {
             if (selection.startDate !== selection.endDate) {
                 return { startDate: selection.startDate, endDate: selection.endDate, key: "selection" };
             }
-            
+
             if (!prev.startDate && !prev.endDate) {
                 return { startDate: selection.startDate, endDate: null, key: "selection" };
             }
@@ -92,8 +99,8 @@ export default function Home() {
         date ? date.toLocaleDateString("th-TH", { year: "numeric", month: "short", day: "numeric" }) : "";
 
     return (
-        <div className="w-full h-full flex justify-center py-28 background" >
-            <div className="bg-paper w-[800px] h-fit flex flex-col justify-center items-center gap-5 rounded-[20px] px-7 py-10 ">
+        <div className="w-full h-full flex justify-center background" >
+            <div className="bg-paper w-[800px] h-fit flex flex-col mt-20 justify-center items-center gap-5 rounded-[20px] px-7 py-10 ">
                 <h1 className="font-krub text-[56px] font-bold">WannoGo!</h1>
                 <div className="flex justify-center gap-3">
                     <h2 className="text-[32px] font-bold">วางแผนการท่องเที่ยวของคุณ</h2>
@@ -108,12 +115,12 @@ export default function Home() {
 
                     <div className="flex gap-3">
                         <div
-                            className="relative flex px-5 justify-between items-center gap-3 w-full bg-white border border-gray-300 rounded-xl cursor-pointer"
+                            className="relative flex px-5 items-center gap-3 w-full bg-white border border-gray-300 rounded-xl cursor-pointer"
                             onClick={() => setShowPicker(true)}
                             ref={pickerRef}
                         >
                             {/* Start Date */}
-                            <div className="flex items-center gap-1 py-5">
+                            <div className="flex items-center gap-1 py-5 w-1/2">
                                 <CalendarDays className="w-6 h-6" />
                                 {range.startDate ? (
                                     <span className="text-gray-700 text-base">{formatDate(range.startDate)}</span>
@@ -122,7 +129,7 @@ export default function Home() {
                                 )}
                             </div>
                             {/* End Date */}
-                            <div className="flex items-center gap-1 py-5">
+                            <div className="flex items-center gap-1 py-5 w-1/2">
                                 <CalendarDays className="w-6 h-6" />
                                 {range.endDate ? (
                                     <span className="text-gray-700 text-base">{formatDate(range.endDate)}</span>
@@ -165,6 +172,18 @@ export default function Home() {
                     <div className="flex gap-3">
                         <DropDownInput placeholder="กิจกรรมที่สนใจ" value={selectedActivities} onChange={setSelectedActivities} options={ACTIVITY} />
                         <DropDownInput placeholder="วิธีการเดินทาง" value={selectedTravel} onChange={setSelectedTravel} options={TRAVEL} />
+                    </div>
+                    <div className="relative flex px-5 justify-between self-center gap-3 w-1/2 py-5 bg-white border border-gray-300 rounded-xl">
+                        <p className="font-bold whitespace-nowrap">ค่าใช้จ่าย</p>
+                        <div className="flex items-center gap-3">
+                            <input
+                                type="number"
+                                className="text-right outline-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                value={budget}
+                                onChange={handleBudgetChange}
+                            />
+                        <p>฿</p>
+                        </div>
                     </div>
                     <div className="flex justify-center">
                         <button className="submitBtn" type="submit" onClick={() => navigate("/plan")}>
