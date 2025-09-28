@@ -1,21 +1,19 @@
 import { CalendarDays } from "lucide-react";
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { DateRange } from "react-date-range";
-import DateContainer from "./DateList";
+import DateContainer from "./DateContainer";
 
 const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
     const [showPicker, setShowPicker] = useState(false);
     const pickerRef = useRef(null);
     const dayRefs = useRef({});
 
-    // ใช้ planData โดยตรง แทนการ copy ไป local state
     const [range, setRange] = useState(() => ({
         startDate: planData?.startDate ? new Date(planData.startDate) : null,
         endDate: planData?.endDate ? new Date(planData.endDate) : null,
         key: "selection",
     }));
 
-    // อัพเดท range เมื่อ planData เปลี่ยน (เฉพาะครั้งแรก)
     useEffect(() => {
         if (planData?.startDate && planData?.endDate) {
             setRange(prev => {

@@ -60,13 +60,6 @@ export const PlanMock = {
             ],
             "travelTimes": []
         },
-        "2025-08-27": {
-            "dayName": "วันพุธ",
-            "date": "27 สิงหาคม",
-            "description": "วันพักผ่อน",
-            "locations": [],
-            "travelTimes": []
-        },
     },
 
     // เพิ่ม hotels และ cars data

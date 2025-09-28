@@ -15,7 +15,6 @@ export default function Location({
 		description = "ห้างสรรพสินค้าขนาดใหญ่ที่มีร้านบูติกระดับไฮเอนด์และร้านทั่วไป ร้านอาหาร โบว์ลิ่ง และโรงภาพยนตร์มัลติเพล็กซ์",
 		image = Pool,
 		order = 1,
-		rating = 0
 	} = locationData || {};
 
 	return (
@@ -25,9 +24,6 @@ export default function Location({
 					<div className="flex-1">
 						<p className="font-bold">{name}</p>
 						<p className="text-sm text-neutral-600">{openHours}</p>
-						{rating > 0 && (
-							<p className="text-sm text-yellow-600">⭐ {rating}/5</p>
-						)}
 					</div>
 				</div>
 

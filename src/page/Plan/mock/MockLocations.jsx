@@ -38,7 +38,7 @@ export const MockLocations = [
     },
     {
         id: "loc_005",
-        name: "อิคอนสยาม",
+        name: "ไอคอนสยาม",
         openHours: "เปิด 10.00 - 22.00",
         description: "ห้างสรรพสินค้าริมแม่น้ำเจ้าพระยา สถาปัตยกรรมไทยร่วมสมัย",
         image: "/public/img/pool.jpg",
