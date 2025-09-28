@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 import LocationList from "./LocationList";
 import AddLocationPanel from "./AddLocationPanel";
@@ -9,6 +9,10 @@ export default function DateContainer({ title, dayData, isEditing = false, onUpd
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const travelTimes = dayData?.travelTimes || [];
     const description = dayData?.description || "Siam Paragon";
+
+    useEffect(() => {
+        setLocations(dayData?.locations || []);
+    }, [dayData?.locations]);
 
     const applyAndBubble = (updated) => {
         setLocations(updated);
@@ -31,13 +35,19 @@ export default function DateContainer({ title, dayData, isEditing = false, onUpd
     };
 
     const handleAddLocation = (loc) => {
-        const updated = [...locations, { ...loc, order: locations.length + 1 }];
-        applyAndBubble(updated);
+        const updated = [...locations, { ...loc }]; // ไม่กำหนด order
+        setLocations(updated);
+        onUpdateLocations?.(updated);
     };
 
-    const handleAddCustomLocation = (customLoc) => {
-        const updated = [...locations, { ...customLoc, order: locations.length + 1 }];
-        applyAndBubble(updated);
+    const handleAddCustomLocation = (custom) => {
+        const newLoc = {
+            ...custom,
+            // ไม่กำหนด order ภายในวัน
+        };
+        const updated = [...locations, newLoc];
+        setLocations(updated);
+        onUpdateLocations?.(updated);
     };
 
     return (
@@ -54,14 +64,12 @@ export default function DateContainer({ title, dayData, isEditing = false, onUpd
             </div>
 
             <div
-                className={`grid transition-all duration-500 ease-in-out bg-paper relative ${
-                    showDetails ? "mb-5 grid-rows-[1fr]" : "grid-rows-[0fr] overflow-hidden pointer-events-none"
-                } ${dropdownOpen ? "z-[200] overflow-visible" : ""}`}  // RAISE WHEN OPEN
+                className={`grid transition-all duration-500 ease-in-out bg-paper relative ${showDetails ? "mb-5 grid-rows-[1fr]" : "grid-rows-[0fr] overflow-hidden pointer-events-none"
+                    } ${dropdownOpen ? "z-[200] overflow-visible" : ""}`}  // RAISE WHEN OPEN
             >
                 <div className="min-h-0">
-                    <div className={`flex flex-col gap-5 transition-all duration-300 ${
-                        showDetails ? "opacity-100 translate-y-0 delay-200" : "opacity-0 -translate-y-2 delay-0"
-                    }`}>
+                    <div className={`flex flex-col gap-5 transition-all duration-300 ${showDetails ? "opacity-100 translate-y-0 delay-200" : "opacity-0 -translate-y-2 delay-0"
+                        }`}>
                         <LocationList
                             locations={locations}
                             travelTimes={travelTimes}

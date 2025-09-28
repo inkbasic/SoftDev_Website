@@ -4,21 +4,35 @@ import { DateRange } from "react-date-range";
 import DateContainer from "./DateContainer";
 
 const toLocalYMD = (date) => {
-  if (!date) return null;
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+    if (!date) return null;
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
 };
 
 const parseYMD = (str) => {
-  if (!str) return null;
-  const [y, m, d] = str.split("-").map(Number);
-  const dt = new Date(y, (m || 1) - 1, d || 1); // local midnight
-  dt.setHours(0, 0, 0, 0);
-  return dt;
+    if (!str) return null;
+    const [y, m, d] = str.split("-").map(Number);
+    const dt = new Date(y, (m || 1) - 1, d || 1); // local midnight
+    dt.setHours(0, 0, 0, 0);
+    return dt;
+};
+
+const normalizeOrders = (itinerary) => {
+  const out = {};
+  const keys = Object.keys(itinerary || {}).sort(); // YYYY-MM-DD
+  let counter = 1;
+  keys.forEach(k => {
+    const day = itinerary[k] || {};
+    const list = Array.isArray(day.locations) ? day.locations : [];
+    // ไม่ sort ใช้ลำดับใน array ตามที่ผู้ใช้เพิ่ม/ย้าย
+    const newLocs = list.map(l => ({ ...l, order: counter++ }));
+    out[k] = { ...day, locations: newLocs };
+  });
+  return out;
 };
 
 const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
@@ -52,9 +66,9 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
         if (!range.startDate || !range.endDate) return [];
         const dates = [];
         const currentDate = new Date(range.startDate);
-        currentDate.setHours(0,0,0,0);
+        currentDate.setHours(0, 0, 0, 0);
         const endDate = new Date(range.endDate);
-        endDate.setHours(0,0,0,0);
+        endDate.setHours(0, 0, 0, 0);
 
         while (currentDate <= endDate) {
             const dateKey = toLocalYMD(currentDate); // ใช้ local key
@@ -158,21 +172,27 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
     };
 
     const handleLocationUpdate = (dateKey, updatedLocations) => {
-    const updatedData = {
-        ...planData,
-        itinerary: {
+        const updatedItinerary = {
             ...planData.itinerary,
             [dateKey]: {
                 ...planData.itinerary[dateKey],
                 locations: updatedLocations
             }
-        }
+        };
+        const normalized = normalizeOrders(updatedItinerary);
+        const updatedData = { ...planData, itinerary: normalized };
+        onDataChange?.(updatedData);
     };
-    
-    if (onDataChange) {
-        onDataChange(updatedData);
-    }
-};
+
+    // ถ้าข้อมูลจากภายนอกเข้ามาแล้ว order ไม่ต่อกัน ให้ normalize หนึ่งครั้ง
+    useEffect(() => {
+        if (!planData?.itinerary) return;
+        const normalized = normalizeOrders(planData.itinerary);
+        // เช็คว่ามีความต่างไหมก่อนยิง onDataChange
+        const same =
+            JSON.stringify(planData.itinerary) === JSON.stringify(normalized);
+        if (!same) onDataChange?.({ ...planData, itinerary: normalized });
+    }, [planData?.itinerary]);
 
     const formatDate = (date) =>
         date ? date.toLocaleDateString("th-TH", { day: "numeric", month: "numeric" }) : "";
