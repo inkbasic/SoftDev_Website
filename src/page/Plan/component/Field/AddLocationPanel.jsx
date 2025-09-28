@@ -35,9 +35,9 @@ export default function AddLocationPanel({ existing = [], onAdd, onAddCustom, on
         <div ref={containerRef} className="search-container">
             <div
                 ref={inputRef}
-                className="flex items-center gap-3 bg-white border-2 border-blue-200 rounded-xl px-4 py-4 shadow-sm hover:border-blue-300 focus-within:border-blue-400 transition-colors duration-200"
+                className="flex items-center gap-3 bg-white border-1 rounded-[12px] border-neutral-200 px-4 py-4 transition-colors duration-200"
             >
-                <Search className="w-5 h-5 text-blue-500" />
+                <Search className="w-5 h-5 text-neutral-400" />
                 <input
                     type="text"
                     className="flex-1 outline-none text-[16px] placeholder-gray-400"
@@ -80,7 +80,7 @@ export default function AddLocationPanel({ existing = [], onAdd, onAddCustom, on
                                         <p className="text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded-full inline-block mt-1">
                                             {loc.category}
                                         </p>
-                                        <p className="text-xs text-gray-500 mt-1">{loc.openHours}</p>
+                                        <p className="text-xs text-neutral-500 mt-1">{loc.openHours}</p>
                                     </div>
                                 </div>
                             </div>
