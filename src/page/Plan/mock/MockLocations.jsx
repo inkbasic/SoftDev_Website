@@ -79,6 +79,16 @@ export const MockLocations = [
         image: "/public/img/pool.jpg",
         category: "ท่องเที่ยว",
         rating: 4.7
+    },
+    {
+        id: "loc_009",
+        name: "หาดจอมเทียน",
+        source: [12.8736, 100.8885], // พิกัดโดยประมาณพัทยาใต้
+        openHours: "เปิด 24 ชั่วโมง",
+        description: "ชายหาดยอดนิยมในพัทยาใต้ มีกิจกรรมทางน้ำและร้านอาหารริมทะเล เหมาะสำหรับพักผ่อน",
+        image: "/public/img/pool.jpg",
+        category: "ธรรมชาติ",
+        rating: 4.4
     }
 ];
 

@@ -2,7 +2,7 @@ export const PlanMock = {
     "id": "plan_001",
     "title": "เที่ยวกรุงเทพ...แบบชิลๆ",
     "category": ["ปีนผา", "ทะเล", "ธรรมชาติ"],
-    "budget": 5000,
+    "budget": 500,
     "transportation": "รถยนต์ส่วนตัว",
     "accommodation": "โรงแรม 3 ดาว",
     "people": 2,

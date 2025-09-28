@@ -72,7 +72,7 @@ export default function MapView({ center = [13.7563, 100.5018], markers = [] }) 
                 zIndexOffset: 1000 - (Number(m.order) || 0)
             })
                 .addTo(markersLayerRef.current)
-                .bindPopup(m.name || "สถานที่");
+                // .bindPopup(m.name || "สถานที่");
 
             // แสดงชื่อค้างไว้
             marker.bindTooltip(m.name || "สถานที่", {
@@ -110,7 +110,7 @@ export default function MapView({ center = [13.7563, 100.5018], markers = [] }) 
                 if (route?.coords?.length) {
                     L.polyline(route.coords, {
                         color: '#2563eb',
-                        weight: 5,
+                        weight: 8,
                         opacity: 0.8
                     }).addTo(routesLayerRef.current);
                 }
