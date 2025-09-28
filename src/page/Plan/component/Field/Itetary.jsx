@@ -21,10 +21,10 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
             setRange(prev => {
                 const newStart = new Date(planData.startDate);
                 const newEnd = new Date(planData.endDate);
-                
+
                 // เช็คว่าเปลี่ยนแปลงจริงหรือไม่
-                if (!prev.startDate || !prev.endDate || 
-                    prev.startDate.getTime() !== newStart.getTime() || 
+                if (!prev.startDate || !prev.endDate ||
+                    prev.startDate.getTime() !== newStart.getTime() ||
                     prev.endDate.getTime() !== newEnd.getTime()) {
                     return {
                         startDate: newStart,
@@ -40,19 +40,19 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
     // สร้างรายการวันที่จาก range
     const generateDateList = () => {
         if (!range.startDate || !range.endDate) return [];
-        
+
         const dates = [];
         const currentDate = new Date(range.startDate);
         const endDate = new Date(range.endDate);
-        
+
         while (currentDate <= endDate) {
             const dateKey = currentDate.toISOString().split('T')[0];
             const dayName = currentDate.toLocaleDateString('th-TH', { weekday: 'long' });
-            const dateStr = currentDate.toLocaleDateString('th-TH', { 
-                day: 'numeric', 
-                month: 'long' 
+            const dateStr = currentDate.toLocaleDateString('th-TH', {
+                day: 'numeric',
+                month: 'long'
             });
-            
+
             dates.push({
                 key: dateKey,
                 dayName: dayName,
@@ -67,10 +67,10 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
                     travelTimes: []
                 }
             });
-            
+
             currentDate.setDate(currentDate.getDate() + 1);
         }
-        
+
         return dates;
     };
 
@@ -79,7 +79,7 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
     useImperativeHandle(ref, () => ({
         scrollToDate: (dateString) => {
             const targetDate = dateList.find(date => date.sidebarFormat === dateString);
-            
+
             if (targetDate && dayRefs.current[targetDate.key]) {
                 dayRefs.current[targetDate.key].scrollIntoView({
                     behavior: 'smooth',
@@ -126,7 +126,7 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
 
     const handleRangeChange = ({ selection }) => {
         const newRange = { ...selection };
-        
+
         setRange(prev => {
             if (selection.startDate !== selection.endDate) {
                 const result = { startDate: selection.startDate, endDate: selection.endDate, key: "selection" };
@@ -152,6 +152,23 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
         });
     };
 
+    const handleLocationUpdate = (dateKey, updatedLocations) => {
+    const updatedData = {
+        ...planData,
+        itinerary: {
+            ...planData.itinerary,
+            [dateKey]: {
+                ...planData.itinerary[dateKey],
+                locations: updatedLocations
+            }
+        }
+    };
+    
+    if (onDataChange) {
+        onDataChange(updatedData);
+    }
+};
+
     const formatDate = (date) =>
         date ? date.toLocaleDateString("th-TH", { day: "numeric", month: "numeric" }) : "";
 
@@ -161,9 +178,8 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
                 <h3>แผนการท่องเที่ยว</h3>
                 <div className="flex gap-3">
                     <div
-                        className={`relative flex items-center justify-between w-full gap-3 px-3 py-2 border ${
-                            isEditing ? 'cursor-pointer' : 'cursor-default'
-                        } bg-neutral-100 border-neutral-200 rounded-xl`}
+                        className={`relative flex items-center justify-between w-full gap-3 px-3 py-2 border ${isEditing ? 'cursor-pointer' : 'cursor-default'
+                            } bg-neutral-100 border-neutral-200 rounded-xl`}
                         onClick={() => isEditing && setShowPicker(true)}
                         ref={pickerRef}
                     >
@@ -195,14 +211,15 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
 
             {/* แสดงวันที่แบบ dynamic */}
             {dateList.map((dateInfo) => (
-                <div 
-                    key={dateInfo.key} 
+                <div
+                    key={dateInfo.key}
                     ref={(el) => dayRefs.current[dateInfo.key] = el}
                 >
-                    <DateContainer 
+                    <DateContainer
                         title={dateInfo.fullTitle}
                         dayData={dateInfo.data}
                         isEditing={isEditing}
+                        onUpdateLocations={(locations) => handleLocationUpdate(dateInfo.key, locations)}
                     />
                 </div>
             ))}

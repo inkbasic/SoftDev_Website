@@ -105,7 +105,7 @@ const Field = forwardRef(({ planData, onDataChange }, ref) => {
 
     return (
         <div
-            className="h-full w-full flex flex-col gap-5 px-20 py-5 justify-start items-center bg-paper overflow-x-clip scroll-auto-hide"
+            className="h-full w-full flex flex-col gap-5 px-20 py-5 justify-start items-center bg-paper overflow-x-visible overflow-y-auto scroll-auto-hide"
             ref={fieldRef}
         >
             {/* Overview Section */}

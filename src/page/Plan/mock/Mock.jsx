@@ -1,4 +1,3 @@
-// src/page/Plan/Mock.jsx
 export const PlanMock = {
     "id": "plan_001",
     "title": "เที่ยวกรุงเทพ...แบบชิลๆ",
