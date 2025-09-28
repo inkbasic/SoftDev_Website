@@ -3,6 +3,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './map.css';
 import { Plus, Minus, MapPin, Navigation } from 'lucide-react';
+import { getTravelBetween } from '@/lib/routeService.jsx';
 
 // แก้ไข default icon ของ Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -18,22 +19,30 @@ export default function MapView({ center = [13.7563, 100.5018], markers = [] }) 
     const mapInstanceRef = useRef(null);
     const currentLocationMarkerRef = useRef(null);
     const markersLayerRef = useRef(null);
+    const routesLayerRef = useRef(null); // NEW: layer สำหรับเส้นทาง
     const [currentZoom, setCurrentZoom] = useState(13);
 
     useEffect(() => {
         if (!mapRef.current) return;
 
-        mapInstanceRef.current = L.map(mapRef.current, { zoomControl: false }).setView(center, 13);
+        mapInstanceRef.current = L.map(mapRef.current, {
+            zoomControl: false
+        }).setView(center, 13);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(mapInstanceRef.current);
 
         markersLayerRef.current = L.layerGroup().addTo(mapInstanceRef.current);
+        routesLayerRef.current = L.layerGroup().addTo(mapInstanceRef.current); // NEW
 
-        mapInstanceRef.current.on('zoomend', () => setCurrentZoom(mapInstanceRef.current.getZoom()));
+        mapInstanceRef.current.on('zoomend', () => {
+            setCurrentZoom(mapInstanceRef.current.getZoom());
+        });
 
-        return () => mapInstanceRef.current?.remove();
+        return () => {
+            mapInstanceRef.current?.remove();
+        };
     }, []);
 
     // วาง/อัปเดตหมุดจาก props.markers
@@ -81,6 +90,35 @@ export default function MapView({ center = [13.7563, 100.5018], markers = [] }) 
             const bounds = L.latLngBounds(latlngs);
             mapInstanceRef.current.fitBounds(bounds, { padding: [24, 24] });
         }
+    }, [markers]);
+
+    useEffect(() => {
+        if (!mapInstanceRef.current || !routesLayerRef.current) return;
+
+        const abort = new AbortController();
+        routesLayerRef.current.clearLayers();
+
+        // ต้องมีอย่างน้อย 2 จุดถึงจะคำนวณเส้นทางได้
+        if (!markers || markers.length < 2) return;
+
+        // คิวรีทีละช่วง (ป้องกันโดน rate-limit)
+        const run = async () => {
+            for (let i = 0; i < markers.length - 1; i++) {
+                const a = { source: markers[i].position };
+                const b = { source: markers[i + 1].position };
+                const route = await getTravelBetween(a, b, abort.signal);
+                if (route?.coords?.length) {
+                    L.polyline(route.coords, {
+                        color: '#2563eb',
+                        weight: 5,
+                        opacity: 0.8
+                    }).addTo(routesLayerRef.current);
+                }
+            }
+        };
+
+        run().catch(() => { /* ignore */ });
+        return () => abort.abort();
     }, [markers]);
 
     // อัปเดตตำแหน่งปัจจุบันเมื่อ center เปลี่ยน
