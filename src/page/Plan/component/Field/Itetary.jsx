@@ -3,32 +3,44 @@ import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "re
 import { DateRange } from "react-date-range";
 import DateContainer from "./DateContainer";
 
+const toLocalYMD = (date) => {
+  if (!date) return null;
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
+const parseYMD = (str) => {
+  if (!str) return null;
+  const [y, m, d] = str.split("-").map(Number);
+  const dt = new Date(y, (m || 1) - 1, d || 1); // local midnight
+  dt.setHours(0, 0, 0, 0);
+  return dt;
+};
+
 const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
     const [showPicker, setShowPicker] = useState(false);
     const pickerRef = useRef(null);
     const dayRefs = useRef({});
 
     const [range, setRange] = useState(() => ({
-        startDate: planData?.startDate ? new Date(planData.startDate) : null,
-        endDate: planData?.endDate ? new Date(planData.endDate) : null,
+        startDate: parseYMD(planData?.startDate) || null,
+        endDate: parseYMD(planData?.endDate) || null,
         key: "selection",
     }));
 
     useEffect(() => {
         if (planData?.startDate && planData?.endDate) {
             setRange(prev => {
-                const newStart = new Date(planData.startDate);
-                const newEnd = new Date(planData.endDate);
-
-                // เช็คว่าเปลี่ยนแปลงจริงหรือไม่
+                const newStart = parseYMD(planData.startDate);
+                const newEnd = parseYMD(planData.endDate);
                 if (!prev.startDate || !prev.endDate ||
                     prev.startDate.getTime() !== newStart.getTime() ||
                     prev.endDate.getTime() !== newEnd.getTime()) {
-                    return {
-                        startDate: newStart,
-                        endDate: newEnd,
-                        key: "selection"
-                    };
+                    return { startDate: newStart, endDate: newEnd, key: "selection" };
                 }
                 return prev;
             });
@@ -38,22 +50,20 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
     // สร้างรายการวันที่จาก range
     const generateDateList = () => {
         if (!range.startDate || !range.endDate) return [];
-
         const dates = [];
         const currentDate = new Date(range.startDate);
+        currentDate.setHours(0,0,0,0);
         const endDate = new Date(range.endDate);
+        endDate.setHours(0,0,0,0);
 
         while (currentDate <= endDate) {
-            const dateKey = currentDate.toISOString().split('T')[0];
+            const dateKey = toLocalYMD(currentDate); // ใช้ local key
             const dayName = currentDate.toLocaleDateString('th-TH', { weekday: 'long' });
-            const dateStr = currentDate.toLocaleDateString('th-TH', {
-                day: 'numeric',
-                month: 'long'
-            });
+            const dateStr = currentDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'long' });
 
             dates.push({
                 key: dateKey,
-                dayName: dayName,
+                dayName,
                 date: dateStr,
                 fullTitle: `${dayName}, ${dateStr}`,
                 sidebarFormat: `${dayName} ${currentDate.getDate()}/${currentDate.getMonth() + 1}`,
@@ -68,7 +78,6 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
 
             currentDate.setDate(currentDate.getDate() + 1);
         }
-
         return dates;
     };
 
@@ -93,8 +102,8 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
         if (onDataChange && newRange.startDate && newRange.endDate) {
             const updatedData = {
                 ...planData,
-                startDate: newRange.startDate.toISOString().split('T')[0],
-                endDate: newRange.endDate.toISOString().split('T')[0]
+                startDate: toLocalYMD(newRange.startDate),
+                endDate: toLocalYMD(newRange.endDate),
             };
             onDataChange(updatedData);
         }
@@ -128,7 +137,6 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
         setRange(prev => {
             if (selection.startDate !== selection.endDate) {
                 const result = { startDate: selection.startDate, endDate: selection.endDate, key: "selection" };
-                // ส่งข้อมูลกลับเมื่อเลือกเสร็จ
                 setTimeout(() => handleRangeChangeComplete(result), 0);
                 return result;
             }
@@ -141,7 +149,6 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
                 let end = selection.endDate;
                 if (end < start) [start, end] = [end, start];
                 const result = { startDate: prev.startDate, endDate: end, key: "selection" };
-                // ส่งข้อมูลกลับเมื่อเลือกเสร็จ
                 setTimeout(() => handleRangeChangeComplete(result), 0);
                 return result;
             }

@@ -51,7 +51,6 @@ const Field = forwardRef(({ planData, onDataChange }, ref) => {
                 targetRef = itetaryRef;
                 break;
             default:
-                console.log("Scrolling to date in Itinerary:", sectionName);
                 if (dateRefs && dateRefs.current && dateRefs.current.scrollToDate) {
                     dateRefs.current.scrollToDate(sectionName);
                 }
