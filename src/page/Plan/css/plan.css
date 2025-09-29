@@ -1,3 +1,4 @@
+/* src/page/Plan/css/plan.css */
 @import "tailwindcss";
 
 @config "@/../tailwind.config.js";
@@ -65,9 +66,24 @@
   background: #888;
 }
 
-
 /* Firefox ตอนโชว์ */
 .scroll-auto-hide:hover,
 .scroll-auto-hide.is-scrolling {
   scrollbar-color: #bcbcbc transparent;
+}
+
+/* แก้ไข search dropdown styles */
+.search-container { position: relative; z-index: 150; }
+.search-dropdown { position: absolute; z-index: 160; animation: slideDown .18s ease-out; }
+.search-dropdown-item { transition: background-color .15s ease; }
+.search-dropdown-item:hover { background: rgb(239 246 255); }
+@keyframes slideDown { from { opacity:0; transform: translateY(-6px);} to {opacity:1; transform: none;} }
+
+/* เพิ่ม styles สำหรับ parent container */
+.date-container-expanded {
+    /* ไม่ใส่ z-index เพื่อไม่สร้าง stacking context */
+}
+
+.date-container-collapsed {
+    /* ไม่ใส่ z-index */
 }
