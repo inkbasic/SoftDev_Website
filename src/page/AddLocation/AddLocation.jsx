@@ -1,129 +1,61 @@
-// src/components/AddPlaceForm.jsx
+"use client";
+
 import { useEffect, useMemo, useState } from "react";
-import PropTypes from "prop-types";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-// ถ้าโปรเจกต์ไม่มี Textarea ของ shadcn/ui ให้เปลี่ยนเป็น Input ได้
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-/* ===================== Utilities ===================== */
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
-// แปลง "HH:mm" → "1970-01-01THH:mm:00+07:00" ตามสเปก API
-function hhmmToApiISO(hhmm) {
-    const [h, m] = (hhmm || "").split(":").map((v) => v.padStart(2, "0"));
-    if (!h || !m) return "";
-    return `1970-01-01T${h}:${m}:00+07:00`;
-}
+import {
+    InputField,
+    TextAreaField,
+    FormSection,
+    ReusableSelect,
+    hhmmToApiISO,
+    getToken,
+} from "@/page/AddLocation/component/FormPieces";
 
-// ดึง JWT จาก local/session storage
-function getToken() {
-    const fromLocal = localStorage.getItem("jwtToken");
-    if (fromLocal) return fromLocal;
-    const fromSession = sessionStorage.getItem("jwtToken");
-    return fromSession || "";
-}
+/* ===================== Utils ภายในไฟล์ ===================== */
+const toTitle = (s = "") => s.replace(/-/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
 
-const clamp = (n, min, max) => Math.max(min, Math.min(n, max));
 const isFiniteNum = (v) => Number.isFinite(Number(v));
+const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
 
-/* ===================== Reusable Inputs ===================== */
+/* ===================== Subcomponent: GroupBox ===================== */
+function GroupBox({ title, items, values, onChange }) {
+    const toggleOne = (val) => {
+        if (values.includes(val)) onChange(values.filter((v) => v !== val));
+        else onChange([...values, val]);
+    };
 
-function InputField({ label, id, placeholder, type = "text", value, onChange }) {
     return (
-        <div className="flex flex-col gap-2">
-            <Label htmlFor={id}>{label}</Label>
-            <Input
-                id={id}
-                name={id}
-                type={type}
-                placeholder={placeholder}
-                value={value ?? ""}
-                onChange={(e) => onChange(id, e.target.value)}
-            />
-        </div>
-    );
-}
+        <section className="w-full">
+            <header className="mb-2">
+                <h5 className="text-lg">{title}</h5>
+                <p className="text-sm text-muted-foreground">{values.length} selected</p>
+            </header>
 
-InputField.propTypes = {
-    label: PropTypes.string.isRequired,
-    id: PropTypes.string.isRequired,
-    placeholder: PropTypes.string,
-    type: PropTypes.string,
-    value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-    onChange: PropTypes.func.isRequired,
-};
-
-function TextAreaField({ label, id, placeholder, value, onChange }) {
-    return (
-        <div className="flex flex-col gap-2">
-            <Label htmlFor={id}>{label}</Label>
-            <Textarea
-                id={id}
-                name={id}
-                placeholder={placeholder}
-                value={value ?? ""}
-                onChange={(e) => onChange(id, e.target.value)}
-            />
-        </div>
-    );
-}
-
-TextAreaField.propTypes = {
-    label: PropTypes.string.isRequired,
-    id: PropTypes.string.isRequired,
-    placeholder: PropTypes.string,
-    value: PropTypes.string,
-    onChange: PropTypes.func.isRequired,
-};
-
-function FormSection({ title, description, children }) {
-    return (
-        <div className="flex flex-col w-full gap-6">
-            <div>
-                <h2 className="text-xl font-semibold">{title}</h2>
-                {description ? <p className="text-neutral-500">{description}</p> : null}
-            </div>
-            {children}
-        </div>
-    );
-}
-
-FormSection.propTypes = {
-    title: PropTypes.string.isRequired,
-    description: PropTypes.string,
-    children: PropTypes.node,
-};
-
-function ReusableSelect({ label, placeholder, options, value, onChange }) {
-    return (
-        <div className="flex flex-col gap-2">
-            <Label>{label}</Label>
-            <Select value={value} onValueChange={onChange}>
-                <SelectTrigger className="w-full">
-                    <SelectValue placeholder={placeholder} />
-                </SelectTrigger>
-                <SelectContent>
-                    {options.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                            {opt.label}
-                        </SelectItem>
+            <ScrollArea className="max-h-64">
+                <div className="grid grid-cols-1 gap-2 p-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {(items || []).map((v) => (
+                        <div key={v} className="flex items-center gap-3 rounded-md px-2 py-1.5">
+                            <Checkbox
+                                id={`${title}-${v}`}
+                                checked={values.includes(v)}
+                                onCheckedChange={() => toggleOne(v)}
+                            />
+                            <Label htmlFor={`${title}-${v}`} className="text-sm cursor-pointer">
+                                {toTitle(v)}
+                            </Label>
+                        </div>
                     ))}
-                </SelectContent>
-            </Select>
-        </div>
+                </div>
+            </ScrollArea>
+        </section>
     );
 }
-
-ReusableSelect.propTypes = {
-    label: PropTypes.string.isRequired,
-    placeholder: PropTypes.string,
-    options: PropTypes.arrayOf(PropTypes.shape({ value: PropTypes.string, label: PropTypes.string })).isRequired,
-    value: PropTypes.string.isRequired,
-    onChange: PropTypes.func.isRequired,
-};
 
 /* ===================== Main Component (JSX) ===================== */
 /**
@@ -138,38 +70,35 @@ export default function AddPlaceForm() {
     // ตั้งค่า base URL ผ่าน .env (เช่น VITE_API_BASE=https://api.example.com)
     const API_BASE = "";
 
-    // type ของข้อมูล
+    /* ---------- type + tags (comma-separated) ---------- */
     const [type, setType] = useState("accommodation"); // "accommodation" | "attraction" | "restaurant"
+    const [tags, setTags] = useState(""); // รวมค่าเลือกจาก GroupBox ทั้งหมดเป็นสตริงคั่นด้วยคอมมา
 
-    // สถานะ request/ผลลัพธ์
+    /* ---------- state ฟอร์มร่วม ---------- */
     const [loading, setLoading] = useState(false);
     const [responseData, setResponseData] = useState(null);
     const [errorMsg, setErrorMsg] = useState("");
 
-    // ฟิลด์ร่วม
     const [name, setName] = useState("");
     const [imageUrl, setImageUrl] = useState("");
     const [description, setDescription] = useState("");
-    const [tags, setTags] = useState(""); // comma-separated
+    const [locationStr, setLocationStr] = useState("");
 
-    // location: [lng, lat]
-    const [lat, setLat] = useState("");
-    const [lng, setLng] = useState("");
-
-    // accommodation
+    /* ---------- เฉพาะ accommodation ---------- */
     const [facilities, setFacilities] = useState("");
     const [starRating, setStarRating] = useState("0");
     const [redirectUrl, setRedirectUrl] = useState("");
 
-    // attraction
+    /* ---------- เฉพาะ attraction ---------- */
     const [entryFee, setEntryFee] = useState("0");
 
-    // restaurant
+    /* ---------- เฉพาะ restaurant ---------- */
     const [openingHours, setOpeningHours] = useState("09:00"); // HH:mm
     const [closingHours, setClosingHours] = useState("21:00");
     const [cuisineType, setCuisineType] = useState("");
     const [contactInfo, setContactInfo] = useState("");
 
+    /* ---------- Map label แสดงหัวข้อ ---------- */
     const typeLabelMap = useMemo(
         () => ({
             accommodation: "ที่พัก",
@@ -179,17 +108,80 @@ export default function AddPlaceForm() {
         []
     );
 
+    const [options, setOptions] = useState({
+        groupType: [],
+        preferences: [],
+        accommodation: [],
+        attraction: [],
+        restaurant: [],
+    });
+
+    /* ---------- options ---------- */
+    useEffect(() => {
+        const fetchTags = async () => {
+            try {
+                const response = await fetch("/tags", {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${getToken() || "jwtToken"}`,
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                console.log(data);
+
+                // เซ็ตข้อมูลเข้า state
+                setOptions({
+                    groupType: data.groupType || [],
+                    preferences: data.preferences || [],
+                    accommodation: data.accommodation || [],
+                    attraction: data.attractions || [],
+                    restaurant: data.food || [],
+                });
+            } catch (error) {
+                console.error("Failed to fetch tags:", error);
+            }
+        };
+
+        fetchTags();
+    }, []);
+
+    /* ---------- ตัวเลือก GroupBox ตาม type ---------- */
+    const groupTypeOpts = options.groupType ?? [];
+    const preferencesOpts = options.preferences ?? [];
+    const categoryOpts = options?.[type] ?? [];
+
+    /* ---------- selections ของ GroupBox ---------- */
+    const [groupSel, setGroupSel] = useState([]);
+    const [prefSel, setPrefSel] = useState([]);
+    const [catSel, setCatSel] = useState([]);
+
     // เคลียร์ผลลัพธ์เมื่อเปลี่ยน type
     useEffect(() => {
         setResponseData(null);
         setErrorMsg("");
     }, [type]);
 
-    // สร้าง payload ตาม type
-    function buildBody() {
-        const lon = Number(lng);
-        const latNum = Number(lat);
+    // เมื่อ type/ตัวเลือกของหมวดเปลี่ยน → รักษา selection เฉพาะที่ยัง valid
+    const catKey = useMemo(() => categoryOpts.join(","), [categoryOpts]);
+    useEffect(() => {
+        setCatSel((prev) => prev.filter((v) => categoryOpts.includes(v)));
+    }, [type, catKey]);
 
+    // รวมค่าจาก GroupBox → กลายเป็น comma-separated ใน tags
+    useEffect(() => {
+        const combined = [...groupSel, ...prefSel, ...catSel];
+        setTags(combined.join(","));
+    }, [groupSel, prefSel, catSel]);
+
+    /* ---------- Builder / Validate / Submit ---------- */
+    function buildBody() {
         const tagsArr = (tags || "")
             .split(",")
             .map((s) => s.trim())
@@ -204,7 +196,7 @@ export default function AddPlaceForm() {
             return {
                 name: name.trim(),
                 imageUrl: imageUrl.trim(),
-                location: [lon, latNum], // [lng, lat]
+                location: locationStr.trim(),
                 description: description.trim(),
                 tags: tagsArr,
                 facilities: facilitiesArr,
@@ -217,7 +209,7 @@ export default function AddPlaceForm() {
             return {
                 name: name.trim(),
                 imageUrl: imageUrl.trim(),
-                location: [lon, latNum],
+                location: locationStr.trim(),
                 description: description.trim(),
                 tags: tagsArr,
                 entryFee: Number(entryFee),
@@ -228,7 +220,7 @@ export default function AddPlaceForm() {
         return {
             name: name.trim(),
             imageUrl: imageUrl.trim(),
-            location: [lon, latNum],
+            location: locationStr.trim(),
             description: description.trim(),
             tags: tagsArr,
             openingHours: hhmmToApiISO(openingHours),
@@ -238,18 +230,10 @@ export default function AddPlaceForm() {
         };
     }
 
-    // ตรวจค่าก่อนยิง API
     function validate(body) {
         if (!body.name) return "กรุณากรอกชื่อ";
         if (!body.imageUrl) return "กรุณากรอกลิงก์รูปภาพ (imageUrl)";
-        if (!Array.isArray(body.location) || body.location.length !== 2) return "กรุณากรอก location เป็น [lng, lat]";
-
-        const [lon, latNum] = body.location;
-        if (!isFiniteNum(lon) || !isFiniteNum(latNum)) {
-            return "longitude/latitude ต้องเป็นตัวเลข";
-        }
-        if (lon < -180 || lon > 180) return "longitude ต้องอยู่ในช่วง −180 ถึง 180";
-        if (latNum < -90 || latNum > 90) return "latitude ต้องอยู่ในช่วง −90 ถึง 90";
+        if (!body.location) return "กรุณากรอก location (string)";
         if (!body.description) return "กรุณากรอกคำอธิบาย";
 
         if (type === "accommodation") {
@@ -264,7 +248,6 @@ export default function AddPlaceForm() {
 
         if (type === "restaurant") {
             if (!body.openingHours || !body.closingHours) return "กรุณากรอกเวลาเปิด/ปิด";
-            // ตรวจรูปแบบ HH:mm แบบคร่าว ๆ
             const asISO = (s) => hhmmToApiISO(s);
             const ok = (iso) =>
                 typeof iso === "string" && iso.startsWith("1970-01-01T") && /^\d{2}:\d{2}/.test(iso.slice(11));
@@ -276,7 +259,6 @@ export default function AddPlaceForm() {
         return null;
     }
 
-    // เรียก API
     async function handleSubmit(e) {
         e.preventDefault();
         setErrorMsg("");
@@ -314,12 +296,6 @@ export default function AddPlaceForm() {
             }));
 
             if (!res.ok) {
-                // โครงสร้าง error ที่ให้มา:
-                // {
-                //   "message": ["Give me longitude and latitude", "..."],
-                //   "error": "Bad Request",
-                //   "statusCode": 400
-                // }
                 let msg = "เกิดข้อผิดพลาด";
                 if (data && data.message) {
                     msg = Array.isArray(data.message) ? data.message.join(" • ") : String(data.message);
@@ -342,7 +318,6 @@ export default function AddPlaceForm() {
         }
     }
 
-    // Preview payload (memo เพื่อไม่คำนวณซ้ำโดยไม่จำเป็น)
     const previewPayload = useMemo(
         () => buildBody(),
         [
@@ -350,8 +325,7 @@ export default function AddPlaceForm() {
             imageUrl,
             description,
             tags,
-            lat,
-            lng,
+            locationStr,
             facilities,
             starRating,
             redirectUrl,
@@ -364,95 +338,8 @@ export default function AddPlaceForm() {
         ]
     );
 
-    // ฟิลด์เฉพาะตามประเภท
-    function renderTypeSpecificFields() {
-        if (type === "accommodation") {
-            return (
-                <>
-                    <InputField
-                        label="สิ่งอำนวยความสะดวก (คั่นด้วย ,)"
-                        id="facilities"
-                        placeholder="Pool, Gym, Wifi"
-                        value={facilities}
-                        onChange={(_, v) => setFacilities(v)}
-                    />
-                    <InputField
-                        label="ดาว (0–5)"
-                        id="starRating"
-                        type="number"
-                        placeholder="5"
-                        value={starRating}
-                        onChange={(_, v) => {
-                            const n = clamp(Number(v), 0, 5);
-                            setStarRating(String(Number.isNaN(n) ? 0 : n));
-                        }}
-                    />
-                    <InputField
-                        label="ลิงก์ Redirect"
-                        id="redirectUrl"
-                        placeholder="https://booking.example.com"
-                        value={redirectUrl}
-                        onChange={(_, v) => setRedirectUrl(v)}
-                    />
-                </>
-            );
-        }
-
-        if (type === "attraction") {
-            return (
-                <>
-                    <InputField
-                        label="ค่าเข้าชม (ตัวเลข)"
-                        id="entryFee"
-                        type="number"
-                        placeholder="200"
-                        value={entryFee}
-                        onChange={(_, v) => {
-                            const n = Math.max(0, Number(v));
-                            setEntryFee(String(Number.isNaN(n) ? 0 : n));
-                        }}
-                    />
-                </>
-            );
-        }
-
-        // restaurant
-        return (
-            <>
-                <InputField
-                    label="เวลาเปิด (HH:mm)"
-                    id="openingHours"
-                    placeholder="09:00"
-                    value={openingHours}
-                    onChange={(_, v) => setOpeningHours(v)}
-                />
-                <InputField
-                    label="เวลาปิด (HH:mm)"
-                    id="closingHours"
-                    placeholder="21:00"
-                    value={closingHours}
-                    onChange={(_, v) => setClosingHours(v)}
-                />
-                <InputField
-                    label="ประเภทอาหาร"
-                    id="cuisineType"
-                    placeholder="Thai, Noodles"
-                    value={cuisineType}
-                    onChange={(_, v) => setCuisineType(v)}
-                />
-                <InputField
-                    label="ข้อมูลติดต่อ"
-                    id="contactInfo"
-                    placeholder="091-234-5678"
-                    value={contactInfo}
-                    onChange={(_, v) => setContactInfo(v)}
-                />
-            </>
-        );
-    }
-
     return (
-        <div className="flex flex-col items-center justify-center w-full gap-12 px-6 py-12 sm:px-12">
+        <div className="flex flex-col items-center justify-center w-full gap-12 px-6 py-20 sm:px-12">
             <h5 className="w-full max-w-5xl text-2xl font-semibold">เพิ่มข้อมูลสถานที่</h5>
 
             {/* เลือกประเภทข้อมูล */}
@@ -470,11 +357,11 @@ export default function AddPlaceForm() {
                 />
             </div>
 
-            {/* ฟอร์ม */}
+            {/* ฟอร์มหลัก */}
             <form onSubmit={handleSubmit} className="flex flex-col w-full max-w-5xl gap-12">
                 <FormSection
                     title={`กรอกข้อมูลสำหรับ “${typeLabelMap[type]}”`}
-                    description="* จำเป็นต้องกรอก name, imageUrl, location (lng/lat), description"
+                    description="* จำเป็นต้องกรอก name, imageUrl, location (string), description"
                 >
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         {/* Common fields */}
@@ -492,24 +379,13 @@ export default function AddPlaceForm() {
                             value={imageUrl}
                             onChange={(_, v) => setImageUrl(v)}
                         />
-                        {/* Location */}
                         <InputField
-                            label="Longitude (−180 ถึง 180)"
-                            id="longitude"
-                            type="number"
-                            placeholder="100.5018"
-                            value={lng}
-                            onChange={(_, v) => setLng(v)}
+                            label="Location (string)"
+                            id="location"
+                            placeholder="เช่น 'Bangkok, Thailand' หรือ '100.5018,13.7563'"
+                            value={locationStr}
+                            onChange={(_, v) => setLocationStr(v)}
                         />
-                        <InputField
-                            label="Latitude (−90 ถึง 90)"
-                            id="latitude"
-                            type="number"
-                            placeholder="13.7563"
-                            value={lat}
-                            onChange={(_, v) => setLat(v)}
-                        />
-                        {/* Description & Tags */}
                         <TextAreaField
                             label="คำอธิบาย"
                             id="description"
@@ -517,27 +393,117 @@ export default function AddPlaceForm() {
                             value={description}
                             onChange={(_, v) => setDescription(v)}
                         />
-                        <InputField
-                            label="แท็ก (คั่นด้วย ,)"
-                            id="tags"
-                            placeholder="beach, family, halal"
-                            value={tags}
-                            onChange={(_, v) => setTags(v)}
-                        />
 
-                        {/* Type-specific */}
-                        {renderTypeSpecificFields()}
+                        {/* ---------- Type-specific ---------- */}
+                        {type === "accommodation" && (
+                            <>
+                                <InputField
+                                    label="สิ่งอำนวยความสะดวก (คั่นด้วย ,)"
+                                    id="facilities"
+                                    placeholder="Pool, Gym, Wifi"
+                                    value={facilities}
+                                    onChange={(_, v) => setFacilities(v)}
+                                />
+                                <InputField
+                                    label="ดาว (0–5)"
+                                    id="starRating"
+                                    type="number"
+                                    placeholder="5"
+                                    value={starRating}
+                                    onChange={(_, v) => {
+                                        const n = clamp(Number(v), 0, 5);
+                                        setStarRating(String(Number.isNaN(n) ? 0 : n));
+                                    }}
+                                />
+                                <InputField
+                                    label="ลิงก์ Redirect"
+                                    id="redirectUrl"
+                                    placeholder="https://booking.example.com"
+                                    value={redirectUrl}
+                                    onChange={(_, v) => setRedirectUrl(v)}
+                                />
+                            </>
+                        )}
+
+                        {type === "attraction" && (
+                            <>
+                                <InputField
+                                    label="ค่าเข้าชม (ตัวเลข)"
+                                    id="entryFee"
+                                    type="number"
+                                    placeholder="200"
+                                    value={entryFee}
+                                    onChange={(_, v) => {
+                                        const n = Math.max(0, Number(v));
+                                        setEntryFee(String(Number.isNaN(n) ? 0 : n));
+                                    }}
+                                />
+                            </>
+                        )}
+
+                        {type === "restaurant" && (
+                            <>
+                                <InputField
+                                    label="เวลาเปิด (HH:mm)"
+                                    id="openingHours"
+                                    placeholder="09:00"
+                                    value={openingHours}
+                                    onChange={(_, v) => setOpeningHours(v)}
+                                />
+                                <InputField
+                                    label="เวลาปิด (HH:mm)"
+                                    id="closingHours"
+                                    placeholder="21:00"
+                                    value={closingHours}
+                                    onChange={(_, v) => setClosingHours(v)}
+                                />
+                                <InputField
+                                    label="ประเภทอาหาร"
+                                    id="cuisineType"
+                                    placeholder="Thai, Noodles"
+                                    value={cuisineType}
+                                    onChange={(_, v) => setCuisineType(v)}
+                                />
+                                <InputField
+                                    label="ข้อมูลติดต่อ"
+                                    id="contactInfo"
+                                    placeholder="091-234-5678"
+                                    value={contactInfo}
+                                    onChange={(_, v) => setContactInfo(v)}
+                                />
+                            </>
+                        )}
                     </div>
                 </FormSection>
 
-                {/* Preview Payload */}
+                {/* ---------- กล่องเลือกแท็ก (GroupBox) ---------- */}
+                <FormSection
+                    title="แท็ก (เลือกหลายรายการ)"
+                    description="เลือกรูปแบบกลุ่ม, ความชอบ และหมวดตามประเภท เพื่อช่วยให้ค้นหาได้ดีขึ้น"
+                >
+                    <div className="flex flex-col gap-8">
+                        <GroupBox title="Group Type" items={groupTypeOpts} values={groupSel} onChange={setGroupSel} />
+                        <GroupBox title="Preferences" items={preferencesOpts} values={prefSel} onChange={setPrefSel} />
+                        <GroupBox title={toTitle(type)} items={categoryOpts} values={catSel} onChange={setCatSel} />
+                    </div>
+
+                    {/* เก็บค่า tags (comma-separated) เพื่อส่งไปกับฟอร์ม */}
+                    <input type="hidden" name="tags" value={tags} />
+
+                    {/* แสดงตัวอย่างค่า tags ที่จะส่ง */}
+                    <div className="mt-16 text-sm text-muted-foreground">
+                        <b>tags:</b> {tags || "(none)"}
+                    </div>
+                </FormSection>
+
+                {/* ---------- Preview Payload ---------- */}
                 <FormSection title="ตัวอย่างข้อมูลที่จะส่ง (Preview)" description="ตรวจสอบก่อนกดบันทึก">
                     <pre className="max-h-[320px] overflow-auto rounded-lg bg-neutral-900 p-4 text-sm text-neutral-100">
                         {JSON.stringify(previewPayload, null, 2)}
                     </pre>
                 </FormSection>
 
-                {/* Actions */}
+                {/* ---------- Actions ---------- */}
                 <div className="flex justify-end gap-3">
                     <Button
                         type="button"
@@ -547,8 +513,7 @@ export default function AddPlaceForm() {
                             setImageUrl("");
                             setDescription("");
                             setTags("");
-                            setLat("");
-                            setLng("");
+                            setLocationStr("");
                             setFacilities("");
                             setStarRating("0");
                             setRedirectUrl("");
@@ -557,6 +522,9 @@ export default function AddPlaceForm() {
                             setClosingHours("21:00");
                             setCuisineType("");
                             setContactInfo("");
+                            setGroupSel([]);
+                            setPrefSel([]);
+                            setCatSel([]);
                             setResponseData(null);
                             setErrorMsg("");
                         }}
@@ -568,13 +536,6 @@ export default function AddPlaceForm() {
                         {loading ? "กำลังบันทึก..." : "บันทึก"}
                     </Button>
                 </div>
-
-                {/* Result / Error */}
-                {/* {errorMsg ? (
-                    <div className="p-3 text-sm text-red-700 border border-red-300 rounded-md bg-red-50">
-                        ⚠️ {errorMsg}
-                    </div>
-                ) : null} */}
 
                 {responseData ? (
                     <div className="w-full">

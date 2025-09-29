@@ -54,9 +54,6 @@ export default function Login() {
             localStorage.setItem("jwtToken", data.token);
             localStorage.setItem("loginMessage", data.message || "Login success");
 
-            sessionStorage.setItem("jwtToken", data.token);
-            sessionStorage.setItem("loginMessage", data.message || "Login success");
-
             setSuccess("เข้าสู่ระบบสำเร็จ 🎉");
             setIsLoggedIn(true);
 

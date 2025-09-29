@@ -11,14 +11,20 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 export function ChartAreaInteractive({ title, description, chartData, chartConfig }) {
-    const [timeRange, setTimeRange] = React.useState("90d");
+    const [timeRange, setTimeRange] = React.useState("15d");
 
     // filter chartData ตาม timeRange
     const filteredData = React.useMemo(() => {
         const referenceDate = new Date("2024-06-30");
-        let daysToSubtract = 90;
-        if (timeRange === "30d") daysToSubtract = 30;
-        else if (timeRange === "7d") daysToSubtract = 7;
+        let daysToSubtract = 15;
+
+        if (chartData.length > 15) {
+            if (timeRange === "15d") daysToSubtract = 15;
+            else if (timeRange === "7d") daysToSubtract = 7;
+            else if (timeRange === "3d") daysToSubtract = 3;
+        } else {
+            daysToSubtract = chartData.length;
+        }
 
         const startDate = new Date(referenceDate);
         startDate.setDate(startDate.getDate() - daysToSubtract);
@@ -40,16 +46,22 @@ export function ChartAreaInteractive({ title, description, chartData, chartConfi
                     >
                         <SelectValue placeholder="Last 3 months" />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl">
-                        <SelectItem value="90d" className="rounded-lg">
-                            3 เดือนที่ผ่านมา
-                        </SelectItem>
-                        <SelectItem value="30d" className="rounded-lg">
-                            30 วันที่ผ่านมา
-                        </SelectItem>
-                        <SelectItem value="7d" className="rounded-lg">
-                            7 วันที่ผ่านมา
-                        </SelectItem>
+                    <SelectContent className="border-gray-200 border-1 rounded-xl">
+                        {chartData.length > 15 ? (
+                            <SelectItem value="15d" className="rounded-lg">
+                                15 วันที่ผ่านมา
+                            </SelectItem>
+                        ) : null}
+                        {chartData.length > 7 ? (
+                            <SelectItem value="7d" className="rounded-lg">
+                                7 วันที่ผ่านมา
+                            </SelectItem>
+                        ) : null}
+                        {chartData.length > 3 ? (
+                            <SelectItem value="3d" className="rounded-lg">
+                                3 วันที่ผ่านมา
+                            </SelectItem>
+                        ) : null}
                     </SelectContent>
                 </Select>
             </CardHeader>
