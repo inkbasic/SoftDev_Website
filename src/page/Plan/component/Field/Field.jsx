@@ -5,11 +5,14 @@ import Itetary from "./Itetary";
 import { CancelButton, SaveButton, MeatButton } from "./Button";
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useAutoHideScrollbar } from "@/lib/useAutoHideScrollbar";
+import { useNavigate } from "react-router-dom";
 
 const Field = forwardRef(({ planData, onDataChange }, ref) => {
     const [isEditing, setIsEditing] = useState(true);
     const [showMenu, setShowMenu] = useState(false);
     const [data, setData] = useState(planData || {});
+
+    const navigate = useNavigate();
 
     useEffect(() => {
         setData(planData);
@@ -123,7 +126,7 @@ const Field = forwardRef(({ planData, onDataChange }, ref) => {
                                     <div ref={menuRef} className="absolute right-0 top-full mt-1 w-30 bg-white border border-neutral-200 rounded-md shadow-lg z-10 overflow-hidden z-50">
                                         <p className="px-2 py-1 cursor-pointer hover:bg-neutral-200">แชร์</p>
                                         <p onClick={handleEdit} className="px-2 py-1 cursor-pointer hover:bg-neutral-200">แก้ไข</p>
-                                        <p className="px-2 py-1 cursor-pointer hover:bg-neutral-200">ลบ</p>
+                                        <p onClick={() => navigate("/")} className="px-2 py-1 cursor-pointer hover:bg-neutral-200">ลบ</p>
                                     </div>
                                 )}
                             </MeatButton>
