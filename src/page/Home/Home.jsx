@@ -329,7 +329,10 @@ export default function Home() {
                                 <span className="text-red-500 text-sm px-2">{errors.activities}</span>
                             )}
                         </div>
+                    </div>
 
+                    {/* Budget Input */}
+                    <div className="flex gap-3">
                         {/* Travel Dropdown */}
                         <div className="flex flex-col gap-1 w-full">
                             <DropDownInput
@@ -343,11 +346,7 @@ export default function Home() {
                                 <span className="text-red-500 text-sm px-2">{errors.travel}</span>
                             )}
                         </div>
-                    </div>
-
-                    {/* Budget Input */}
-                    <div className="flex flex-col gap-1">
-                        <div className={`relative flex px-5 justify-between self-center gap-3 w-1/2 py-5 bg-white border rounded-xl ${errors.budget ? 'border-red-300' : 'border-gray-300'
+                        <div className={`relative flex px-5 justify-between self-center gap-3 w-full py-5 bg-white border rounded-xl ${errors.budget ? 'border-red-300' : 'border-gray-300'
                             }`}>
                             <p className="font-bold whitespace-nowrap">ค่าใช้จ่าย</p>
                             <div className="flex items-center gap-3">
