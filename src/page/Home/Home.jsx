@@ -6,7 +6,8 @@ import { DateRange } from "react-date-range";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 import { CalendarDays, PlusIcon, MinusIcon } from "lucide-react";
-import DropDownInput from "./component/DropDownInput";
+import DropDownInput from "./component/DropDownInput.jsx";
+import DropDownMulti from "./component/DropDownMulti.jsx";
 import { ACTIVITY, TRAVEL } from "@/const/userPick";
 
 export default function Home() {
@@ -156,7 +157,7 @@ export default function Home() {
     // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         // Clear previous errors
         setErrors({});
 
@@ -192,17 +193,17 @@ export default function Home() {
             await new Promise(resolve => setTimeout(resolve, 2000));
 
             // Navigate to plan page with data
-            navigate("/plan", { 
-                state: { 
+            navigate("/plan", {
+                state: {
                     planData: payload,
-                    isNew: true 
-                } 
+                    isNew: true
+                }
             });
 
         } catch (error) {
             console.error("Error creating plan:", error);
-            setErrors({ 
-                general: "เกิดข้อผิดพลาดในการสร้างแผนการท่องเที่ยว กรุณาลองใหม่อีกครั้ง" 
+            setErrors({
+                general: "เกิดข้อผิดพลาดในการสร้างแผนการท่องเที่ยว กรุณาลองใหม่อีกครั้ง"
             });
         } finally {
             setIsLoading(false);
@@ -228,13 +229,12 @@ export default function Home() {
                 <form onSubmit={handleSubmit} className="flex flex-col gap-5 w-full">
                     {/* Destination Input */}
                     <div className="flex flex-col gap-1">
-                        <div className={`flex px-5 items-center gap-3 w-full bg-white border rounded-xl ${
-                            errors.destination ? 'border-red-300' : 'border-gray-300'
-                        }`}>
+                        <div className={`flex px-5 items-center gap-3 w-full bg-white border rounded-xl ${errors.destination ? 'border-red-300' : 'border-gray-300'
+                            }`}>
                             <p className="font-bold whitespace-nowrap">ไปที่ไหน</p>
-                            <input 
-                                type="text" 
-                                placeholder="พัทยา เขาใหญ่ กรุงเทพ หัวหิน" 
+                            <input
+                                type="text"
+                                placeholder="พัทยา เขาใหญ่ กรุงเทพ หัวหิน"
                                 className="w-full h-full py-5 focus:outline-none"
                                 value={destination}
                                 onChange={(e) => setDestination(e.target.value)}
@@ -249,9 +249,8 @@ export default function Home() {
                         {/* Date Range Input */}
                         <div className="flex flex-col gap-1 w-full">
                             <div
-                                className={`relative flex px-5 items-center gap-3 w-full bg-white border rounded-xl cursor-pointer ${
-                                    errors.startDate || errors.endDate || errors.dateRange ? 'border-red-300' : 'border-gray-300'
-                                }`}
+                                className={`relative flex px-5 items-center gap-3 w-full bg-white border rounded-xl cursor-pointer ${errors.startDate || errors.endDate || errors.dateRange ? 'border-red-300' : 'border-gray-300'
+                                    }`}
                                 onClick={() => setShowPicker(true)}
                                 ref={pickerRef}
                             >
@@ -294,9 +293,8 @@ export default function Home() {
 
                         {/* People Input */}
                         <div className="flex flex-col gap-1 w-full">
-                            <div className={`relative flex px-5 justify-between items-center gap-3 w-full py-5 bg-white border rounded-xl ${
-                                errors.people ? 'border-red-300' : 'border-gray-300'
-                            }`}>
+                            <div className={`relative flex px-5 justify-between items-center gap-3 w-full py-5 bg-white border rounded-xl ${errors.people ? 'border-red-300' : 'border-gray-300'
+                                }`}>
                                 <p className="font-bold whitespace-nowrap">จำนวนคน</p>
                                 <div className="flex items-center gap-3">
                                     <MinusIcon className="w-6 h-6 cursor-pointer" onClick={decPeople} />
@@ -319,14 +317,13 @@ export default function Home() {
                     </div>
 
                     <div className="flex gap-3">
-                        {/* Activities Dropdown */}
+                        {/* Activities Dropdown (multi) */}
                         <div className="flex flex-col gap-1 w-full">
-                            <DropDownInput 
-                                placeholder="กิจกรรมที่สนใจ" 
-                                value={selectedActivities} 
-                                onChange={setSelectedActivities} 
+                            <DropDownMulti
+                                placeholder="กิจกรรมที่สนใจ"
+                                value={selectedActivities || []}
+                                onChange={setSelectedActivities}
                                 options={ACTIVITY}
-                                error={errors.activities}
                             />
                             {errors.activities && (
                                 <span className="text-red-500 text-sm px-2">{errors.activities}</span>
@@ -335,10 +332,10 @@ export default function Home() {
 
                         {/* Travel Dropdown */}
                         <div className="flex flex-col gap-1 w-full">
-                            <DropDownInput 
-                                placeholder="วิธีการเดินทาง" 
-                                value={selectedTravel} 
-                                onChange={setSelectedTravel} 
+                            <DropDownInput
+                                placeholder="วิธีการเดินทาง"
+                                value={selectedTravel}
+                                onChange={setSelectedTravel}
                                 options={TRAVEL}
                                 error={errors.travel}
                             />
@@ -350,9 +347,8 @@ export default function Home() {
 
                     {/* Budget Input */}
                     <div className="flex flex-col gap-1">
-                        <div className={`relative flex px-5 justify-between self-center gap-3 w-1/2 py-5 bg-white border rounded-xl ${
-                            errors.budget ? 'border-red-300' : 'border-gray-300'
-                        }`}>
+                        <div className={`relative flex px-5 justify-between self-center gap-3 w-1/2 py-5 bg-white border rounded-xl ${errors.budget ? 'border-red-300' : 'border-gray-300'
+                            }`}>
                             <p className="font-bold whitespace-nowrap">ค่าใช้จ่าย</p>
                             <div className="flex items-center gap-3">
                                 <input
@@ -371,8 +367,8 @@ export default function Home() {
                     </div>
 
                     <div className="flex justify-center">
-                        <button 
-                            className={`submitBtn ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
+                        <button
+                            className={`submitBtn ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                             type="submit"
                             disabled={isLoading}
                         >
