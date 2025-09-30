@@ -18,30 +18,32 @@ import { ChartAreaInteractive } from "@/components/Chart";
 import { generateChartConfig } from "@/components/generateChartConfig";
 import { generatePastData } from "./components/generatePastData";
 import { chartTabs } from "./components/chartTabs";
+import { PlaceTable } from "./components/PlaceTable";
 
 const jsonData = {
-    booking: 0,
-    click: 0,
-    contract: 0,
-    ctr: 0,
+    booking: 200,
+    click: 200,
+    contract: 200,
+    ctr: 200,
     date: "2025-09-30",
-    view: 0,
+    view: 500,
 };
 
-const mockData = generatePastData(jsonData, 20);
+// เดิม: const mockData = generatePastData(jsonData, 20);
+const mockData = generatePastData([jsonData], 20); // ✅ ห่อให้เป็น array
 
 // ===== Utilities =====
 const nfTH = new Intl.NumberFormat("th-TH");
 const dtFmt = new Intl.DateTimeFormat("th-TH", { day: "2-digit", month: "short", year: "numeric" });
 // const chartConfig = generateChartConfig(chartData);
 
-const chartConfig = [
-    { key: "click", label: "Click", color: "var(--chart-1)" },
-    { key: "view", label: "View", color: "var(--chart-2)" },
-    { key: "contract", label: "Contract", color: "var(--chart-3)" },
-    { key: "booking", label: "Booking", color: "var(--chart-4)" },
-    { key: "ctr", label: "CTR", color: "var(--chart-5)" },
-];
+const chartConfig = {
+    click: { label: "Click", color: "var(--chart-1)" },
+    view: { label: "View", color: "var(--chart-2)" },
+    contract: { label: "Contract", color: "var(--chart-3)" },
+    booking: { label: "Booking", color: "var(--chart-4)" },
+    ctr: { label: "CTR", color: "var(--chart-5)" },
+};
 
 /** ดึง JWT จาก storage (ถ้าไม่มีให้ fallback เป็นสตริงเฉย ๆ) */
 function getAuthToken() {
@@ -140,7 +142,6 @@ export default function Dashboard() {
 
     useEffect(() => {
         console.log("chartData changed:", chartData);
-        console.table(chartData);
         setChartVersion((v) => v + 1); // บังคับ remount chart เมื่อข้อมูลเปลี่ยน
     }, [chartData]);
 
@@ -388,33 +389,41 @@ export default function Dashboard() {
             {/* Chart */}
             <div className="flex flex-col w-full max-w-5xl gap-6 pt-20">
                 <ChartAreaInteractive
+                    key={chartVersion} // ✅ ให้ remount เมื่อ setChartVersion
                     title="แดชบอร์ดโฆษณา"
                     description="สถิติการแสดงผลและการคลิก"
-                    chartData={mockData}
+                    chartData={chartData.length ? chartData : mockData} // ✅ ใช้ของจริงก่อน ตกกลับ mock ถ้าว่าง
                     chartConfig={chartConfig}
                 />
             </div>
 
-            {/* Table ad */}
+            {/* Table place */}
             <div className="flex flex-col w-full max-w-5xl gap-6 pt-20">
                 <div className="flex justify-end w-full gap-3">
                     <Button variant="outline" onClick={handleAddLocation}>
                         <Plus />
                         เพิ่มสถานที่
                     </Button>
-                    <Button variant="outline" onClick={handleCreateAd}>
-                        <Plus />
-                        ลงโฆษณา
-                    </Button>
                 </div>
+                <PlaceTable
+                    data={places}
+                    onAddAd={(row) => {
+                        /* เงียบไว้ตามคำสั่ง */
+                    }}
+                    onDelete={(row) => {
+                        /* เงียบไว้ตามคำสั่ง */
+                    }}
+                />
+            </div>
 
+            {/* Table ad */}
+            <div className="flex flex-col w-full max-w-5xl gap-6 pt-20">
                 <AdTable
                     data={adTableData}
                     onDelete={(row) => {
                         /* เงียบไว้ตามคำสั่ง */
                     }}
                 />
-                <PaginationMock />
             </div>
         </div>
     );

@@ -6,7 +6,7 @@ import PropTypes from "prop-types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2 } from "lucide-react";
+import { BanknoteArrowDown, Trash2 } from "lucide-react";
 
 /**
  * PlaceTable component
@@ -20,10 +20,10 @@ export function PlaceTable({ data = [], onAddAd, onDelete }) {
         <Table>
             <TableHeader>
                 <TableRow>
-                    <TableHead className="w-[320px]">ชื่อสถานที่</TableHead>
+                    <TableHead className="w-[300px]">สถานที่</TableHead>
                     <TableHead>แท็ก</TableHead>
                     <TableHead>ประเภท</TableHead>
-                    <TableHead className="w-[220px] text-right">ฟังก์ชัน</TableHead>
+                    <TableHead></TableHead>
                 </TableRow>
             </TableHeader>
 
@@ -40,7 +40,7 @@ export function PlaceTable({ data = [], onAddAd, onDelete }) {
                                     {tags.length > 0 ? (
                                         <div className="flex flex-wrap gap-1">
                                             {tags.map((t, i) => (
-                                                <Badge key={i} variant="secondary" className="rounded-full">
+                                                <Badge key={i} variant="secondary" className="bg-gray-100 rounded-full">
                                                     {t}
                                                 </Badge>
                                             ))}
@@ -52,27 +52,23 @@ export function PlaceTable({ data = [], onAddAd, onDelete }) {
 
                                 <TableCell>{row.type || "-"}</TableCell>
 
-                                <TableCell className="text-right">
-                                    <div className="flex justify-end gap-2">
-                                        <Button
-                                            size="sm"
-                                            onClick={() => onAddAd?.(row)}
-                                            title="เพิ่มโฆษณาให้สถานที่นี้"
-                                        >
-                                            <Plus className="w-4 h-4 mr-2" />
-                                            เพิ่มโฆษณา
-                                        </Button>
-
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="size-8"
-                                            onClick={() => onDelete?.(row)}
-                                            title="ลบรายการนี้"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </Button>
-                                    </div>
+                                <TableCell className="flex justify-end gap-4">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="size-8"
+                                        onClick={() => onAddAd?.(row)}
+                                    >
+                                        <BanknoteArrowDown className="w-4 h-4" />
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="size-8"
+                                        onClick={() => onDelete?.(row)}
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </Button>
                                 </TableCell>
                             </TableRow>
                         );

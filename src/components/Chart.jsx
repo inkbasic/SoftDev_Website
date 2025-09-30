@@ -14,22 +14,32 @@ export function ChartAreaInteractive({ title, description, chartData, chartConfi
     const [timeRange, setTimeRange] = React.useState("15d");
 
     // filter chartData ตาม timeRange
+    // const filteredData = React.useMemo(() => {
+    //     const referenceDate = new Date("2024-06-30");
+    //     let daysToSubtract = 15;
+
+    //     if (chartData.length > 15) {
+    //         if (timeRange === "15d") daysToSubtract = 15;
+    //         else if (timeRange === "7d") daysToSubtract = 7;
+    //         else if (timeRange === "3d") daysToSubtract = 3;
+    //     } else {
+    //         daysToSubtract = chartData.length;
+    //     }
+
+    //     const startDate = new Date(referenceDate);
+    //     startDate.setDate(startDate.getDate() - daysToSubtract);
+
+    //     return chartData.filter((item) => new Date(item.date) >= startDate);
+    // }, [chartData, timeRange]);
+
     const filteredData = React.useMemo(() => {
-        const referenceDate = new Date("2024-06-30");
-        let daysToSubtract = 15;
-
-        if (chartData.length > 15) {
-            if (timeRange === "15d") daysToSubtract = 15;
-            else if (timeRange === "7d") daysToSubtract = 7;
-            else if (timeRange === "3d") daysToSubtract = 3;
-        } else {
-            daysToSubtract = chartData.length;
-        }
-
-        const startDate = new Date(referenceDate);
-        startDate.setDate(startDate.getDate() - daysToSubtract);
-
-        return chartData.filter((item) => new Date(item.date) >= startDate);
+        if (!chartData.length) return [];
+        const lastDate = new Date(chartData[chartData.length - 1].date);
+        let days = timeRange === "7d" ? 7 : timeRange === "3d" ? 3 : 15;
+        days = Math.min(days, chartData.length);
+        const start = new Date(lastDate);
+        start.setDate(lastDate.getDate() - (days - 1));
+        return chartData.filter((d) => new Date(d.date) >= start);
     }, [chartData, timeRange]);
 
     return (
@@ -70,10 +80,16 @@ export function ChartAreaInteractive({ title, description, chartData, chartConfi
                 <ChartContainer config={chartConfig} className="aspect-auto h-[250px] w-full">
                     <AreaChart data={filteredData}>
                         <defs>
-                            {Object.keys(chartConfig).map((key) => (
+                            {/* {Object.keys(chartConfig).map((key) => (
                                 <linearGradient key={key} id={`fill${key}`} x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="5%" stopColor={chartConfig[key].color} stopOpacity={0.8} />
                                     <stop offset="95%" stopColor={chartConfig[key].color} stopOpacity={0.1} />
+                                </linearGradient>
+                            ))} */}
+                            {Object.entries(chartConfig).map(([key, cfg]) => (
+                                <linearGradient key={key} id={`fill-${key}`} x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor={cfg.color} stopOpacity={0.8} />
+                                    <stop offset="95%" stopColor={cfg.color} stopOpacity={0.1} />
                                 </linearGradient>
                             ))}
                         </defs>
@@ -104,13 +120,23 @@ export function ChartAreaInteractive({ title, description, chartData, chartConfi
                                 />
                             }
                         />
-                        {Object.keys(chartConfig).map((key) => (
+                        {/* {Object.keys(chartConfig).map((key) => (
                             <Area
                                 key={key}
                                 dataKey={key}
                                 type="natural"
                                 fill={`url(#fill${key})`}
                                 stroke={chartConfig[key].color}
+                                stackId="a"
+                            />
+                        ))} */}
+                        {Object.entries(chartConfig).map(([key, cfg]) => (
+                            <Area
+                                key={key}
+                                dataKey={key}
+                                type="natural"
+                                fill={`url(#fill-${key})`}
+                                stroke={cfg.color}
                                 stackId="a"
                             />
                         ))}

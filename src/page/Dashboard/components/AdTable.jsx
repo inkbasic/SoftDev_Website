@@ -33,7 +33,7 @@ export function AdTable({ data = [], onDelete }) {
                             <TableCell>{row.adStatus}</TableCell>
                             <TableCell>{row.dateRange}</TableCell>
                             <TableCell>{row.budget}</TableCell>
-                            <TableCell>
+                            <TableCell className="flex justify-end">
                                 <Button variant="ghost" size="icon" className="size-8" onClick={() => onDelete?.(row)}>
                                     <Trash2 />
                                 </Button>
