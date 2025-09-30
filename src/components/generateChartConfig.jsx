@@ -12,7 +12,7 @@ export function generateChartConfig(chartData) {
     const seriesKeys = uniqueKeys.filter((key) => key !== "date").slice(0, 5); // สูงสุด 5 ค่า
 
     // สร้าง config
-    const chartConfig = { visitors: { label: "Visitors" } }; // สามารถปรับได้
+    const chartConfig = { visitors: { label: "Parameter" } }; // สามารถปรับได้
 
     seriesKeys.forEach((key, index) => {
         chartConfig[key] = {

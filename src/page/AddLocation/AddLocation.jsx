@@ -15,7 +15,7 @@ import {
     ReusableSelect,
     hhmmToApiISO,
     getToken,
-} from "@/page/AddLocation/component/FormPieces";
+} from "@/page/AddLocation/components/FormPieces";
 
 /* ===================== Utils ภายในไฟล์ ===================== */
 const toTitle = (s = "") => s.replace(/-/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
@@ -497,11 +497,11 @@ export default function AddPlaceForm() {
                 </FormSection>
 
                 {/* ---------- Preview Payload ---------- */}
-                <FormSection title="ตัวอย่างข้อมูลที่จะส่ง (Preview)" description="ตรวจสอบก่อนกดบันทึก">
+                {/* <FormSection title="ตัวอย่างข้อมูลที่จะส่ง (Preview)" description="ตรวจสอบก่อนกดบันทึก">
                     <pre className="max-h-[320px] overflow-auto rounded-lg bg-neutral-900 p-4 text-sm text-neutral-100">
                         {JSON.stringify(previewPayload, null, 2)}
                     </pre>
-                </FormSection>
+                </FormSection> */}
 
                 {/* ---------- Actions ---------- */}
                 <div className="flex justify-end gap-3">
@@ -537,14 +537,14 @@ export default function AddPlaceForm() {
                     </Button>
                 </div>
 
-                {responseData ? (
+                {/* {responseData ? (
                     <div className="w-full">
                         <h3 className="mb-2 text-lg font-semibold">ผลลัพธ์จาก API</h3>
                         <div className="p-4 overflow-auto text-sm border rounded-lg border-neutral-800 bg-neutral-900 text-neutral-100">
                             <pre>{JSON.stringify(responseData, null, 2)}</pre>
                         </div>
                     </div>
-                ) : null}
+                ) : null} */}
             </form>
         </div>
     );
