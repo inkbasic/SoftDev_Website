@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import PropTypes from "prop-types";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -13,167 +14,344 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
+import { BanknoteArrowDown } from "lucide-react";
 
-const PAYMENT_ENDPOINT = "/ads/transaction";
+// ---------- ค่าคงที่และยูทิล ----------
+const API_BASE = import.meta.env.VITE_API_BASE_URL || ""; // เช่น https://api.example.com
+const API_ENDPOINT = "/ad"; // ตามสเปกที่ให้มา
+const MONGO_ID_RX = /^[a-f0-9]{24}$/i;
 
-// ✅ Component หลัก
-export default function DialogPayment() {
-    // จัดการ state
-    const [method, setMethod] = useState("card"); // ค่า default = PromptPay
+// ฟังก์ชันฟอร์แมตวันหมดอายุอ่านง่าย
+const formatISO = (iso) => {
+    try {
+        return new Intl.DateTimeFormat(undefined, {
+            year: "numeric",
+            month: "short",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+        }).format(new Date(iso));
+    } catch {
+        return iso || "-";
+    }
+};
+
+// ---------- คอมโพเนนต์หลัก ----------
+/**
+ * DialogPayment
+ * - รับ prop เดียวคือ placeId
+ * - เปิด Dialog เพื่อให้ผู้ใช้กรอกข้อมูลบัตร/ราคา/วัน แล้วยิง POST /ad
+ * - จัดการสถานะ loading / error / success
+ */
+export default function DialogPayment({ placeId }) {
+    // ฟอร์มและสถานะต่าง ๆ
+    const [method, setMethod] = useState("Credit Card"); // สเปกกำหนดให้ส่ง "Credit Card"
+    const [durationDays, setDurationDays] = useState(5); // ดีฟอลต์ตามตัวอย่างสเปก
+    const [price, setPrice] = useState(5000);
+
+    const [holder, setHolder] = useState("");
+    const [email, setEmail] = useState("");
+    const [number, setNumber] = useState("");
+    const [expiry, setExpiry] = useState("");
+    const [cvc, setCvc] = useState("");
+
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
-    const [success, setSuccess] = useState("");
+    const [errMsg, setErrMsg] = useState("");
+    const [result, setResult] = useState(null); // เก็บ response 201
+    const [open, setOpen] = useState(false);
 
-    // ฟังก์ชันเรียก API
+    // เตือนถ้า placeId ไม่ใช่ MongoId (ช่วยจับ 400 ล่วงหน้า)
+    const invalidPlaceId = useMemo(() => !placeId || !MONGO_ID_RX.test(placeId), [placeId]);
+
+    // เคลียร์สถานะเมื่อปิด/เปิด dialog ใหม่
+    useEffect(() => {
+        if (!open) {
+            setErrMsg("");
+            setResult(null);
+            setLoading(false);
+        }
+    }, [open]);
+
+    // ดึง JWT จาก localStorage แบบเมโม (ลดอ่านซ้ำ ๆ)
+    const jwtToken = useMemo(() => localStorage.getItem("jwtToken") || "", []);
+
+    // ---------- ยิง API ----------
     const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("👉 เริ่มส่ง request ไปที่ server");
+        setErrMsg("");
+        setResult(null);
 
-        // ถ้ามี state เหล่านี้อยู่ ให้ตั้งค่าเริ่มต้นก่อนยิง API
-        setLoading?.(true);
-        setError?.("");
-        setSuccess?.("");
+        // ตรวจความถูกต้องเบื้องต้น
+        if (invalidPlaceId) {
+            setErrMsg("placeId ไม่ถูกต้อง (ต้องเป็น MongoId 24 ตัวอักษรฐาน 16)");
+            return;
+        }
+        if (!jwtToken) {
+            setErrMsg("ไม่พบโทเค็นสำหรับยืนยันตัวตน โปรดเข้าสู่ระบบอีกครั้ง");
+            return;
+        }
+        if (!holder || !email || !number || !expiry || !cvc) {
+            setErrMsg("กรุณากรอกข้อมูลบัตรให้ครบถ้วน");
+            return;
+        }
+        if (!durationDays || durationDays <= 0) {
+            setErrMsg("จำนวนวันต้องมากกว่า 0");
+            return;
+        }
+        if (!price || price <= 0) {
+            setErrMsg("ราคา/Amount ต้องมากกว่า 0");
+            return;
+        }
 
-        // ดึงค่าจากฟอร์ม
-        const fd = new FormData(e.currentTarget);
+        setLoading(true);
+
+        // สร้าง payload ตรงตามสเปก
         const payload = {
-            // ค่าจากฟอร์ม
-            name: fd.get("name")?.toString().trim(),
-            email: fd.get("email")?.toString().trim(),
-            card_number: fd.get("card_number")?.toString().trim(),
-            expiration_date: fd.get("expiration_date")?.toString().trim(),
-            cvv: fd.get("cvv")?.toString().trim(),
-            method: (typeof method !== "undefined" && method) || fd.get("method")?.toString() || "",
-
-            // hardcoded values
-            adType: "banner",
-            adDuration: "30days",
-            amount: 299,
+            placeId: placeId,
+            durationDays: Number(durationDays),
+            price: Number(price),
+            transaction: {
+                method,
+                cardInfo: {
+                    holder,
+                    email,
+                    number,
+                    expiry,
+                    cvc,
+                },
+            },
         };
 
         try {
-            // ดึง JWT token จาก localStorage (หรือที่คุณเก็บไว้)
-            const jwtToken = localStorage.getItem("jwtToken");
-            if (!jwtToken) {
-                throw new Error("ไม่พบโทเค็นสำหรับยืนยันตัวตน โปรดเข้าสู่ระบบอีกครั้ง");
-            }
-
-            const res = await fetch(PAYMENT_ENDPOINT, {
+            const res = await fetch(`${API_BASE}${API_ENDPOINT}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${jwtToken}`, // แนบ JWT
+                    Authorization: `Bearer ${jwtToken}`, // ตามสเปก
                 },
-                body: JSON.stringify({
-                    adType: "CarRental",
-                    adDuration: 7,
-                    amount: 50,
-                    method: "PromptPay",
-                }),
+                body: JSON.stringify(payload),
             });
 
-            console.log("📡 Response status:", res.status);
-
-            // ป้องกันกรณี response ไม่มี body หรือไม่ใช่ JSON
-            let data = null;
             const text = await res.text();
+            let data = null;
             if (text) {
                 try {
                     data = JSON.parse(text);
                 } catch {
-                    data = null;
+                    // ถ้าไม่ใช่ JSON ก็ปล่อยเป็น null
                 }
             }
-            console.log("📦 Response data:", data);
 
             if (!res.ok) {
-                // พยายามดึงข้อความ error จาก body ถ้ามี
-                const msg = (data && (data.message || data.error)) || `Server error (status ${res.status})`;
-                throw new Error(`❌ ${msg}`);
+                // รองรับโครงสร้าง error 400 ที่ให้มา
+                if (res.status === 400 && data?.message) {
+                    // message อาจเป็น array ของข้อความ validate
+                    const msg =
+                        Array.isArray(data.message) && data.message.length
+                            ? data.message.join(", ")
+                            : data.message || "Bad Request";
+                    throw new Error(msg);
+                }
+                throw new Error(data?.error || data?.message || `Server error (status ${res.status})`);
             }
 
-            // สำเร็จ
-            setSuccess?.(data?.message || "ชำระเงินสำเร็จ 🎉");
+            // สำเร็จ (คาดหวัง 201 + data object)
+            setResult(data?.data || null);
         } catch (err) {
-            console.error("⚠️ Error:", err);
-            setError?.(err.message || "เกิดข้อผิดพลาดในการชำระเงิน");
+            setErrMsg(err?.message || "เกิดข้อผิดพลาดในการส่งคำขอ");
         } finally {
-            setLoading?.(false);
+            setLoading(false);
         }
     };
 
+    // ---------- UI ผลลัพธ์หลังสร้างสำเร็จ ----------
+    const SuccessView = () => {
+        if (!result) return null;
+        return (
+            <div className="p-4 space-y-2 border rounded-2xl bg-green-50">
+                <p className="font-semibold">สร้างโฆษณาสำเร็จ 🎉</p>
+                <div className="grid gap-1 text-sm">
+                    <div>
+                        <span className="font-medium">Ad ID:</span> {result.id}
+                    </div>
+                    <div>
+                        <span className="font-medium">Provider:</span> {result.providerId}
+                    </div>
+                    <div>
+                        <span className="font-medium">Place:</span> {result.placeId}
+                    </div>
+                    <div>
+                        <span className="font-medium">สถานะ:</span> {result.status}
+                    </div>
+                    <div>
+                        <span className="font-medium">จำนวนวัน:</span> {result.durationDays}
+                    </div>
+                    <div>
+                        <span className="font-medium">ราคา:</span> {Number(result.price).toLocaleString()}
+                    </div>
+                    <div>
+                        <span className="font-medium">หมดอายุ:</span> {formatISO(result.expireAt)}
+                    </div>
+                </div>
+                <div className="flex gap-2 pt-2">
+                    <Button type="button" variant="secondary" onClick={() => navigator.clipboard?.writeText(result.id)}>
+                        คัดลอก Ad ID
+                    </Button>
+                    <Button type="button" onClick={() => setOpen(false)}>
+                        ปิดหน้าต่าง
+                    </Button>
+                </div>
+            </div>
+        );
+    };
+
     return (
-        <Dialog>
+        <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="w-full bg-gradient-to-l from-[#FF7474] to-[#FF9F43]">สมัครเลย</Button>
+                <Button variant="ghost" size="icon" className="size-8">
+                    <BanknoteArrowDown className="w-4 h-4" />
+                </Button>
             </DialogTrigger>
 
             <DialogContent className="w-xs sm:w-md">
                 <DialogHeader>
-                    <DialogTitle>อัพเกรดการสมัครสมาชิก</DialogTitle>
-                    <DialogDescription>
-                        ขณะนี้คุณใช้แพ็กเกจฟรี อัปเกรดเป็นแพ็กเกจโปรเพื่อเข้าถึงฟีเจอร์ทั้งหมด
-                    </DialogDescription>
+                    <DialogTitle>ชำระเงินเพื่อสร้างโฆษณา</DialogTitle>
+                    <DialogDescription>ระบุจำนวนวัน, ราคา และข้อมูลบัตร</DialogDescription>
                 </DialogHeader>
 
-                {/* ย้าย form มาอยู่ใน DialogContent */}
-                <form onSubmit={handleSubmit} className="grid gap-4">
-                    <div className="grid gap-3">
-                        <Label htmlFor="name-1">ชื่อบนบัตร</Label>
-                        <Input id="name-1" name="name" placeholder="Somchai T." />
-                    </div>
-
-                    <div className="grid gap-3">
-                        <Label htmlFor="email-1">อีเมล</Label>
-                        <Input id="email-1" name="email" placeholder="example@acme.com" />
-                    </div>
-
-                    <div className="grid gap-3">
-                        <Label htmlFor="number-1">เลขบัตร</Label>
-                        <div className="flex gap-4">
-                            <Input id="card_number" name="card_number" placeholder="1234 1234 1234 1234" />
-                            <Input id="expiration_date" name="expiration_date" placeholder="MM/YY" className="w-30" />
-                            <Input id="cvv" name="cvv" placeholder="CVC" className="w-20" />
+                {/* ถ้าสำเร็จแล้ว แสดงสรุป และซ่อนฟอร์ม */}
+                {result ? (
+                    <SuccessView />
+                ) : (
+                    <form onSubmit={handleSubmit} className="grid gap-5">
+                        {/* ข้อมูล Ad */}
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div className="grid gap-2">
+                                <Label>จำนวนวัน (durationDays)</Label>
+                                <Input
+                                    type="number"
+                                    min={1}
+                                    value={durationDays}
+                                    onChange={(e) => setDurationDays(Number(e.target.value))}
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>ราคา (price)</Label>
+                                <Input
+                                    type="number"
+                                    min={1}
+                                    value={price}
+                                    onChange={(e) => setPrice(Number(e.target.value))}
+                                />
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="grid gap-3">
-                        <Label htmlFor="payment-method">วิธีการชำระเงิน</Label>
-                        <Select value={method} onValueChange={setMethod}>
-                            <SelectTrigger className="w-full">
-                                <SelectValue placeholder="เลือกวิธีการชำระเงิน" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectGroup>
-                                    <SelectItem value="card">บัตรเครดิต / เดบิต</SelectItem>
-                                    <SelectItem value="PromptPay">PromptPay / QR Payment</SelectItem>
-                                    <SelectItem value="wallet">Wallet</SelectItem>
-                                    <SelectItem value="PayPal">PayPal</SelectItem>
-                                    <SelectItem value="TrueMoney">TrueMoney</SelectItem>
-                                </SelectGroup>
-                            </SelectContent>
-                        </Select>
-                        {/* ถ้าต้องการส่งค่า method ไปกับ FormData ด้วย ใส่ hidden ไว้ */}
-                        <input type="hidden" name="method" value={method ?? ""} />
-                    </div>
+                        {/* วิธีชำระเงิน */}
+                        <div className="grid gap-2">
+                            <Label>วิธีการชำระเงิน</Label>
+                            <Select value={method} onValueChange={setMethod}>
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="เลือกวิธีการชำระเงิน" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        <SelectItem value="Credit Card">บัตรเครดิต/เดบิต</SelectItem>
+                                        {/* รองรับการขยายในอนาคต แต่สเปกตอนนี้ต้องส่ง 'Credit Card' */}
+                                        <SelectItem value="PromptPay" disabled>
+                                            PromptPay (ปิดไว้)
+                                        </SelectItem>
+                                        <SelectItem value="Wallet" disabled>
+                                            Wallet (ปิดไว้)
+                                        </SelectItem>
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
+                        </div>
 
-                    {/* สถานะ */}
-                    {loading && <p className="mt-2 text-sm text-blue-600">กำลังดำเนินการ...</p>}
-                    {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
-                    {success && <p className="mt-2 text-sm text-green-600">{success}</p>}
+                        {/* ข้อมูลบัตร */}
+                        <div className="grid gap-3">
+                            <Label>ข้อมูลบัตร</Label>
+                            <div className="grid gap-3 pt-2">
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                    <div className="grid gap-1.5">
+                                        <Label htmlFor="holder">ชื่อบนบัตร</Label>
+                                        <Input
+                                            id="holder"
+                                            placeholder="John Doe"
+                                            value={holder}
+                                            onChange={(e) => setHolder(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="grid gap-1.5">
+                                        <Label htmlFor="email">อีเมลสำหรับใบเสร็จ</Label>
+                                        <Input
+                                            id="email"
+                                            type="email"
+                                            placeholder="john@example.com"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
 
-                    <DialogFooter>
-                        <DialogClose asChild>
-                            <Button type="button" variant="outline">
-                                ยกเลิก
+                                <div className="grid gap-3 pt-2 sm:grid-cols-2">
+                                    <div className="grid gap-1.5">
+                                        <Label htmlFor="number">เลขบัตร</Label>
+                                        <Input
+                                            id="number"
+                                            inputMode="numeric"
+                                            placeholder="4111 1111 1111 1111"
+                                            value={number}
+                                            onChange={(e) => setNumber(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="grid gap-1.5">
+                                            <Label htmlFor="expiry">MM/YY</Label>
+                                            <Input
+                                                id="expiry"
+                                                placeholder="12/26"
+                                                value={expiry}
+                                                onChange={(e) => setExpiry(e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="grid gap-1.5">
+                                            <Label htmlFor="cvc">CVC</Label>
+                                            <Input
+                                                id="cvc"
+                                                inputMode="numeric"
+                                                placeholder="123"
+                                                value={cvc}
+                                                onChange={(e) => setCvc(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* สถานะ */}
+                        {loading && <p className="text-sm text-blue-600">กำลังดำเนินการ...</p>}
+                        {errMsg && <p className="text-sm text-red-600">{errMsg}</p>}
+
+                        <DialogFooter className="flex gap-2">
+                            <DialogClose asChild>
+                                <Button type="button" variant="outline">
+                                    ยกเลิก
+                                </Button>
+                            </DialogClose>
+                            <Button type="submit" disabled={loading}>
+                                {loading ? "กำลังชำระเงิน..." : "ยืนยันการชำระเงิน"}
                             </Button>
-                        </DialogClose>
-                        <Button type="submit" disabled={loading}>
-                            {loading ? "กำลังชำระเงิน..." : "อัพเกรดแผน"}
-                        </Button>
-                    </DialogFooter>
-                </form>
+                        </DialogFooter>
+                    </form>
+                )}
             </DialogContent>
         </Dialog>
     );
 }
+
+DialogPayment.propTypes = {
+    // ต้องส่งเข้ามาเสมอ และเป็น MongoId 24 ตัว
+    placeId: PropTypes.string.isRequired,
+};

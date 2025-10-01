@@ -113,24 +113,6 @@ export default function Dashboard() {
     const [chartData, setChartData] = useState([]);
     const [chartVersion, setChartVersion] = useState(0);
 
-    // ===== State (ใหม่สำหรับ /places — เก็บไว้เฉย ๆ) =====
-    /** โครงสร้างข้อมูลอ้างอิง:
-     * [
-     *   {
-     *     "_id":"68dbaa46f889887f69097d49",
-     *     "name":"ไก่ย่าง 5 ดาว สาขา ฉลองกรุง1",
-     *     "location":[0,0],
-     *     "description":"string",
-     *     "providerId":"68db9fb67e7c55fe6d6ec0a8",
-     *     "tags":["budget"],
-     *     "type":"Restaurant",
-     *     "openingHours":"1970-01-01T02:00:00.000Z",
-     *     "closingHours":"1970-01-01T13:00:00.000Z",
-     *     "cuisineType":"Street Food",
-     *     "contactInfo":"https://fivestar.in.th"
-     *   }
-     * ]
-     */
     const [places, setPlaces] = useState([]); // ✅ เก็บข้อมูล /places
     const [placesLoading, setPlacesLoading] = useState(false); // ✅ สถานะโหลด /places
     const [placesError, setPlacesError] = useState(""); // ✅ เก็บ error /places (ไม่แสดงผล)
@@ -295,9 +277,6 @@ export default function Dashboard() {
 
                 if (!isMountedRef.current) return;
                 setPlaces(safe); // ✅ เก็บไว้เฉย ๆ ตามคำสั่ง
-
-                // debug
-                console.log(safe);
             } catch (err) {
                 if (err?.name === "AbortError" || err?.message?.includes("The operation was aborted")) {
                     return; // unmount/timeout — เงียบ ๆ

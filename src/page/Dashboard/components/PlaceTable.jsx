@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BanknoteArrowDown, Trash2 } from "lucide-react";
+import DialogPayment from "@/components/DialogPayment";
 
 /**
  * PlaceTable component
@@ -21,7 +22,7 @@ export function PlaceTable({ data = [], onAddAd, onDelete }) {
             <TableHeader>
                 <TableRow>
                     <TableHead className="w-[300px]">สถานที่</TableHead>
-                    <TableHead>แท็ก</TableHead>
+                    <TableHead className="max-w-[300px]">แท็ก</TableHead>
                     <TableHead>ประเภท</TableHead>
                     <TableHead></TableHead>
                 </TableRow>
@@ -36,7 +37,7 @@ export function PlaceTable({ data = [], onAddAd, onDelete }) {
                             <TableRow key={key}>
                                 <TableCell className="font-medium">{row.name || "-"}</TableCell>
 
-                                <TableCell className="align-top">
+                                <TableCell className="align-top max-w-[300px]">
                                     {tags.length > 0 ? (
                                         <div className="flex flex-wrap gap-1">
                                             {tags.map((t, i) => (
@@ -52,15 +53,8 @@ export function PlaceTable({ data = [], onAddAd, onDelete }) {
 
                                 <TableCell>{row.type || "-"}</TableCell>
 
-                                <TableCell className="flex justify-end gap-4">
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="size-8"
-                                        onClick={() => onAddAd?.(row)}
-                                    >
-                                        <BanknoteArrowDown className="w-4 h-4" />
-                                    </Button>
+                                <TableCell className="flex items-center justify-end gap-4">
+                                    <DialogPayment placeId={row._id} />
                                     <Button
                                         variant="ghost"
                                         size="icon"

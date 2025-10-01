@@ -52,7 +52,9 @@ function SubscriptionCard({ title, features, price, per = "/เดือน", is
                 <p>ฟีเจอร์:</p>
                 <ul className="list-disc list-inside">
                     {features.map((f, i) => (
-                        <li className="!p-0" key={i}>{f}</li>
+                        <li className="!p-0" key={i}>
+                            {f}
+                        </li>
                     ))}
                 </ul>
             </div>
@@ -79,7 +81,9 @@ function AboutSection({ aboutMe, interests, profile }) {
                 <h2 className="text-2xl">ความสนใจ</h2>
                 <ul className="list-disc list-inside">
                     {interests.map((item, idx) => (
-                        <li className="!p-0" key={idx}>{item}</li>
+                        <li className="!p-0" key={idx}>
+                            {item}
+                        </li>
                     ))}
                 </ul>
             </Card>
@@ -264,7 +268,9 @@ export default function Profile() {
                             "รองรับการเชื่อมต่ออุปกรณ์ 2 เครื่อง",
                         ]}
                         price="199 บาท"
-                        action={<DialogPayment />}
+                        action={
+                            <Button className="w-full bg-gradient-to-l from-[#FF7474] to-[#FF9F43]">ชำระเงิน</Button>
+                        }
                     />
                     <SubscriptionCard
                         title="Pro Plan"
@@ -275,7 +281,9 @@ export default function Profile() {
                             "ฟีเจอร์พิเศษด้านการวิเคราะห์",
                         ]}
                         price="499 บาท"
-                        action={<DialogPayment />}
+                        action={
+                            <Button className="w-full bg-gradient-to-l from-[#FF7474] to-[#FF9F43]">ชำระเงิน</Button>
+                        }
                     />
                 </div>
             </div>
