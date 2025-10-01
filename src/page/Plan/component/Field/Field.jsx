@@ -140,25 +140,6 @@ const Field = forwardRef(({ planData, onDataChange }, ref) => {
                 <Info data={data} />
             </Card>
 
-            {/* Hotel Section */}
-            <Card ref={hotelRef}>
-                <p className="font-bold">โรงแรม</p>
-                <div className="w-full flex justify-center items-center gap-3 py-2">
-                    {data.hotels?.map((hotel, index) => (
-                        <BusinessCard key={hotel.id} showStar={true} data={hotel} />
-                    )) || (
-                        <>
-                            <BusinessCard showStar={true} />
-                            <BusinessCard showStar={true} />
-                            <BusinessCard showStar={true} />
-                        </>
-                    )}
-                </div>
-                <div className="btnBackground w-full text-center text-paper font-bold px-4 py-2 rounded-[8px]">
-                    <p>ดูเพิ่มเติม</p>
-                </div>
-            </Card>
-
             {/* Car Section */}
             <Card ref={carRef}>
                 <p className="font-bold">รถเช่า</p>
