@@ -4,10 +4,11 @@
 import * as React from "react";
 import PropTypes from "prop-types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BanknoteArrowDown, Trash2 } from "lucide-react";
+
+// dialog
 import DialogPayment from "@/components/DialogPayment";
+import DeletePlaceDialog from "./DeletePlaceDialog";
 
 /**
  * PlaceTable component
@@ -51,18 +52,17 @@ export function PlaceTable({ data = [], onAddAd, onDelete }) {
                                     )}
                                 </TableCell>
 
-                                <TableCell>{row.type || "-"}</TableCell>
+                                <TableCell>
+                                    {{
+                                        Restaurant: "ร้านอาหาร",
+                                        Accommodation: "ที่พัก",
+                                        Attraction: "สถานที่ท่องเที่ยว",
+                                    }[row.type] || "-"}
+                                </TableCell>
 
                                 <TableCell className="flex items-center justify-end gap-4">
                                     <DialogPayment placeId={row._id} />
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="size-8"
-                                        onClick={() => onDelete?.(row)}
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </Button>
+                                    <DeletePlaceDialog placeId={row._id} />
                                 </TableCell>
                             </TableRow>
                         );

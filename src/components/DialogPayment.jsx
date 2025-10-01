@@ -42,6 +42,9 @@ const formatISO = (iso) => {
  * - รับ prop เดียวคือ placeId
  * - เปิด Dialog เพื่อให้ผู้ใช้กรอกข้อมูลบัตร/ราคา/วัน แล้วยิง POST /ad
  * - จัดการสถานะ loading / error / success
+ * - 🆕 dispatch CustomEvent เพื่อให้หน้า parent รีเฟรชได้:
+ *   - "ad:dialog-opened" ตอนเปิด Dialog
+ *   - "ad:created" หลัง POST สำเร็จ
  */
 export default function DialogPayment({ placeId }) {
     // ฟอร์มและสถานะต่าง ๆ
@@ -157,6 +160,9 @@ export default function DialogPayment({ placeId }) {
 
             // สำเร็จ (คาดหวัง 201 + data object)
             setResult(data?.data || null);
+
+            // 🆕 แจ้ง parent ให้รีเฟรชข้อมูลหลังสร้างโฆษณาสำเร็จ
+            window.dispatchEvent(new CustomEvent("ad:created", { detail: data?.data }));
         } catch (err) {
             setErrMsg(err?.message || "เกิดข้อผิดพลาดในการส่งคำขอ");
         } finally {
@@ -206,8 +212,18 @@ export default function DialogPayment({ placeId }) {
     };
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
+        // 🆕 onOpenChange: ยิง event เมื่อเปิด dialog (ผู้ใช้กดปุ่มใน DialogTrigger)
+        <Dialog
+            open={open}
+            onOpenChange={(next) => {
+                setOpen(next);
+                if (next) {
+                    window.dispatchEvent(new CustomEvent("ad:dialog-opened", { detail: { placeId } })); // 🆕
+                }
+            }}
+        >
             <DialogTrigger asChild>
+                {/* ปุ่มกดแบบไอคอนตามที่คุณระบุ */}
                 <Button variant="ghost" size="icon" className="size-8">
                     <BanknoteArrowDown className="w-4 h-4" />
                 </Button>

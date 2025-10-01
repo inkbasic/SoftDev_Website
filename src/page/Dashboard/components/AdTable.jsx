@@ -7,6 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 
+import DeleteAdDialog from "./DeleteAdDialog";
+
 /**
  * AdTable component
  * ใช้แสดงตารางรายการโฆษณา
@@ -34,9 +36,7 @@ export function AdTable({ data = [], onDelete }) {
                             <TableCell>{row.dateRange}</TableCell>
                             <TableCell>{row.budget}</TableCell>
                             <TableCell className="flex justify-end">
-                                <Button variant="ghost" size="icon" className="size-8" onClick={() => onDelete?.(row)}>
-                                    <Trash2 />
-                                </Button>
+                                <DeleteAdDialog adId={row.id} />
                             </TableCell>
                         </TableRow>
                     ))

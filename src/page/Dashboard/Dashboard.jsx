@@ -1,23 +1,17 @@
 "use client";
 
 import * as React from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react"; // 🆕 useCallback
 import { data, useNavigate } from "react-router-dom";
-
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
 import { StatCard } from "./components/StatCard";
 import { AdTable } from "./components/AdTable";
 import { Plus } from "lucide-react";
 
 // กราฟยังคงใช้ mock ตามโจทย์
-import { PaginationMock } from "./components/PaginationMock";
 import { ChartAreaInteractive } from "@/components/Chart";
 import { generateChartConfig } from "@/components/generateChartConfig";
 import { generatePastData } from "./components/generatePastData";
-import { chartTabs } from "./components/chartTabs";
 import { PlaceTable } from "./components/PlaceTable";
 
 const jsonData = {
@@ -293,6 +287,154 @@ export default function Dashboard() {
 
     // ===== แปลงข้อมูลของตารางโฆษณา (เดิม) =====
     const adTableData = useMemo(() => (Array.isArray(table) ? table.map(mapApiRowToAdTableRow) : []), [table]);
+
+    // ===== 🆕 ฟังก์ชัน re-fetch เพื่อเรียกซ้ำได้ทุกเมื่อ =====
+    const refetchAds = useCallback(async () => {
+        const token = getAuthToken();
+        if (!token || token === "undefined") {
+            navigate("/login", { replace: true });
+            return;
+        }
+
+        setLoading(true);
+        setError("");
+
+        try {
+            const res = await fetchWithTimeout(
+                "/ad",
+                {
+                    method: "GET",
+                    headers: {
+                        Accept: "application/json",
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                },
+                15000
+            );
+
+            if (res.status === 401 || res.status === 403) {
+                localStorage.removeItem("jwtToken");
+                sessionStorage.removeItem("jwtToken");
+                setError("เซสชันหมดอายุหรือสิทธิ์ไม่เพียงพอ (ต้องเข้าสู่ระบบใหม่)");
+                navigate("/login", { replace: true });
+                return;
+            }
+
+            if (!res.ok) {
+                const t = await res.text().catch(() => "");
+                throw new Error(`Request failed ${res.status}: ${t?.slice(0, 200) || "(no response body)"}`);
+            }
+
+            const json = await parseJsonResponse(res);
+            const data = json?.data ?? {};
+            const apiTotals = data?.stats?.total || {};
+            const apiGraph = data?.graph || [];
+            const apiTable = data?.table || [];
+
+            if (!isMountedRef.current) return;
+
+            setTotals({
+                views: Number(apiTotals.views || 0),
+                clicks: Number(apiTotals.clicks || 0),
+                contacts: Number(apiTotals.contacts || 0),
+                bookings: Number(apiTotals.bookings || 0),
+                ctr: Number(apiTotals.ctr || 0),
+            });
+            setGraph(apiGraph);
+            setTable(apiTable);
+            setChartData(generatePastData(apiGraph, 20));
+        } catch (err) {
+            if (!isMountedRef.current) return;
+            setError(err?.message || "ไม่สามารถดึงข้อมูลได้");
+        } finally {
+            if (isMountedRef.current) setLoading(false);
+        }
+    }, [navigate]);
+
+    const refetchPlaces = useCallback(async () => {
+        const token = getAuthToken();
+        if (!token || token === "undefined") {
+            navigate("/login", { replace: true });
+            return;
+        }
+
+        setPlacesLoading(true);
+        setPlacesError("");
+
+        try {
+            const res = await fetchWithTimeout(
+                "/places",
+                {
+                    method: "GET",
+                    headers: {
+                        Accept: "application/json",
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                },
+                15000
+            );
+
+            if (res.status === 401 || res.status === 403) {
+                localStorage.removeItem("jwtToken");
+                sessionStorage.removeItem("jwtToken");
+                setPlacesError("เซสชันหมดอายุหรือสิทธิ์ไม่เพียงพอ (ต้องเข้าสู่ระบบใหม่)");
+                navigate("/login", { replace: true });
+                return;
+            }
+
+            if (!res.ok) {
+                const t = await res.text().catch(() => "");
+                throw new Error(`Request failed ${res.status}: ${t?.slice(0, 200) || "(no response body)"}`);
+            }
+
+            const json = await parseJsonResponse(res);
+            const arr = Array.isArray(json) ? json : json?.data ?? [];
+            const safe = Array.isArray(arr) ? arr.filter((x) => x && typeof x === "object" && x._id && x.name) : [];
+
+            if (!isMountedRef.current) return;
+            setPlaces(safe);
+        } catch (err) {
+            if (!isMountedRef.current) return;
+            setPlacesError(err?.message || "โหลด /places ไม่สำเร็จ");
+        } finally {
+            if (isMountedRef.current) setPlacesLoading(false);
+        }
+    }, [navigate]);
+
+    // ===== 🆕 ฟัง CustomEvent จาก DialogPayment เพื่อรีเฟรชหน้า =====
+    useEffect(() => {
+        // เปิด dialog – ถ้าต้องการรีเฟรชตอนเปิด ให้เรียกในนี้ได้
+        const onDialogOpened = (e) => {
+            // ตัวอย่าง: ทำ analytics / preload
+            // refetchPlaces(); // หากอยากรีเฟรชทันทีเมื่อกดเปิด dialog
+        };
+
+        // หลังสร้างสำเร็จ – รีเฟรชแดชบอร์ดและรายการสถานที่
+        const onAdCreated = (e) => {
+            refetchAds();
+            refetchPlaces();
+        };
+
+        window.addEventListener("ad:dialog-opened", onDialogOpened);
+        window.addEventListener("ad:created", onAdCreated);
+
+        return () => {
+            window.removeEventListener("ad:dialog-opened", onDialogOpened);
+            window.removeEventListener("ad:created", onAdCreated);
+        };
+    }, [refetchAds, refetchPlaces]);
+
+    // (ทางเลือก) ฟัง event แล้วรีเฟรชข้อมูล
+    // useEffect(() => {
+    //     const onDeleted = () => {
+    //         // revalidate/refetch list
+    //         // e.g., call fetchAds() หรือใช้ SWR/React Query ให้ mutate()
+    //     };
+    //     window.addEventListener("ad-deleted", onDeleted);
+    //     return () => window.removeEventListener("ad-deleted", onDeleted);
+    // }, []);
 
     // ===== ปุ่มนำทาง (เดิม) =====
     const handleAddLocation = () => navigate("/addlocation");
