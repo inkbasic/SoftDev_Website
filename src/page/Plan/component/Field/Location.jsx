@@ -62,10 +62,10 @@ export default function Location({
 						<div className="flex-1">
 							<div className="flex items-center justify-between gap-2">
 								<p className="font-bold w-40 truncate">{name}</p>
-								<div className="flex gap-2 items-center">
+								<div className="flex gap-2 items-center w-fit">
 									{isEditing ? (
 										<>
-											<div className="flex items-center gap-2">
+											<div className="flex items-center gap-2 w-fit">
 												<TimePicker
 													format="HH:mm"
 													value={start}
@@ -74,7 +74,7 @@ export default function Location({
 													minuteStep={5}
 													inputReadOnly
 													placeholder="เริ่ม"
-													className="w-20"
+													className="w-full"
 													showNow={false}
 												/>
 												<span className="text-sm text-neutral-500">-</span>
@@ -86,7 +86,7 @@ export default function Location({
 													minuteStep={5}
 													inputReadOnly
 													placeholder="สิ้นสุด"
-													className="w-20"
+													className="w-full"
 													showNow={false}
 												/>
 											</div>
