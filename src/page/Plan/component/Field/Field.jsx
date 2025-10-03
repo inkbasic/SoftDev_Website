@@ -34,8 +34,8 @@ const Field = forwardRef(({ planData, onDataChange }, ref) => {
     useAutoHideScrollbar(fieldRef);
 
     const overviewRef = useRef(null);
-    const hotelRef = useRef(null);
     const carRef = useRef(null);
+    const startPointRef = useRef(null);
     const itetaryRef = useRef(null);
     const dateRefs = useRef(null);
 
@@ -46,11 +46,11 @@ const Field = forwardRef(({ planData, onDataChange }, ref) => {
             case 'ภาพรวม':
                 targetRef = overviewRef;
                 break;
-            case 'ที่พัก':
-                targetRef = hotelRef;
-                break;
             case 'เช่ารถ':
                 targetRef = carRef;
+                break;
+            case 'จุดเริ่มต้น':
+                targetRef = startPointRef;
                 break;
             case 'กำหนดการ':
                 targetRef = itetaryRef;
@@ -158,7 +158,9 @@ const Field = forwardRef(({ planData, onDataChange }, ref) => {
             </div>
 
             {/* จุดเริ่มต้นการเดินทาง */}
-            <StartPoint value={data?.startPoint} onChange={handleStartPointChange} />
+            <div ref={startPointRef} className="w-full">
+                <StartPoint value={data?.startPoint} onChange={handleStartPointChange} />
+            </div>
 
             {/* Itinerary Section */}
             <div className="w-full" ref={itetaryRef}>

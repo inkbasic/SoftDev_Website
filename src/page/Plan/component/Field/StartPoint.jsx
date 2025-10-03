@@ -117,7 +117,7 @@ export default function StartPoint({ value, onChange }) {
                 </div>
             )}
 
-            {mode === "current" && (
+            {/* {mode === "current" && (
                 <div className="mt-3">
                     <button
                         type="button"
@@ -127,7 +127,7 @@ export default function StartPoint({ value, onChange }) {
                         ใช้ตำแหน่งปัจจุบันอีกครั้ง
                     </button>
                 </div>
-            )}
+            )} */}
         </>
     );
 }

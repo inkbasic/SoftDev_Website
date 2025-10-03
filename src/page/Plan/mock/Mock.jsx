@@ -1,12 +1,11 @@
 export const PlanMock = {
-    "id": "plan_001",
-    "title": "เที่ยวกรุงเทพ...แบบชิลๆ",
-    "category": ["ปีนผา", "ทะเล", "ธรรมชาติ"],
-    "budget": 500,
-    "transportation": "รถยนต์ส่วนตัว",
-    "accommodation": "โรงแรม 3 ดาว",
-    "people": 2,
-    startDate: "2025-09-28",
+  id: "plan_001",
+  title: "เที่ยวกรุงเทพ...แบบชิลๆ",
+  category: ["ปีนผา", "ทะเล", "ธรรมชาติ"],
+  budget: 500,
+  transportation: "รถยนต์ส่วนตัว",
+  people: 2,
+  startDate: "2025-09-28",
   endDate: "2025-09-30",
   itinerary: {
     "2025-09-28": {
@@ -21,7 +20,6 @@ export const PlanMock = {
           order: 1,
           startTime: "10:00",
           endTime: "12:00",
-          stayMinutes: 120,
           openHours: "เปิด 10.00 - 22.00",
           image: "/public/img/pool.jpg",
           description: "ห้างสรรพสินค้าขนาดใหญ่ใจกลางเมือง"
