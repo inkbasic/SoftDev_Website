@@ -1,11 +1,13 @@
 import Card from "./Card";
 import Info from "./Info";
-import BusinessCard from "./BusinessCard";
+import Car from "/Car.png";
 import Itetary from "./Itetary";
 import { CancelButton, SaveButton, MeatButton } from "./Button";
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useAutoHideScrollbar } from "@/lib/useAutoHideScrollbar";
-import { useNavigate } from "react-router-dom";
+import { href, useNavigate } from "react-router-dom";
+import { MockLocations } from "../../mock/MockLocations.jsx";
+import StartPoint from "./StartPoint";
 
 const Field = forwardRef(({ planData, onDataChange }, ref) => {
     const [isEditing, setIsEditing] = useState(true);
@@ -32,8 +34,8 @@ const Field = forwardRef(({ planData, onDataChange }, ref) => {
     useAutoHideScrollbar(fieldRef);
 
     const overviewRef = useRef(null);
-    const hotelRef = useRef(null);
     const carRef = useRef(null);
+    const startPointRef = useRef(null);
     const itetaryRef = useRef(null);
     const dateRefs = useRef(null);
 
@@ -44,11 +46,11 @@ const Field = forwardRef(({ planData, onDataChange }, ref) => {
             case 'ภาพรวม':
                 targetRef = overviewRef;
                 break;
-            case 'ที่พัก':
-                targetRef = hotelRef;
-                break;
             case 'เช่ารถ':
                 targetRef = carRef;
+                break;
+            case 'จุดเริ่มต้น':
+                targetRef = startPointRef;
                 break;
             case 'กำหนดการ':
                 targetRef = itetaryRef;
@@ -99,6 +101,12 @@ const Field = forwardRef(({ planData, onDataChange }, ref) => {
         setIsEditing(true);
     };
 
+    const handleStartPointChange = (startPoint) => {
+        const updated = { ...(data || {}), startPoint };
+        setData(updated);
+        onDataChange?.(updated);
+    };
+
     useImperativeHandle(ref, () => ({
         scrollToSection,
         getItineraryRef: () => dateRefs.current
@@ -123,7 +131,7 @@ const Field = forwardRef(({ planData, onDataChange }, ref) => {
                         ) : (
                             <MeatButton onClick={handleToggleMenu} click={showMenu}>
                                 {showMenu && (
-                                    <div ref={menuRef} className="absolute right-0 top-full mt-1 w-30 bg-white border border-neutral-200 rounded-md shadow-lg z-10 overflow-hidden z-50">
+                                    <div ref={menuRef} className="absolute right-0 top-full mt-1 w-30 bg-white border border-neutral-200 rounded-md shadow-lg z-10 overflow-hidden">
                                         <p className="px-2 py-1 cursor-pointer hover:bg-neutral-200">แชร์</p>
                                         <p onClick={handleEdit} className="px-2 py-1 cursor-pointer hover:bg-neutral-200">แก้ไข</p>
                                         <p onClick={() => navigate("/")} className="px-2 py-1 cursor-pointer hover:bg-neutral-200">ลบ</p>
@@ -140,49 +148,25 @@ const Field = forwardRef(({ planData, onDataChange }, ref) => {
                 <Info data={data} />
             </Card>
 
-            {/* Hotel Section */}
-            <Card ref={hotelRef}>
-                <p className="font-bold">โรงแรม</p>
-                <div className="w-full flex justify-center items-center gap-3 py-2">
-                    {data.hotels?.map((hotel, index) => (
-                        <BusinessCard key={hotel.id} showStar={true} data={hotel} />
-                    )) || (
-                        <>
-                            <BusinessCard showStar={true} />
-                            <BusinessCard showStar={true} />
-                            <BusinessCard showStar={true} />
-                        </>
-                    )}
-                </div>
-                <div className="btnBackground w-full text-center text-paper font-bold px-4 py-2 rounded-[8px]">
-                    <p>ดูเพิ่มเติม</p>
-                </div>
-            </Card>
-
             {/* Car Section */}
-            <Card ref={carRef}>
-                <p className="font-bold">รถเช่า</p>
-                <div className="w-full flex justify-center items-center gap-3 py-2">
-                    {data.cars?.map((car, index) => (
-                        <BusinessCard key={car.id} showStar={false} data={car} />
-                    )) || (
-                        <>
-                            <BusinessCard showStar={false} />
-                            <BusinessCard showStar={false} />
-                            <BusinessCard showStar={false} />
-                        </>
-                    )}
+            <div ref={carRef} className="w-full flex justify-center items-center gap-3 py-2 cursor-pointer" onClick={() => window.open("https://thairentacar.com/", "_blank")}>
+                <div className="w-full flex flex-col gap-2">
+                    <div className="relative w-full h-fit rounded-[8px] overflow-hidden">
+                        <img src={Car} className="object-cover w-full h-full" />
+                    </div>
                 </div>
-                <div className="btnBackground w-full text-center text-paper font-bold px-4 py-2 rounded-[8px]">
-                    <p>ดูเพิ่มเติม</p>
-                </div>
-            </Card>
+            </div>
+
+            {/* จุดเริ่มต้นการเดินทาง */}
+            <div ref={startPointRef} className="w-full">
+                <StartPoint value={data?.startPoint} onChange={handleStartPointChange} />
+            </div>
 
             {/* Itinerary Section */}
             <div className="w-full" ref={itetaryRef}>
-                <Itetary 
-                    planData={data} 
-                    isEditing={isEditing} 
+                <Itetary
+                    planData={data}
+                    isEditing={isEditing}
                     ref={dateRefs}
                     onDataChange={handleItineraryDataChange}
                 />

@@ -20,7 +20,7 @@ export default function DropdownMenu({ title, items, onItemClick }) {
                                     `}
             >
                 <ChevronDown onClick={() => setOverviewMenu(!showOverviewMenu)}
-                    className={`w-5 h-5 absolute left-1 top-[25%] transition-transform duration-200 cursor-pointer ${showOverviewMenu ? 'brightness-0 invert' : '-rotate-90'
+                    className={`w-5 h-5 absolute left-1 top-[25%] transition-transform durat ion-200 cursor-pointer ${showOverviewMenu ? 'brightness-0 invert' : '-rotate-90'
                         }`}
                 />
                 <p onClick={() => handleItemClick(title)} className="cursor-pointer">{title}</p>
@@ -28,7 +28,7 @@ export default function DropdownMenu({ title, items, onItemClick }) {
 
             <div className={`list bg-paper ${showOverviewMenu ? "max-h-[70vh]" : "max-h-0 pointer-events-none"}`}>
                 {items.map((item, index) => (
-                    <a key={index} onClick={() => handleItemClick(item)} >{item}</a>
+                    <p className="cursor-pointer" key={index} onClick={() => handleItemClick(item)} >{item}</p>
                 ))}
             </div>
         </div>
