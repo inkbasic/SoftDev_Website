@@ -6,6 +6,8 @@ import { CancelButton, SaveButton, MeatButton } from "./Button";
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useAutoHideScrollbar } from "@/lib/useAutoHideScrollbar";
 import { href, useNavigate } from "react-router-dom";
+import { MockLocations } from "../../mock/MockLocations.jsx";
+import StartPoint from "./StartPoint";
 
 const Field = forwardRef(({ planData, onDataChange }, ref) => {
     const [isEditing, setIsEditing] = useState(true);
@@ -99,6 +101,12 @@ const Field = forwardRef(({ planData, onDataChange }, ref) => {
         setIsEditing(true);
     };
 
+    const handleStartPointChange = (startPoint) => {
+        const updated = { ...(data || {}), startPoint };
+        setData(updated);
+        onDataChange?.(updated);
+    };
+
     useImperativeHandle(ref, () => ({
         scrollToSection,
         getItineraryRef: () => dateRefs.current
@@ -141,18 +149,16 @@ const Field = forwardRef(({ planData, onDataChange }, ref) => {
             </Card>
 
             {/* Car Section */}
-            {/* <Card ref={carRef}> */}
-                <div ref={carRef} className="w-full flex justify-center items-center gap-3 py-2 cursor-pointer" onClick={() => window.open("https://thairentacar.com/", "_blank")}>
-                    <div className="w-full flex flex-col gap-2">
-                        <div className="relative w-full h-fit rounded-[8px] overflow-hidden">
-                            <img src={Car} className="object-cover w-full h-full" />
-                        </div>
+            <div ref={carRef} className="w-full flex justify-center items-center gap-3 py-2 cursor-pointer" onClick={() => window.open("https://thairentacar.com/", "_blank")}>
+                <div className="w-full flex flex-col gap-2">
+                    <div className="relative w-full h-fit rounded-[8px] overflow-hidden">
+                        <img src={Car} className="object-cover w-full h-full" />
                     </div>
                 </div>
-                {/* <div className="btnBackground w-full text-center text-paper font-bold px-4 py-2 rounded-[8px]">
-                    <a href="https://thairentacar.com/">ดูเพิ่มเติม</a>
-                </div> */}
-            {/* </Card> */}
+            </div>
+
+            {/* จุดเริ่มต้นการเดินทาง */}
+            <StartPoint value={data?.startPoint} onChange={handleStartPointChange} />
 
             {/* Itinerary Section */}
             <div className="w-full" ref={itetaryRef}>
