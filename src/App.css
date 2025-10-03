@@ -16,6 +16,12 @@ h3 {
   font-family: 'Sarabun', sans-serif;
 }
 
+h4 {
+  @apply text-[28px] font-bold;
+  font-family: 'Sarabun', sans-serif;
+}
+
+
 p {
   @apply text-[16px];
   font-family: 'Sarabun', sans-serif;

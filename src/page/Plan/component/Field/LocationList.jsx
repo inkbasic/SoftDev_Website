@@ -3,7 +3,7 @@ import Location from "./Location";
 import TravelTime from "./TravelTime";
 import { computeTravelTimes } from "@/lib/routeService";
 
-export default function LocationList({ locations = [], travelTimes = [], isEditing, onRemove, onReorder }) {
+export default function LocationList({ locations = [], travelTimes = [], isEditing, onRemove, onReorder, onStayChange, onTimeChange }) {
     const [computed, setComputed] = useState([]);
 
     useEffect(() => {
@@ -35,6 +35,8 @@ export default function LocationList({ locations = [], travelTimes = [], isEditi
                         }}
                         canMoveUp={index > 0}
                         canMoveDown={index < locations.length - 1}
+                        onStayChange={(mins) => onStayChange?.(index, mins)}
+                        onTimeChange={(start, end) => onTimeChange?.(index, start, end)} // เพิ่ม
                     />
                     {index < locations.length - 1 && (
                         <TravelTime data={times?.[index]} />
