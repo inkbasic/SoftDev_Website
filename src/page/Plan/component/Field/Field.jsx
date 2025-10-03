@@ -1,11 +1,11 @@
 import Card from "./Card";
 import Info from "./Info";
-import BusinessCard from "./BusinessCard";
+import Car from "/Car.png";
 import Itetary from "./Itetary";
 import { CancelButton, SaveButton, MeatButton } from "./Button";
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useAutoHideScrollbar } from "@/lib/useAutoHideScrollbar";
-import { useNavigate } from "react-router-dom";
+import { href, useNavigate } from "react-router-dom";
 
 const Field = forwardRef(({ planData, onDataChange }, ref) => {
     const [isEditing, setIsEditing] = useState(true);
@@ -141,29 +141,24 @@ const Field = forwardRef(({ planData, onDataChange }, ref) => {
             </Card>
 
             {/* Car Section */}
-            <Card ref={carRef}>
-                <p className="font-bold">รถเช่า</p>
-                <div className="w-full flex justify-center items-center gap-3 py-2">
-                    {data.cars?.map((car, index) => (
-                        <BusinessCard key={car.id} showStar={false} data={car} />
-                    )) || (
-                        <>
-                            <BusinessCard showStar={false} />
-                            <BusinessCard showStar={false} />
-                            <BusinessCard showStar={false} />
-                        </>
-                    )}
+            {/* <Card ref={carRef}> */}
+                <div ref={carRef} className="w-full flex justify-center items-center gap-3 py-2 cursor-pointer" onClick={() => window.open("https://thairentacar.com/", "_blank")}>
+                    <div className="w-full flex flex-col gap-2">
+                        <div className="relative w-full h-fit rounded-[8px] overflow-hidden">
+                            <img src={Car} className="object-cover w-full h-full" />
+                        </div>
+                    </div>
                 </div>
-                <div className="btnBackground w-full text-center text-paper font-bold px-4 py-2 rounded-[8px]">
-                    <p>ดูเพิ่มเติม</p>
-                </div>
-            </Card>
+                {/* <div className="btnBackground w-full text-center text-paper font-bold px-4 py-2 rounded-[8px]">
+                    <a href="https://thairentacar.com/">ดูเพิ่มเติม</a>
+                </div> */}
+            {/* </Card> */}
 
             {/* Itinerary Section */}
             <div className="w-full" ref={itetaryRef}>
-                <Itetary 
-                    planData={data} 
-                    isEditing={isEditing} 
+                <Itetary
+                    planData={data}
+                    isEditing={isEditing}
                     ref={dateRefs}
                     onDataChange={handleItineraryDataChange}
                 />
