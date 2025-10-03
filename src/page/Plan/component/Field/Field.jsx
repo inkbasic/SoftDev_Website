@@ -123,7 +123,7 @@ const Field = forwardRef(({ planData, onDataChange }, ref) => {
                         ) : (
                             <MeatButton onClick={handleToggleMenu} click={showMenu}>
                                 {showMenu && (
-                                    <div ref={menuRef} className="absolute right-0 top-full mt-1 w-30 bg-white border border-neutral-200 rounded-md shadow-lg z-10 overflow-hidden z-50">
+                                    <div ref={menuRef} className="absolute right-0 top-full mt-1 w-30 bg-white border border-neutral-200 rounded-md shadow-lg z-10 overflow-hidden">
                                         <p className="px-2 py-1 cursor-pointer hover:bg-neutral-200">แชร์</p>
                                         <p onClick={handleEdit} className="px-2 py-1 cursor-pointer hover:bg-neutral-200">แก้ไข</p>
                                         <p onClick={() => navigate("/")} className="px-2 py-1 cursor-pointer hover:bg-neutral-200">ลบ</p>
