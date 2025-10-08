@@ -92,7 +92,7 @@ function AboutSection({ aboutMe, interests, profile }) {
             <Card className="gap-3 p-6">
                 {profile.map((field, idx) => (
                     <div key={idx} className="space-y-1">
-                        <h4 className="font-medium">{field.label}</h4>
+                        <h5 className="font-medium">{field.label}</h5>
                         {Array.isArray(field.value) ? (
                             field.value.map((v, i) => (
                                 <p key={i} className="text-sm text-neutral-500">
