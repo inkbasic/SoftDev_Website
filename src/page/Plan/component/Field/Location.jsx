@@ -7,6 +7,7 @@ import dayjs from "dayjs";
 // ...existing code...
 
 export default function Location({
+	index,
 	locationData,
 	isEditing = false,
 	onRemove,
@@ -107,7 +108,24 @@ export default function Location({
 
 					{isEditing && (
 						<>
-							<GripVertical className="absolute -left-6 top-1/2 transform -translate-y-1/2 cursor-move text-neutral-400" />
+							<span
+								title="ลากเพื่อสลับลำดับ"
+								className="absolute -left-6 top-1/2 -translate-y-1/2 text-neutral-400 cursor-grab active:cursor-grabbing"
+								draggable // ให้ลากเฉพาะที่ handle
+								onDragStart={(e) => {
+									// ส่ง index ของรายการที่ลาก
+									e.dataTransfer.setData("text/plain", String(index));
+									e.dataTransfer.effectAllowed = "move";
+									// ใช้การ์ดเป็นรูป Ghost ตอนลาก (ถ้ามี)
+									const card = e.currentTarget.closest(".location-card");
+									if (card) {
+										e.dataTransfer.setDragImage(card, 16, 16);
+									}
+								}}
+							>
+								<GripVertical className="w-5 h-5" />
+							</span>
+
 							<button
 								onClick={onRemove}
 								className="absolute cursor-pointer -right-60 top-1/2 transform -translate-y-1/2 p-1 rounded text-neutral-400 hover:text-red-500 transition-colors duration-200"
