@@ -1,5 +1,5 @@
 import "../global.css";
-import "./css/Home.css";
+import "./css/home.css";
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { DateRange } from "react-date-range";
