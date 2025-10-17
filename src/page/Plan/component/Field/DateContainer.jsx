@@ -1,15 +1,21 @@
 import { useState, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 import { arrayMove } from '@dnd-kit/sortable';
+import { useDroppable } from '@dnd-kit/core';
 import LocationList from "./LocationList.jsx";
 import AddLocationPanel from "./AddLocationPanel.jsx";
 
-export default function DateContainer({ title, dayData, isEditing = false, onUpdateLocations }) {
+export default function DateContainer({ title, dayData, dateKey, isEditing = false, onUpdateLocations }) {
     const [showDetails, setShowDetails] = useState(true);
     const [locations, setLocations] = useState(dayData?.locations || []);
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const travelTimes = dayData?.travelTimes || [];
     const description = dayData?.description || "Siam Paragon";
+
+    // เพิ่ม droppable zone
+    const { setNodeRef, isOver } = useDroppable({
+        id: `drop-zone-${dateKey}`,
+    });
 
     useEffect(() => {
         setLocations(dayData?.locations || []);
@@ -36,7 +42,7 @@ export default function DateContainer({ title, dayData, isEditing = false, onUpd
     const handleAddLocation = (loc) => {
         const newLocation = {
             ...loc,
-            id: loc.id || `location-${Date.now()}-${Math.random()}`, // ensure unique ID
+            id: loc.id || `location-${Date.now()}-${Math.random()}`,
         };
         const updated = [...locations, newLocation];
         setLocations(updated);
@@ -46,7 +52,7 @@ export default function DateContainer({ title, dayData, isEditing = false, onUpd
     const handleAddCustomLocation = (custom) => {
         const newLoc = {
             ...custom,
-            id: custom.id || `custom-${Date.now()}-${Math.random()}`, // ensure unique ID
+            id: custom.id || `custom-${Date.now()}-${Math.random()}`,
         };
         const updated = [...locations, newLoc];
         setLocations(updated);
@@ -78,12 +84,17 @@ export default function DateContainer({ title, dayData, isEditing = false, onUpd
             </div>
 
             <div
-                className={`grid transition-all duration-500 ease-in-out bg-paper relative ${showDetails ? "mb-5 grid-rows-[1fr]" : "grid-rows-[0fr] overflow-hidden pointer-events-none"
-                    } ${dropdownOpen ? "z-[200] overflow-visible" : ""}`}
+                ref={setNodeRef}
+                className={`grid transition-all duration-500 ease-in-out bg-paper relative ${
+                    showDetails ? "mb-5 grid-rows-[1fr]" : "grid-rows-[0fr] overflow-hidden pointer-events-none"
+                } ${dropdownOpen ? "z-[200] overflow-visible" : ""} ${
+                    isOver && isEditing ? "ring-2 ring-blue-300 ring-opacity-50" : ""
+                }`}
             >
                 <div className="min-h-0">
-                    <div className={`flex flex-col gap-5 transition-all duration-300 ${showDetails ? "opacity-100 translate-y-0 delay-200" : "opacity-0 -translate-y-2 delay-0"
-                        }`}>
+                    <div className={`flex flex-col gap-5 transition-all duration-300 ${
+                        showDetails ? "opacity-100 translate-y-0 delay-200" : "opacity-0 -translate-y-2 delay-0"
+                    }`}>
                         <LocationList
                             locations={locations}
                             travelTimes={travelTimes}
@@ -91,7 +102,14 @@ export default function DateContainer({ title, dayData, isEditing = false, onUpd
                             onRemove={handleRemoveLocation}
                             onReorder={handleReorderLocation}
                             onTimeChange={handleTimeChange}
+                            enableDragDrop={false} // ปิดใน LocationList เพราะจัดการที่ Itinerary แล้ว
                         />
+
+                        {isEditing && locations.length === 0 && (
+                            <div className="h-16 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-500">
+                                วางสถานที่ที่นี่
+                            </div>
+                        )}
 
                         {isEditing && (
                             <AddLocationPanel

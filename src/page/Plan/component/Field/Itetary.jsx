@@ -2,6 +2,23 @@ import { CalendarDays } from "lucide-react";
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { DateRange } from "react-date-range";
 import DateContainer from "./DateContainer";
+import Location from "./Location";
+
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragOverlay,
+} from '@dnd-kit/core';
+import {
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+    arrayMove,
+} from '@dnd-kit/sortable';
 
 const toLocalYMD = (date) => {
     if (!date) return null;
@@ -22,17 +39,17 @@ const parseYMD = (str) => {
 };
 
 const normalizeOrders = (itinerary) => {
-  const out = {};
-  const keys = Object.keys(itinerary || {}).sort(); // YYYY-MM-DD
-  let counter = 1;
-  keys.forEach(k => {
-    const day = itinerary[k] || {};
-    const list = Array.isArray(day.locations) ? day.locations : [];
-    // ไม่ sort ใช้ลำดับใน array ตามที่ผู้ใช้เพิ่ม/ย้าย
-    const newLocs = list.map(l => ({ ...l, order: counter++ }));
-    out[k] = { ...day, locations: newLocs };
-  });
-  return out;
+    const out = {};
+    const keys = Object.keys(itinerary || {}).sort(); // YYYY-MM-DD
+    let counter = 1;
+    keys.forEach(k => {
+        const day = itinerary[k] || {};
+        const list = Array.isArray(day.locations) ? day.locations : [];
+        // ไม่ sort ใช้ลำดับใน array ตามที่ผู้ใช้เพิ่ม/ย้าย
+        const newLocs = list.map(l => ({ ...l, order: counter++ }));
+        out[k] = { ...day, locations: newLocs };
+    });
+    return out;
 };
 
 const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
@@ -197,58 +214,233 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
     const formatDate = (date) =>
         date ? date.toLocaleDateString("th-TH", { day: "numeric", month: "numeric" }) : "";
 
+    const [activeId, setActiveId] = useState(null);
+    const [draggedLocation, setDraggedLocation] = useState(null);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8,
+            },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
+    // สร้าง flat list ของ locations ทั้งหมดสำหรับ SortableContext
+    const getAllLocations = () => {
+        const allLocations = [];
+        dateList.forEach(dateInfo => {
+            if (dateInfo.data.locations) {
+                dateInfo.data.locations.forEach(location => {
+                    allLocations.push({
+                        ...location,
+                        dateKey: dateInfo.key
+                    });
+                });
+            }
+        });
+        return allLocations;
+    };
+
+    const handleDragStart = (event) => {
+        const { active } = event;
+        setActiveId(active.id);
+
+        // หา location ที่กำลังลาก
+        const allLocations = getAllLocations();
+        const draggedLoc = allLocations.find(loc => loc.id === active.id);
+        setDraggedLocation(draggedLoc);
+    };
+
+    const handleDragEnd = (event) => {
+        const { active, over } = event;
+        setActiveId(null);
+        setDraggedLocation(null);
+
+        if (!over) return;
+
+        const activeLocationId = active.id;
+
+        // หาว่า location ที่ลากมาจากวันไหน
+        let sourceDate = null;
+        let sourceIndex = -1;
+
+        dateList.forEach(dateInfo => {
+            const locationIndex = dateInfo.data.locations?.findIndex(loc => loc.id === activeLocationId);
+            if (locationIndex !== -1) {
+                sourceDate = dateInfo.key;
+                sourceIndex = locationIndex;
+            }
+        });
+
+        if (sourceDate === null) return;
+
+        // ตรวจสอบว่าลากไปที่ไหน
+        const overId = over.id;
+
+        // ถ้าลากไปที่ location อื่น
+        if (overId !== activeLocationId) {
+            let targetDate = null;
+            let targetIndex = -1;
+
+            // หา target location
+            dateList.forEach(dateInfo => {
+                const locationIndex = dateInfo.data.locations?.findIndex(loc => loc.id === overId);
+                if (locationIndex !== -1) {
+                    targetDate = dateInfo.key;
+                    targetIndex = locationIndex;
+                }
+            });
+
+            // หา drop zone
+            if (targetDate === null) {
+                // ลองหา drop zone
+                dateList.forEach(dateInfo => {
+                    if (overId === `drop-zone-${dateInfo.key}`) {
+                        targetDate = dateInfo.key;
+                        targetIndex = dateInfo.data.locations?.length || 0;
+                    }
+                });
+            }
+
+            if (targetDate !== null) {
+                moveLocationBetweenDates(sourceDate, sourceIndex, targetDate, targetIndex, activeLocationId);
+            }
+        }
+    };
+
+    const moveLocationBetweenDates = (sourceDate, sourceIndex, targetDate, targetIndex, locationId) => {
+        const currentItinerary = { ...planData.itinerary };
+
+        if (sourceDate === targetDate) {
+            // ย้ายภายในวันเดียวกัน - ใช้ arrayMove
+            const sourceLocations = [...(currentItinerary[sourceDate]?.locations || [])];
+
+            // ใช้ arrayMove โดยตรงไม่ต้องปรับ targetIndex
+            // arrayMove จะจัดการ index ให้ถูกต้องเองแล้ว
+            const reorderedLocations = arrayMove(sourceLocations, sourceIndex, targetIndex);
+
+            // อัปเดต itinerary
+            const updatedItinerary = {
+                ...currentItinerary,
+                [sourceDate]: {
+                    ...currentItinerary[sourceDate],
+                    locations: reorderedLocations
+                }
+            };
+
+            // Normalize orders
+            const normalized = normalizeOrders(updatedItinerary);
+            const updatedData = { ...planData, itinerary: normalized };
+            onDataChange?.(updatedData);
+        } else {
+            // ย้ายข้ามวัน
+            const sourceLocations = [...(currentItinerary[sourceDate]?.locations || [])];
+            const [movedLocation] = sourceLocations.splice(sourceIndex, 1);
+
+            // เพิ่มไปยังวันปลายทาง
+            const targetLocations = [...(currentItinerary[targetDate]?.locations || [])];
+            targetLocations.splice(targetIndex, 0, movedLocation);
+
+            // อัปเดต itinerary
+            const updatedItinerary = {
+                ...currentItinerary,
+                [sourceDate]: {
+                    ...currentItinerary[sourceDate],
+                    locations: sourceLocations
+                },
+                [targetDate]: {
+                    ...currentItinerary[targetDate],
+                    locations: targetLocations
+                }
+            };
+
+            // Normalize orders
+            const normalized = normalizeOrders(updatedItinerary);
+            const updatedData = { ...planData, itinerary: normalized };
+            onDataChange?.(updatedData);
+        }
+    };
+
     return (
-        <div className="flex flex-col w-full gap-5">
-            <div className="flex items-center justify-between w-full">
-                <h3>แผนการท่องเที่ยว</h3>
-                <div className="flex gap-3">
-                    <div
-                        className={`relative flex items-center justify-between w-full gap-3 px-3 py-2 border ${isEditing ? 'cursor-pointer' : 'cursor-default'
-                            } bg-neutral-100 border-neutral-200 rounded-xl`}
-                        onClick={() => isEditing && setShowPicker(true)}
-                        ref={pickerRef}
-                    >
-                        <CalendarDays className="w-5 h-5" />
-                        <div>
-                            <span className="text-base font-bold text-gray-700">
-                                {formatDate(range.startDate)}-
-                            </span>
-                            <span className="text-base font-bold text-gray-700">
-                                {formatDate(range.endDate)}
-                            </span>
-                        </div>
-                        {showPicker && (
-                            <div className="absolute right-0 top-[100%] z-50">
-                                <DateRange
-                                    editableDateInputs={true}
-                                    moveRangeOnFirstSelection={false}
-                                    minDate={new Date()}
-                                    ranges={[safeRange]}
-                                    onChange={handleRangeChange}
-                                    months={2}
-                                    direction="horizontal"
-                                />
+        <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+        >
+            <div className="flex flex-col w-full gap-5">
+                <div className="flex items-center justify-between w-full">
+                    <h3>แผนการท่องเที่ยว</h3>
+                    <div className="flex gap-3">
+                        <div
+                            className={`relative flex items-center justify-between w-full gap-3 px-3 py-2 border ${isEditing ? 'cursor-pointer' : 'cursor-default'
+                                } bg-neutral-100 border-neutral-200 rounded-xl`}
+                            onClick={() => isEditing && setShowPicker(true)}
+                            ref={pickerRef}
+                        >
+                            <CalendarDays className="w-5 h-5" />
+                            <div>
+                                <span className="text-base font-bold text-gray-700">
+                                    {formatDate(range.startDate)}-
+                                </span>
+                                <span className="text-base font-bold text-gray-700">
+                                    {formatDate(range.endDate)}
+                                </span>
                             </div>
-                        )}
+                            {showPicker && (
+                                <div className="absolute right-0 top-[100%] z-50">
+                                    <DateRange
+                                        editableDateInputs={true}
+                                        moveRangeOnFirstSelection={false}
+                                        minDate={new Date()}
+                                        ranges={[safeRange]}
+                                        onChange={handleRangeChange}
+                                        months={2}
+                                        direction="horizontal"
+                                    />
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* แสดงวันที่แบบ dynamic */}
-            {dateList.map((dateInfo) => (
-                <div
-                    key={dateInfo.key}
-                    ref={(el) => dayRefs.current[dateInfo.key] = el}
-                >
-                    <DateContainer
-                        title={dateInfo.fullTitle}
-                        dayData={dateInfo.data}
-                        isEditing={isEditing}
-                        onUpdateLocations={(locations) => handleLocationUpdate(dateInfo.key, locations)}
-                    />
-                </div>
-            ))}
-        </div>
+                <SortableContext items={getAllLocations().map(loc => loc.id)} strategy={verticalListSortingStrategy}>
+                    {/* แสดงวันที่แบบ dynamic */}
+                    {dateList.map((dateInfo) => (
+                        <div
+                            key={dateInfo.key}
+                            ref={(el) => dayRefs.current[dateInfo.key] = el}
+                        >
+                            <DateContainer
+                                title={dateInfo.fullTitle}
+                                dayData={dateInfo.data}
+                                dateKey={dateInfo.key}
+                                isEditing={isEditing}
+                                onUpdateLocations={(locations) => handleLocationUpdate(dateInfo.key, locations)}
+                            />
+                        </div>
+                    ))}
+                </SortableContext>
+
+                <DragOverlay>
+                    {activeId && draggedLocation ? (
+                        <div className="opacity-90 rotate-2 transform scale-105">
+                            <Location
+                                index={0}
+                                locationData={draggedLocation}
+                                isEditing={false}
+                                onRemove={() => { }}
+                                onStayChange={() => { }}
+                                onTimeChange={() => { }}
+                            />
+                        </div>
+                    ) : null}
+                </DragOverlay>
+            </div>
+        </DndContext>
     );
 });
 
