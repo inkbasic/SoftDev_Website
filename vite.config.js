@@ -7,7 +7,6 @@ import path from "path"
 
 export default ({ mode }) => {
   process.env = {...process.env, ...loadEnv(mode, process.cwd())};
-  console.log("VITE_PUBLIC_API_URL:", process.env.VITE_PUBLIC_API_URL);
 
   return defineConfig({
     plugins: [react(), tailwind()],
@@ -17,6 +16,7 @@ export default ({ mode }) => {
       },
     },
     server: {
+      allowedHosts: ['localhost', 'www.wannago.code4.dad', 'wannago.code4.dad'],
       proxy: {
         "/auth": {
           target: process.env.VITE_PUBLIC_API_URL || 'http://localhost:3000',
