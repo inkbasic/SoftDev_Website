@@ -50,6 +50,17 @@ export default function DateContainer({ title, dayData, isEditing = false, onUpd
         onUpdateLocations?.(updated);
     };
 
+    const handleTimeChange = (index, start, end) => {
+        const updated = [...locations];
+        updated[index] = {
+            ...updated[index],
+            startTime: start,
+            endTime: end
+        };
+        setLocations(updated);
+        onUpdateLocations?.(updated);
+    };
+
     return (
         <div className={`w-full flex flex-col gap-5 border-b border-neutral-300`}>
             <div className="flex flex-col gap-1 relative">
@@ -76,6 +87,7 @@ export default function DateContainer({ title, dayData, isEditing = false, onUpd
                             isEditing={isEditing}
                             onRemove={handleRemoveLocation}
                             onReorder={handleReorderLocation}
+                            onTimeChange={handleTimeChange}
                         />
 
                         {isEditing && (
@@ -83,7 +95,7 @@ export default function DateContainer({ title, dayData, isEditing = false, onUpd
                                 existing={locations}
                                 onAdd={handleAddLocation}
                                 onAddCustom={handleAddCustomLocation}
-                                onOpenChange={setDropdownOpen} // NEW
+                                onOpenChange={setDropdownOpen}
                             />
                         )}
                     </div>

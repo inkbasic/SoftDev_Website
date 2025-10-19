@@ -12,6 +12,7 @@ import Layout from "./components/Layout.jsx";
 import Plan from "./page/Plan/Plan.jsx";
 import PlacesDetail from "./page/PlacesDetail/PlacesDetail.jsx";
 
+
 function App() {
     return (
         <>

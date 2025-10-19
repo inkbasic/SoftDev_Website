@@ -15,14 +15,20 @@ export default function Plan() {
     const initialData = PlanMock;
     const isNewPlan = location.state?.isNew || false;
 
+    // ย้ายประกาศ state ขึ้นมาก่อนใช้
+    const [currentData, setCurrentData] = useState(initialData);
+
+    const startMarker = useMemo(() => {
+        const sp = currentData?.startPoint;
+        if (!sp?.position) return null;
+        return { ...sp, isStart: true, order: 0 };
+    }, [currentData?.startPoint]);
+
     useEffect(() => {
         if (isNewPlan) {
             console.log("New plan created with data:", initialData);
-
         }
     }, [isNewPlan, initialData]);
-
-    const [currentData, setCurrentData] = useState(initialData);
 
     const markers = useMemo(() => {
         const out = [];
@@ -74,9 +80,15 @@ export default function Plan() {
             </div>
 
             <div className="w-full h-full flex items-center justify-center">
-                {loading ? <h1 className="p-4">กำลังโหลด...</h1>
-                    : <MapView center={geoLocation ? [geoLocation.latitude, geoLocation.longitude] : [13.7563, 100.5018]}
-                        markers={markers} />}
+                {loading ? (
+                    <h1 className="p-4">กำลังโหลด...</h1>
+                ) : (
+                    <MapView
+                        center={geoLocation ? [geoLocation.latitude, geoLocation.longitude] : [13.7563, 100.5018]}
+                        markers={markers}
+                        startMarker={startMarker} // ส่งจุดเริ่มต้น
+                    />
+                )}
                 {error && (
                     <div className="p-4 text-red-500">
                         ไม่สามารถดึงตำแหน่งได้: {error}

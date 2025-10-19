@@ -14,13 +14,15 @@ L.Icon.Default.mergeOptions({
 });
 
 // เปลี่ยนชื่อคอมโพเนนต์เป็น MapView และรับ markers ด้วย
-export default function MapView({ center = [13.7563, 100.5018], markers = [] }) {
+export default function MapView({ center = [13.7563, 100.5018], markers = [], startMarker = null }) {
     const mapRef = useRef(null);
     const mapInstanceRef = useRef(null);
     const currentLocationMarkerRef = useRef(null);
     const markersLayerRef = useRef(null);
-    const routesLayerRef = useRef(null); // NEW: layer สำหรับเส้นทาง
+    const routesLayerRef = useRef(null);
+    const startLayerRef = useRef(null);
     const [currentZoom, setCurrentZoom] = useState(13);
+
 
     useEffect(() => {
         if (!mapRef.current) return;
@@ -35,6 +37,7 @@ export default function MapView({ center = [13.7563, 100.5018], markers = [] }) 
 
         markersLayerRef.current = L.layerGroup().addTo(mapInstanceRef.current);
         routesLayerRef.current = L.layerGroup().addTo(mapInstanceRef.current); // NEW
+        startLayerRef.current = L.layerGroup().addTo(mapInstanceRef.current);
 
         mapInstanceRef.current.on('zoomend', () => {
             setCurrentZoom(mapInstanceRef.current.getZoom());
@@ -72,7 +75,7 @@ export default function MapView({ center = [13.7563, 100.5018], markers = [] }) 
                 zIndexOffset: 1000 - (Number(m.order) || 0)
             })
                 .addTo(markersLayerRef.current)
-                // .bindPopup(m.name || "สถานที่");
+            // .bindPopup(m.name || "สถานที่");
 
             // แสดงชื่อค้างไว้
             marker.bindTooltip(m.name || "สถานที่", {
@@ -121,7 +124,30 @@ export default function MapView({ center = [13.7563, 100.5018], markers = [] }) 
         return () => abort.abort();
     }, [markers]);
 
-    // อัปเดตตำแหน่งปัจจุบันเมื่อ center เปลี่ยน
+    useEffect(() => {
+        if (!mapInstanceRef.current || !startLayerRef.current) return;
+        startLayerRef.current.clearLayers();
+        if (!startMarker?.position) return;
+
+        const icon = L.divIcon({
+            className: "start-marker",
+            html: `<div class="start-pin"></div>`,
+            iconSize: [32, 38],
+            iconAnchor: [16, 34],
+            popupAnchor: [0, -30]
+        });
+
+        const [lat, lng] = startMarker.position;
+        const m = L.marker([lat, lng], { icon }).addTo(startLayerRef.current);
+        m.bindTooltip(startMarker.name || "", {
+            permanent: true,
+            direction: "top",
+            offset: [0, -40],
+            opacity: 1,
+            className: "place-label"
+        }).openTooltip();
+    }, [startMarker]);
+
     useEffect(() => {
         if (!mapInstanceRef.current || !center) return;
 
