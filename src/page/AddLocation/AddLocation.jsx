@@ -17,6 +17,8 @@ import {
     getToken,
 } from "@/page/AddLocation/components/FormPieces";
 
+const API_BASE_URL = import.meta.env.VITE_PUBLIC_API_URL || "http://localhost:3000";
+
 /* ===================== Utils ภายในไฟล์ ===================== */
 const toTitle = (s = "") => s.replace(/-/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
 
@@ -67,8 +69,6 @@ function GroupBox({ title, items, values, onChange }) {
  * headers: { Authorization: "Bearer <jwtToken>" }
  */
 export default function AddPlaceForm() {
-    // ตั้งค่า base URL ผ่าน .env (เช่น VITE_API_BASE=https://api.example.com)
-    const API_BASE = "";
 
     /* ---------- type + tags (comma-separated) ---------- */
     const [type, setType] = useState("accommodation"); // "accommodation" | "attraction" | "restaurant"
@@ -120,7 +120,7 @@ export default function AddPlaceForm() {
     useEffect(() => {
         const fetchTags = async () => {
             try {
-                const response = await fetch("/tags", {
+                const response = await fetch(`${API_BASE_URL}/tags`, {
                     method: "GET",
                     headers: {
                         "Content-Type": "application/json",
@@ -282,7 +282,7 @@ export default function AddPlaceForm() {
         try {
             setLoading(true);
 
-            const res = await fetch(`${API_BASE}${endpoint}`, {
+            const res = await fetch(`${API_BASE_URL}${endpoint}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

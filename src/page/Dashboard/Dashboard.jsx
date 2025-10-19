@@ -25,6 +25,8 @@ const jsonData = {
 
 // เดิม: const mockData = generatePastData(jsonData, 20);
 const mockData = generatePastData([jsonData], 20); // ✅ ห่อให้เป็น array
+const API_BASE_URL = import.meta.env.VITE_PUBLIC_API_URL || "http://localhost:3000";
+
 
 // ===== Utilities =====
 const nfTH = new Intl.NumberFormat("th-TH");
@@ -149,7 +151,7 @@ export default function Dashboard() {
 
             try {
                 const res = await fetchWithTimeout(
-                    "/ad",
+                    `${API_BASE_URL}/ad`,
                     {
                         method: "GET",
                         headers: {
@@ -233,7 +235,7 @@ export default function Dashboard() {
 
             try {
                 const res = await fetchWithTimeout(
-                    "/places", // === Required Inputs: api_endpoint ===
+                    `${API_BASE_URL}/places`, // === Required Inputs: api_endpoint ===
                     {
                         method: "GET", // === Required Inputs: api_method ===
                         headers: {
@@ -301,7 +303,7 @@ export default function Dashboard() {
 
         try {
             const res = await fetchWithTimeout(
-                "/ad",
+                `${API_BASE_URL}/ad`,
                 {
                     method: "GET",
                     headers: {
@@ -364,7 +366,7 @@ export default function Dashboard() {
 
         try {
             const res = await fetchWithTimeout(
-                "/places",
+                `${API_BASE_URL}/places`,
                 {
                     method: "GET",
                     headers: {
