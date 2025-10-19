@@ -17,35 +17,6 @@ export default ({ mode }) => {
     },
     server: {
       allowedHosts: ['localhost', 'www.wannago.code4.dad', 'wannago.code4.dad'],
-      proxy: {
-        "/auth": {
-          target: process.env.VITE_PUBLIC_API_URL || 'http://localhost:3000',
-          changeOrigin: true,
-          secure: false,
-        },
-        '/places': {
-          target: process.env.VITE_PUBLIC_API_URL || 'http://localhost:3000',
-          changeOrigin: true,
-          secure: false,
-        },
-        '/users': {
-          target: process.env.VITE_PUBLIC_API_URL || 'http://localhost:3000',
-          changeOrigin: true,
-          secure: false,
-        },
-        "/plans": {
-          target: process.env.VITE_PUBLIC_API_URL || "http://localhost:3000",
-          changeOrigin: true,
-        },
-        "/tags": {
-          target: process.env.VITE_PUBLIC_API_URL || "http://localhost:3000",
-          changeOrigin: true,
-        },
-        "/ad": {
-          target: process.env.VITE_PUBLIC_API_URL || "http://localhost:3000",
-          changeOrigin: true,
-        },
-      },
     },
   });
 }
