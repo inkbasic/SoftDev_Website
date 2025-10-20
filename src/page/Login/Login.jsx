@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Cookies from 'js-cookie';
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Router, useNavigate } from "react-router-dom";
 import "../global.css";
+import { Cookie } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_PUBLIC_API_URL || "http://localhost:3000";
 const LOGIN_ENDPOINT = `${API_BASE_URL}/auth/login`;
@@ -47,7 +48,7 @@ export default function Login() {
 
             const data = await res.json();
 
-            Cookies.set("jwtToken", data.token, { expires: 7, secure: true, sameSite: 'strict' });
+            Cookies.set("jwtToken", data.token, { expires: 7, secure: false, sameSite: 'lax' });
             Cookies.set("loginMessage", data.message || "Login success", { expires: 7 });
 
             setSuccess("เข้าสู่ระบบสำเร็จ 🎉");
@@ -55,7 +56,8 @@ export default function Login() {
 
             await fetchUserId(data.token);
 
-            navigate("/profile", { replace: true });
+            // change navigate() to window.location.href to force reload
+            window.location.href = "/profile";
 
         } catch (err) {
             setError(err.message || "เกิดข้อผิดพลาดในการเข้าสู่ระบบ ❌");
@@ -85,8 +87,12 @@ export default function Login() {
 
             const user = await res.json();
             if (user) {
-                Cookies.set("user", JSON.stringify(user), { expires: 7, secure: true, sameSite: 'strict' });
-                Cookies.set("userId", user._id, { expires: 7, secure: true, sameSite: 'strict' });
+
+                Cookies.set("userId", user._id, { expires: 7, secure: false, sameSite: 'lax' });
+                Cookies.set("name", `${user.firstName} ${user.lastName}`, { expires: 7, secure: false, sameSite: 'lax' });
+                Cookies.set("email", user.email, { expires: 7, secure: false, sameSite: 'lax' });
+                Cookies.set("profileImage", user.profileImage, { expires: 7, secure: false, sameSite: 'lax' });
+                Cookies.set("username", user.name, { expires: 7, secure: false, sameSite: 'lax' });
 
                 console.log("เก็บ user ทั้ง object:", user);
             }
