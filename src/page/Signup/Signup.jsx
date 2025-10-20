@@ -8,9 +8,11 @@ import { useNavigate } from "react-router-dom";
 import "../global.css";
 import React, { useState, useEffect } from "react";
 
-const REGISTER_ENDPOINT = "/auth/register";
+const API_BASE_URL = import.meta.env.VITE_PUBLIC_API_URL || "http://localhost:3000";
+const REGISTER_ENDPOINT = `${API_BASE_URL}/auth/register`;
 
 export default function Signin() {
+
     // State สำหรับฟอร์ม
     const [formData, setFormData] = useState({
         firstName: "",

@@ -8,7 +8,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../global.css";
 
-const LOGIN_ENDPOINT = "/auth/login";
+const API_BASE_URL = import.meta.env.VITE_PUBLIC_API_URL || "http://localhost:3000";
+const LOGIN_ENDPOINT = `${API_BASE_URL}/auth/login`;
 
 export default function Login() {
     // State ฟอร์ม
