@@ -15,7 +15,7 @@ export default function DropDownInput({ placeholder, value, onChange, options })
       onClick={() => setIsOpen(!isOpen)}
     >
             <p className="font-bold whitespace-nowrap ">{value || placeholder}</p>
-            <ChevronDown className="w-6 h-6"/>
+            <ChevronDown className={`w-6 h-6 transition-all ${isOpen ? "rotate-180" : ""}`} />
       {isOpen && (
         <div className="absolute z-10 mt-1 w-full left-0 top-full bg-white border border-gray-300 rounded-md overflow-hidden shadow-lg">
           <ul className="overflow-auto">

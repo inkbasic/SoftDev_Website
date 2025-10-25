@@ -3,7 +3,7 @@
 @config "@/../tailwind.config.js";
 
 .category {
-    @apply w-full bg-white rounded-[10px]
+    @apply w-full bg-paper rounded-[10px]
 }
 
 .button {

@@ -45,6 +45,7 @@ export async function getTravelBetween(a, b, signal) {
 
     cache.set(key, result);
     return result;
+    // return null;
 }
 
 export async function computeTravelTimes(locations, signal) {
