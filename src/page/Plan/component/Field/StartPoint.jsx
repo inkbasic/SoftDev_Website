@@ -1,17 +1,14 @@
-import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
-import { useAutoHideScrollbar } from "@/lib/useAutoHideScrollbar";
-import { href, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { MockLocations } from "../../mock/MockLocations.jsx";
 
 export default function StartPoint({ value, onChange }) {
-    const [mode, setMode] = useState(value?.type || "current"); // "current" | "hotel"
+    const [mode, setMode] = useState(value?.type || "current");
     const hotels = (MockLocations || []).filter(l => (l.category === "ที่พัก") || /โรงแรม/i.test(l?.name));
     const [hotelId, setHotelId] = useState(
         value?.type === "hotel" ? value?.refId : (hotels[0]?.id || "")
     );
 
     useEffect(() => {
-        // init ครั้งแรก: ถ้ามี value มาก่อน sync state
         if (value?.type === "hotel" && value?.refId) setHotelId(value.refId);
     }, [value?.type, value?.refId]);
 
@@ -21,7 +18,7 @@ export default function StartPoint({ value, onChange }) {
                 type: "current",
                 id: "start",
                 name: "จุดเริ่มต้น (ตำแหน่งปัจจุบัน)",
-                position: [13.7563, 100.5018], // fallback: กรุงเทพฯ
+                position: [13.7563, 100.5018],
                 order: 0,
                 isStart: true
             });
@@ -60,17 +57,15 @@ export default function StartPoint({ value, onChange }) {
             id: "start",
             refId: h.id,
             name: `จุดเริ่มต้น (โรงแรม: ${h.name})`,
-            position: h.source, // [lat, lng]
+            position: h.source,
             order: 0,
             isStart: true
         });
     };
 
     useEffect(() => {
-        // auto commit เมื่อสลับโหมด
         if (mode === "current") commitCurrent();
         if (mode === "hotel" && hotelId) commitHotel(hotelId);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [mode]);
 
     return (
@@ -116,18 +111,6 @@ export default function StartPoint({ value, onChange }) {
                     </select>
                 </div>
             )}
-
-            {/* {mode === "current" && (
-                <div className="mt-3">
-                    <button
-                        type="button"
-                        onClick={commitCurrent}
-                        className="px-3 py-1.5 rounded-md border border-neutral-300 hover:bg-neutral-50"
-                    >
-                        ใช้ตำแหน่งปัจจุบันอีกครั้ง
-                    </button>
-                </div>
-            )} */}
         </>
     );
 }
