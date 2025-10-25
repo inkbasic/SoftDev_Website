@@ -78,6 +78,7 @@ export default function StartPoint({ value, onChange }) {
                             type="radio"
                             name="start-mode"
                             checked={mode === "current"}
+                            className="cursor-pointer"
                             onChange={() => setMode("current")}
                         />
                         ตำแหน่งปัจจุบัน
@@ -87,6 +88,7 @@ export default function StartPoint({ value, onChange }) {
                             type="radio"
                             name="start-mode"
                             checked={mode === "hotel"}
+                            className="cursor-pointer"
                             onChange={() => setMode("hotel")}
                         />
                         โรงแรม
