@@ -107,6 +107,17 @@ const Field = forwardRef(({ planData, onDataChange }, ref) => {
         onDataChange?.(updated);
     };
 
+    // หา "สถานที่แรก" ของทริปจาก itinerary (วันที่แรกที่มี locations)
+    const firstLocation = (() => {
+        const iti = data?.itinerary || {};
+        const keys = Object.keys(iti).sort();
+        for (const k of keys) {
+            const locs = iti[k]?.locations || [];
+            if (locs.length > 0) return locs[0];
+        }
+        return null;
+    })();
+
     useImperativeHandle(ref, () => ({
         scrollToSection,
         getItineraryRef: () => dateRefs.current
@@ -159,7 +170,11 @@ const Field = forwardRef(({ planData, onDataChange }, ref) => {
 
             {/* จุดเริ่มต้นการเดินทาง */}
             <div ref={startPointRef} className="w-full">
-                <StartPoint value={data?.startPoint} onChange={handleStartPointChange} />
+                <StartPoint
+                    value={data?.startPoint}
+                    onChange={handleStartPointChange}
+                    firstLocation={firstLocation}
+                />
             </div>
 
             {/* Itinerary Section */}

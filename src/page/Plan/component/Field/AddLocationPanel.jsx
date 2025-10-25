@@ -3,7 +3,7 @@ import { Search, Plus, X } from "lucide-react";
 import { MockLocations, searchLocations, generateLocationId } from "../../mock/MockLocations.jsx";
 import "../../css/plan.css";
 
-export default function AddLocationPanel({ existing = [], onAdd, onAddCustom, onOpenChange }) {
+export default function AddLocationPanel({ existing = [], onAdd, onAddCustom, onOpenChange, filter, placeholder }) {
     const [query, setQuery] = useState("");
     const [results, setResults] = useState([]);
     const containerRef = useRef(null);
@@ -11,10 +11,12 @@ export default function AddLocationPanel({ existing = [], onAdd, onAddCustom, on
 
     const doSearch = (text) => {
         if (text.trim()) {
-            const r = searchLocations(text).filter(x => !existing.find(e => e.id === x.id));
+            let r = searchLocations(text).filter(x => !existing.find(e => e.id === x.id));
+            if (typeof filter === "function") r = filter(r);
             setResults(r);
         } else {
-            const popular = MockLocations.slice(0, 5).filter(x => !existing.find(e => e.id === x.id));
+            let popular = MockLocations.slice(0, 5).filter(x => !existing.find(e => e.id === x.id));
+            if (typeof filter === "function") popular = filter(popular);
             setResults(popular);
         }
     };
@@ -41,7 +43,7 @@ export default function AddLocationPanel({ existing = [], onAdd, onAddCustom, on
                 <input
                     type="text"
                     className="flex-1 outline-none text-[16px] placeholder-gray-400"
-                    placeholder="ค้นหาสถานที่ที่ต้องการเพิ่ม..."
+                    placeholder={placeholder || "ค้นหาสถานที่ที่ต้องการเพิ่ม..."}
                     value={query}
                     onChange={(e) => { setQuery(e.target.value); doSearch(e.target.value); }}
                     onFocus={() => { if (!query) doSearch(""); }}
