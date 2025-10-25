@@ -193,7 +193,7 @@ export default function StartPoint({ value, onChange, firstLocation, onRouteComp
                         <p className="">{Math.round(travel.durationMin)} นาที - ระยะทาง {travel.distanceKm.toFixed(1)} กม.</p>
                     </>
                 ) : (
-                    <p className="text-neutral-500">โปรดเลือกโรงแรม</p>
+                    <p className="text-neutral-500">โปรดเลือกสถานที่</p>
                 )}
             </div>
         </>

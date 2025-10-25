@@ -28,7 +28,7 @@ export default function DropdownMenu({ title, items, onItemClick }) {
 
             <div className={`list bg-paper ${showOverviewMenu ? "max-h-[70vh]" : "max-h-0 pointer-events-none"}`}>
                 {items.map((item, index) => (
-                    <p className="cursor-pointer" key={index} onClick={() => handleItemClick(item)} >{item}</p>
+                    <p className="cursor-pointer py-2" key={index} onClick={() => handleItemClick(item)} >{item}</p>
                 ))}
             </div>
         </div>

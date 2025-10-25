@@ -24,7 +24,7 @@ export default function Side({ onItemClick, fieldRef, planData }) {
     }, [planData?.startDate, planData?.endDate]);
 
     return (
-        <div className="h-full flex flex-col border-r border-neutral-300 p-2 gap-3 bg-paper">
+        <div className="h-full flex flex-col border-r border-neutral-300 p-2 bg-paper">
             <DropdownMenu
                 title={"ภาพรวม"}
                 items={["ภาพรวม", "เช่ารถ", "จุดเริ่มต้น"]}
