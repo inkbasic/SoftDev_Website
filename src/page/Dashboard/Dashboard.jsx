@@ -43,9 +43,7 @@ const chartConfig = {
 
 /** ดึง JWT จาก storage (ถ้าไม่มีให้ fallback เป็นสตริงเฉย ๆ) */
 function getAuthToken() {
-    const fromLocal = localStorage.getItem("jwtToken");
-    const fromSession = sessionStorage.getItem("jwtToken");
-    return fromLocal || fromSession || "jwtToken";
+    return Cookies.get("jwtToken");
 }
 
 /** map ข้อมูลแถวของ API /ad -> แถวของตาราง AdTable (โค้ดเดิม) */
