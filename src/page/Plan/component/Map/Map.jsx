@@ -129,7 +129,7 @@ export default function MapView({ center = [13.7563, 100.5018], markers = [], st
                 if (route?.coords?.length) {
                     L.polyline(route.coords, {
                         color: '#2563eb',
-                        weight: 4,
+                        weight: 8,
                         opacity: 0.8
                     }).addTo(routesLayerRef.current);
                 }
