@@ -41,12 +41,11 @@ const parseYMD = (str) => {
 const normalizeOrders = (itinerary) => {
     const out = {};
     const keys = Object.keys(itinerary || {}).sort(); // YYYY-MM-DD
-    let counter = 1;
     keys.forEach(k => {
         const day = itinerary[k] || {};
         const list = Array.isArray(day.locations) ? day.locations : [];
-        // ไม่ sort ใช้ลำดับใน array ตามที่ผู้ใช้เพิ่ม/ย้าย
-        const newLocs = list.map(l => ({ ...l, order: counter++ }));
+        // กำหนดเลขลำดับภายในแต่ละวัน (1..N) ตามตำแหน่งใน array
+        const newLocs = list.map((l, i) => ({ ...l, order: i + 1 }));
         out[k] = { ...day, locations: newLocs };
     });
     return out;
@@ -306,7 +305,13 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
             }
 
             if (targetDate !== null) {
-                moveLocationBetweenDates(sourceDate, sourceIndex, targetDate, targetIndex, activeLocationId);
+                // ถ้าย้ายข้ามวัน บังคับให้ไปท้ายวันเสมอ เพื่อป้องกันการสลับตำแหน่งกับปลายทาง
+                if (targetDate !== sourceDate) {
+                    const endIndex = (planData?.itinerary?.[targetDate]?.locations?.length) || 0;
+                    moveLocationBetweenDates(sourceDate, sourceIndex, targetDate, endIndex, activeLocationId);
+                } else {
+                    moveLocationBetweenDates(sourceDate, sourceIndex, targetDate, targetIndex, activeLocationId);
+                }
             }
         }
     };
@@ -317,12 +322,8 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
         if (sourceDate === targetDate) {
             // ย้ายภายในวันเดียวกัน - ใช้ arrayMove
             const sourceLocations = [...(currentItinerary[sourceDate]?.locations || [])];
-
-            // ใช้ arrayMove โดยตรงไม่ต้องปรับ targetIndex
-            // arrayMove จะจัดการ index ให้ถูกต้องเองแล้ว
             const reorderedLocations = arrayMove(sourceLocations, sourceIndex, targetIndex);
 
-            // อัปเดต itinerary
             const updatedItinerary = {
                 ...currentItinerary,
                 [sourceDate]: {
@@ -331,20 +332,18 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
                 }
             };
 
-            // Normalize orders
             const normalized = normalizeOrders(updatedItinerary);
             const updatedData = { ...planData, itinerary: normalized };
             onDataChange?.(updatedData);
         } else {
-            // ย้ายข้ามวัน
+            // ย้ายข้ามวัน: บังคับไปท้ายรายการเสมอ (ไม่ใช้ targetIndex)
             const sourceLocations = [...(currentItinerary[sourceDate]?.locations || [])];
             const [movedLocation] = sourceLocations.splice(sourceIndex, 1);
 
-            // เพิ่มไปยังวันปลายทาง
             const targetLocations = [...(currentItinerary[targetDate]?.locations || [])];
-            targetLocations.splice(targetIndex, 0, movedLocation);
+            // ใส่ไว้ท้ายสุด
+            targetLocations.push(movedLocation);
 
-            // อัปเดต itinerary
             const updatedItinerary = {
                 ...currentItinerary,
                 [sourceDate]: {
@@ -357,7 +356,6 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
                 }
             };
 
-            // Normalize orders
             const normalized = normalizeOrders(updatedItinerary);
             const updatedData = { ...planData, itinerary: normalized };
             onDataChange?.(updatedData);
@@ -407,12 +405,15 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
                     </div>
                 </div>
 
-                <SortableContext items={getAllLocations().map(loc => loc.id)} strategy={verticalListSortingStrategy}>
-                    {/* แสดงวันที่แบบ dynamic */}
-                    {dateList.map((dateInfo) => (
-                        <div
-                            key={dateInfo.key}
-                            ref={(el) => dayRefs.current[dateInfo.key] = el}
+                {/* ใช้ SortableContext แยกต่อวัน เพื่อลดการสลับชั่วคราวระหว่างวัน */}
+                {dateList.map((dateInfo) => (
+                    <div
+                        key={dateInfo.key}
+                        ref={(el) => (dayRefs.current[dateInfo.key] = el)}
+                    >
+                        <SortableContext
+                            items={(dateInfo.data.locations || []).map((l) => l.id)}
+                            strategy={verticalListSortingStrategy}
                         >
                             <DateContainer
                                 title={dateInfo.fullTitle}
@@ -421,9 +422,9 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
                                 isEditing={isEditing}
                                 onUpdateLocations={(locations) => handleLocationUpdate(dateInfo.key, locations)}
                             />
-                        </div>
-                    ))}
-                </SortableContext>
+                        </SortableContext>
+                    </div>
+                ))}
 
                 <DragOverlay>
                     {activeId && draggedLocation ? (

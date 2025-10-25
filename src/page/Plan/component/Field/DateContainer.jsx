@@ -105,12 +105,6 @@ export default function DateContainer({ title, dayData, dateKey, isEditing = fal
                             enableDragDrop={false} // ปิดใน LocationList เพราะจัดการที่ Itinerary แล้ว
                         />
 
-                        {isEditing && locations.length === 0 && (
-                            <div className="h-16 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-500">
-                                วางสถานที่ที่นี่
-                            </div>
-                        )}
-
                         {isEditing && (
                             <AddLocationPanel
                                 existing={locations}
