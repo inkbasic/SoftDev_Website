@@ -101,19 +101,35 @@ export default function MapView({ center = [13.7563, 100.5018], markers = [], st
         const abort = new AbortController();
         routesLayerRef.current.clearLayers();
 
+        // สร้างรายการจุดทั้งหมด รวมจุดเริ่มต้น
+        const allPoints = [];
+
+        // เพิ่มจุดเริ่มต้นก่อน (ถ้ามี)
+        if (startMarker?.position) {
+            allPoints.push({
+                position: startMarker.position,
+                name: startMarker.name || 'จุดเริ่มต้น'
+            });
+        }
+
+        // เพิ่ม markers ตามลำดับ
+        if (markers && markers.length > 0) {
+            allPoints.push(...markers);
+        }
+
         // ต้องมีอย่างน้อย 2 จุดถึงจะคำนวณเส้นทางได้
-        if (!markers || markers.length < 2) return;
+        if (allPoints.length < 2) return;
 
         // คิวรีทีละช่วง (ป้องกันโดน rate-limit)
         const run = async () => {
-            for (let i = 0; i < markers.length - 1; i++) {
-                const a = { source: markers[i].position };
-                const b = { source: markers[i + 1].position };
+            for (let i = 0; i < allPoints.length - 1; i++) {
+                const a = { source: allPoints[i].position };
+                const b = { source: allPoints[i + 1].position };
                 const route = await getTravelBetween(a, b, abort.signal);
                 if (route?.coords?.length) {
                     L.polyline(route.coords, {
                         color: '#2563eb',
-                        weight: 8,
+                        weight: 4,
                         opacity: 0.8
                     }).addTo(routesLayerRef.current);
                 }
@@ -122,7 +138,7 @@ export default function MapView({ center = [13.7563, 100.5018], markers = [], st
 
         run().catch(() => { /* ignore */ });
         return () => abort.abort();
-    }, [markers]);
+    }, [markers, startMarker]);
 
     useEffect(() => {
         if (!mapInstanceRef.current || !startLayerRef.current) return;
