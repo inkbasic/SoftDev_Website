@@ -13,6 +13,7 @@ import "../Plan/css/plan.css";
 
 export default function Home() {
     const navigate = useNavigate();
+    const BASE_URL = import.meta.env.VITE_BASE_URL;
     const [selectedActivities, setSelectedActivities] = useState(null);
     const [selectedTravel, setSelectedTravel] = useState(null);
     const [destination, setDestination] = useState("");
@@ -46,6 +47,10 @@ export default function Home() {
         endDate: null,
         key: "selection",
     });
+
+    function getToken() {
+        return localStorage.getItem("jwtToken") || sessionStorage.getItem("jwtToken") || "jwtToken";
+    }
 
     useEffect(() => {
         if (range && range.startDate && range.endDate) {
@@ -143,15 +148,16 @@ export default function Home() {
     // Prepare API payload
     const prepareApiPayload = () => {
         return {
-            destination: destination.trim(),
+            where: destination.trim(),
             startDate: range.startDate ? range.startDate.toISOString().split('T')[0] : null,
             endDate: range.endDate ? range.endDate.toISOString().split('T')[0] : null,
             people: people,
-            activities: selectedActivities || [],
+            category: selectedActivities || [],
             transportation: selectedTravel,
             budget: budget,
-            createdAt: new Date().toISOString(),
-            userId: null // จะได้จาก auth system ในอนาคต
+            source: [0, 0]
+            // createdAt: new Date().toISOString(),
+            // userId: null // จะได้จาก auth system ในอนาคต
         };
     };
 
@@ -159,7 +165,6 @@ export default function Home() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Clear previous errors
         setErrors({});
 
         // Validate form
@@ -175,28 +180,47 @@ export default function Home() {
         try {
             setIsLoading(true);
 
-            // TODO: Replace with actual API call
-            // const response = await fetch('/api/travel-plans', {
-            //     method: 'POST',
-            //     headers: {
-            //         'Content-Type': 'application/json',
-            //     },
-            //     body: JSON.stringify(payload)
-            // });
+            // Build headers conditionally (avoid sending malformed JWT)
+            const headers = { 'Content-Type': 'application/json' };
+            const token = getToken();
+            if (token && token !== 'jwtToken' && token.split('.').length === 3) {
+                headers.Authorization = `Bearer ${token}`;
+            }
 
-            // if (!response.ok) {
-            //     throw new Error('Failed to create travel plan');
-            // }
+            const base = BASE_URL || 'http://localhost:3000';
+            var response = await fetch(`${base}/plans`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(payload)
+            });
+            var rawText = await response.text();
+            let parsed;
+            try { parsed = rawText ? JSON.parse(rawText) : null; } catch { parsed = rawText; }
+            console.log("POST /plans =>", response.status, parsed);
 
-            // const result = await response.json();
+            if (!response.ok) {
+                throw new Error(typeof parsed === 'string' ? parsed : (parsed?.message || 'Failed to create travel plan'));
+            }
 
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            console.log("Plan created successfully:", parsed);
 
-            // Navigate to plan page with data
+            console.log("Fetching created plan details...", parsed._id);
+
+            response = await fetch(`${base}/plans/${parsed._id}`, {
+                method: 'GET',
+                    headers
+                });
+            rawText = await response.text();
+            try { parsed = rawText ? JSON.parse(rawText) : null; } catch { parsed = rawText; }
+            console.log("GET /plans =>", response.status, parsed);
+
+            if (!response.ok) {
+                throw new Error(typeof parsed === 'string' ? parsed : (parsed?.message || 'Failed to create travel plan'));
+            }
+
             navigate("/plan", {
                 state: {
-                    planData: payload,
+                    planData: parsed,
                     isNew: true
                 }
             });
