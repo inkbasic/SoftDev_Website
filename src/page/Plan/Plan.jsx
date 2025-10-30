@@ -6,7 +6,7 @@ import { useGeolocation } from "@/hooks/useGeolocation";
 import { useLocation } from "react-router-dom";
 import { PlanMock } from "./mock/Mock.jsx";
 import { MockLocations } from "./mock/MockLocations.jsx";
-import { EyeIcon } from "lucide-react";
+import "./plan.css";
 
 export default function Plan() {
     const location = useLocation();
