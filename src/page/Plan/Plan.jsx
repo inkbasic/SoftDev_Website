@@ -6,11 +6,14 @@ import { useGeolocation } from "@/hooks/useGeolocation";
 import { useLocation } from "react-router-dom";
 import { PlanMock } from "./mock/Mock.jsx";
 import { MockLocations } from "./mock/MockLocations.jsx";
+import { EyeIcon } from "lucide-react";
 
 export default function Plan() {
     const location = useLocation();
     const fieldRef = useRef(null);
     const { location: geoLocation, error, loading, getCurrentPosition } = useGeolocation();
+
+    const [isHideMap, setIsHideMap] = useState(false);
 
     const initialData = PlanMock;
     const isNewPlan = location.state?.isNew || false;
@@ -76,10 +79,11 @@ export default function Plan() {
                     ref={fieldRef}
                     planData={currentData}
                     onDataChange={handleDataChange}
+                    padding={isHideMap ? 'px-80' : 'px-20'}
                 />
             </div>
 
-            <div className="w-full h-full flex items-center justify-center">
+            <div className={`w-full h-full flex items-center justify-center ` + (isHideMap ? 'hidden' : '')}>
                 {loading ? (
                     <h1 className="p-4">กำลังโหลด...</h1>
                 ) : (
@@ -89,7 +93,7 @@ export default function Plan() {
                         startMarker={startMarker} // ส่งจุดเริ่มต้น
                     />
                 )}
-                {error && (
+                {/* {error && (
                     <div className="p-4 text-red-500">
                         ไม่สามารถดึงตำแหน่งได้: {error}
                         <button
@@ -99,8 +103,11 @@ export default function Plan() {
                             ลองใหม่
                         </button>
                     </div>
-                )}
+                )} */}
             </div>
+            <button onClick={() => setIsHideMap(!isHideMap)} className="bg-white cursor-pointer hover:bg-gray-50 border border-gray-300 rounded-md p-2 shadow-md absolute bottom-8 right-4 z-[1000]" title="ปรับมุมมอง">
+                <p>{isHideMap ? 'แสดงแผนที่' : 'ซ่อนแผนที่'}</p>
+            </button>
         </div>
     );
 }

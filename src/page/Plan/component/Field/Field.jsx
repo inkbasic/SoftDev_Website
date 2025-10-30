@@ -9,7 +9,7 @@ import { href, useNavigate } from "react-router-dom";
 import { MockLocations } from "../../mock/MockLocations.jsx";
 import StartPoint from "./StartPoint";
 
-const Field = forwardRef(({ planData, onDataChange }, ref) => {
+const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
     const [isEditing, setIsEditing] = useState(true);
     const [showMenu, setShowMenu] = useState(false);
     const [data, setData] = useState(planData || {});
@@ -126,7 +126,7 @@ const Field = forwardRef(({ planData, onDataChange }, ref) => {
 
     return (
         <div
-            className="h-full w-full flex flex-col gap-5 px-20 py-5 justify-start items-center bg-paper overflow-x-visible overflow-y-auto scroll-auto-hide"
+            className={`h-full w-full flex flex-col gap-5 ${padding} py-5 justify-start items-center bg-paper overflow-x-visible overflow-y-auto scroll-auto-hide`}
             ref={fieldRef}
         >
             {/* Overview Section */}

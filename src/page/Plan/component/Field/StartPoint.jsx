@@ -171,7 +171,7 @@ export default function StartPoint({ value, onChange, firstLocation, onRouteComp
                     )}
                     <AddLocationPanel
                         existing={[]}
-                        placeholder="พิมพ์เพื่อค้นหาโรงแรม..."
+                        placeholder="ค้นหาโรงแรมที่ต้องการ..."
                         filter={(arr) => arr.filter(x => (x.category === "ที่พัก") || /โรงแรม/i.test(x?.name))}
                         onAdd={(loc) => {
                             setHotelId(loc.id);
