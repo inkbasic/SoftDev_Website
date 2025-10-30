@@ -132,7 +132,9 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
             {/* Overview Section */}
             <div ref={overviewRef} className="w-full flex flex-col gap-1">
                 <div className="flex justify-between items-center w-full">
-                    <h3>{data.title}</h3>
+                    <h3>
+                        <input type="text" value={data.title} onChange={(e) => setData({ ...data, title: e.target.value })} />
+                    </h3>
                     <div className="flex gap-3 relative">
                         {isEditing ? (
                             <>
