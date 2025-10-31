@@ -163,20 +163,18 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
             endDate: safe?.endDate,
             budget: safe?.budget,
             people: safe?.people,
-            transport: safe?.transport ? {
-                type: safe.transport.type,
-                rental: safe.transport.type === 'rental' && safe.transport.rental ? {
-                    providerId: safe.transport.rental.providerId,
-                    name: safe.transport.rental.name,
-                    link: safe.transport.rental.link,
-                    imageUrl: safe.transport.rental.imageUrl,
-                } : undefined,
-            } : undefined,
-            startPoint: safe?.startPoint ? {
-                type: safe.startPoint.type,
-                refId: safe.startPoint.refId || undefined,
-                position: safe.startPoint.position || safe.startPoint.source || undefined,
-            } : undefined,
+            ownerId: safe?.ownerId,
+            where: safe?.where,
+            transportation: "รถยนต์ส่วนตัว",
+            category: safe?.category,
+            // source: safe?.startPoint ? {
+            //     type: safe.startPoint.type,
+            //     refId: safe.startPoint.refId || undefined,
+            //     position: safe.startPoint.position || safe.startPoint.source || undefined,
+            // } : undefined,
+            source: safe?.startPoint ? 
+                safe.startPoint.position || safe.startPoint.source || undefined
+             : undefined,
             itinerary: outItinerary,
         };
 
