@@ -151,7 +151,7 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
 
             outItinerary[dk] = {
                 description: desc,
-                location: mappedLocations,
+                locations: mappedLocations,
             };
         }
 
@@ -161,6 +161,8 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
             title: safe?.title,
             startDate: safe?.startDate,
             endDate: safe?.endDate,
+            budget: safe?.budget,
+            people: safe?.people,
             startPoint: safe?.startPoint ? {
                 type: safe.startPoint.type,
                 refId: safe.startPoint.refId || undefined,
@@ -323,7 +325,16 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
             </div>
 
             <Card>
-                <Info data={data} />
+                <Info
+                    data={data}
+                    isEditing={isEditing}
+                    onChange={(patch) => {
+                        const updated = { ...(data || {}), ...(patch || {}) };
+                        setData(updated);
+                        latestPlanRef.current = updated;
+                        onDataChange?.(updated);
+                    }}
+                />
             </Card>
 
             {/* Car Section */}
