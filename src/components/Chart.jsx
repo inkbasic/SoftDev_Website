@@ -11,6 +11,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 export function ChartAreaInteractive({ title, description, chartData, chartConfig }) {
+
+    console.log("ChartAreaInteractive render with chartData:", chartData);
+
     const [timeRange, setTimeRange] = React.useState("15d");
 
     // filter chartData ตาม timeRange

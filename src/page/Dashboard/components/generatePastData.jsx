@@ -13,10 +13,11 @@ export function generatePastData(apiData, length = 15) {
     // ใช้ keys จาก object แรกเป็น template
     const keys = Object.keys(apiData[0]).filter((k) => k !== "date");
 
-    const result = [];
-    for (let i = 0; i < length; i++) {
+    let result = [];
+    
+    for (let i = 0; i < length - apiData.length; i++) {
         const d = new Date(baseDate);
-        d.setDate(baseDate.getDate() - i);
+        d.setDate(baseDate.getDate() - i - 1);
 
         // สร้าง object ใหม่ โดย copy keys ที่เหลือแล้วตั้งค่าเป็น 0
         const obj = { date: d.toISOString().split("T")[0] };
@@ -25,5 +26,6 @@ export function generatePastData(apiData, length = 15) {
         result.push(obj);
     }
 
-    return result;
+    // result = result.reverse();
+    return result.reverse().concat(apiData);
 }
