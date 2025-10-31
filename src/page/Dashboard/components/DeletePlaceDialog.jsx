@@ -26,7 +26,7 @@ import { Trash2 } from "lucide-react";
    ========================= */
 
 // Base endpoint สำหรับลบสถานที่
-const ENDPOINT_BASE = "/places";
+const ENDPOINT_BASE = import.meta.env.VITE_PUBLIC_API_URL+"/places";
 
 // JWT สามารถกำหนดแบบฮาร์ดโค้ดหรือดึงจากแหล่งเก็บภายในเบราว์เซอร์ได้
 // ลำดับความสำคัญ: ENV (Vite) -> localStorage -> ค่าดีฟอลต์ (ตัวอย่าง)

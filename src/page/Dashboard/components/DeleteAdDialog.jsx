@@ -25,7 +25,7 @@ import { Trash2 } from "lucide-react";
    ========================= */
 
 // Base endpoint สำหรับลบโฆษณา
-const ENDPOINT_BASE = "/ad";
+const ENDPOINT_BASE = import.meta.env.VITE_PUBLIC_API_URL+"/ad";
 
 // แหล่ง JWT: ENV (Vite) → localStorage → ค่า fallback (ตัวอย่าง)
 // หมายเหตุ: ในโปรดักชันควรหลีกเลี่ยง fallback ฮาร์ดโค้ด
