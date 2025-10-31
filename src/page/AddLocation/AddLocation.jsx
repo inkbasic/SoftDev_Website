@@ -368,7 +368,7 @@ export default function AddPlaceForm() {
                         <InputField
                             label="ชื่อ"
                             id="name"
-                            placeholder="Ocean View Resort / Emerald Pool / Jinda Noodle"
+                            placeholder="Ocean View Resort"
                             value={name}
                             onChange={(_, v) => setName(v)}
                         />
@@ -491,9 +491,9 @@ export default function AddPlaceForm() {
                     <input type="hidden" name="tags" value={tags} />
 
                     {/* แสดงตัวอย่างค่า tags ที่จะส่ง */}
-                    <div className="mt-16 text-sm text-muted-foreground">
-                        <b>tags:</b> {tags || "(none)"}
-                    </div>
+                    {/* <div className="mt-16 text-sm text-muted-foreground">
+                        <b>tags:</b> {tags || ""}
+                    </div> */}
                 </FormSection>
 
                 {/* ---------- Preview Payload ---------- */}
@@ -504,7 +504,7 @@ export default function AddPlaceForm() {
                 </FormSection> */}
 
                 {/* ---------- Actions ---------- */}
-                <div className="flex justify-end gap-3">
+                <div className="flex justify-end gap-3 mt-24">
                     <Button
                         type="button"
                         variant="outline"

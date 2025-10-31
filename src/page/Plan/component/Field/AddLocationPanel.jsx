@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Search, Plus, X } from "lucide-react";
-import { MockLocations, searchLocations, generateLocationId } from "../../mock/MockLocations.jsx";
+import { searchPlaces, getAllPlacesCached } from "@/lib/placesService";
 import "../../css/plan.css";
 
 export default function AddLocationPanel({ existing = [], onAdd, onAddCustom, onOpenChange, filter, placeholder }) {
@@ -9,13 +9,15 @@ export default function AddLocationPanel({ existing = [], onAdd, onAddCustom, on
     const containerRef = useRef(null);
     const inputRef = useRef(null);
 
-    const doSearch = (text) => {
+    const doSearch = async (text) => {
         if (text.trim()) {
-            let r = searchLocations(text).filter(x => !existing.find(e => e.id === x.id));
+            let r = await searchPlaces(text);
+            r = r.filter(x => !existing.find(e => e.id === x.id));
             if (typeof filter === "function") r = filter(r);
             setResults(r);
         } else {
-            let popular = MockLocations.slice(0, 5).filter(x => !existing.find(e => e.id === x.id));
+            let all = await getAllPlacesCached();
+            let popular = all.slice(0, 8).filter(x => !existing.find(e => e.id === x.id));
             if (typeof filter === "function") popular = filter(popular);
             setResults(popular);
         }
@@ -67,9 +69,9 @@ export default function AddLocationPanel({ existing = [], onAdd, onAddCustom, on
                     </div>
 
                     <div className="max-h-64 overflow-y-auto">
-                        {results.map((loc) => (
+                        {results.map((loc, index) => (
                             <div
-                                key={loc.id}
+                                key={loc.id || `${loc.name || 'item'}-${index}`}
                                 className="p-4 hover:bg-blue-50 cursor-pointer border-b border-gray-50 last:border-b-0 search-dropdown-item"
                                 onClick={() => { onAdd?.(loc); setQuery(""); setResults([]); }}
                             >
@@ -79,10 +81,14 @@ export default function AddLocationPanel({ existing = [], onAdd, onAddCustom, on
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="font-medium text-gray-900 truncate">{loc.name}</p>
-                                        <p className="text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded-full inline-block mt-1">
-                                            {loc.category}
-                                        </p>
-                                        <p className="text-xs text-neutral-500 mt-1">{loc.openHours}</p>
+                                        {loc.category && (
+                                            <p className="text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded-full inline-block mt-1">
+                                                {loc.category}
+                                            </p>
+                                        )}
+                                        {loc.description && (
+                                            <p className="text-xs text-neutral-500 mt-1 line-clamp-1">{loc.description}</p>
+                                        )}
                                     </div>
                                 </div>
                             </div>

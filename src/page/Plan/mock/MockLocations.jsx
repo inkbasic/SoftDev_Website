@@ -1,4 +1,3 @@
-// src/page/Plan/MockLocations.js
 export const MockLocations = [
     {
         id: "loc_001",

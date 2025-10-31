@@ -27,5 +27,5 @@ export const ACTIVITY = [
 
 export const TRAVEL = [
   'รถยนต์ส่วนตัว',
-  'รถสาธารณะ',
+  'รถเช่า',
 ]

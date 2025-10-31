@@ -1,13 +1,11 @@
 import { useState, useEffect } from "react";
 import { getTravelBetween } from "@/lib/routeService";
-import { MockLocations } from "../../mock/MockLocations.jsx";
 import AddLocationPanel from "./AddLocationPanel.jsx";
 import Pool from "/img/pool.jpg";
 
 const image = Pool;
 export default function StartPoint({ value, onChange, firstLocation, onRouteComputed }) {
     const [mode, setMode] = useState(value?.type || "current");
-    const hotels = (MockLocations || []).filter(l => (l.category === "ที่พัก") || /โรงแรม/i.test(l?.name));
     const [hotelId, setHotelId] = useState(
         value?.type === "hotel" ? value?.refId : null
     );
@@ -79,17 +77,11 @@ export default function StartPoint({ value, onChange, firstLocation, onRouteComp
         setHotelDescription(h.description || "");
     };
 
-    const commitHotel = (id) => {
-        const h = hotels.find(x => x.id === id);
-        if (!h) return;
-        commitHotelObj(h);
-    };
+    // เลือกโรงแรมจากการค้นหาเท่านั้น
 
     useEffect(() => {
         if (mode === "current") commitCurrent();
-        if (mode === "hotel" && hotelId) {
-            commitHotel(hotelId);
-        }
+        // เมื่อเปลี่ยนเป็นโหมดโรงแรม จะยังไม่เลือกใดๆ จนกว่าผู้ใช้จะค้นหาและกดเลือก
         setTravel(null);
     }, [mode]);
 
@@ -172,7 +164,7 @@ export default function StartPoint({ value, onChange, firstLocation, onRouteComp
                     <AddLocationPanel
                         existing={[]}
                         placeholder="ค้นหาโรงแรมที่ต้องการ..."
-                        filter={(arr) => arr.filter(x => (x.category === "ที่พัก") || /โรงแรม/i.test(x?.name))}
+                        filter={(arr) => arr.filter(x => (x.category === 'hotel') || (Array.isArray(x.tags) && x.tags.includes('hotel')) || /โรงแรม/i.test(x?.name))}
                         onAdd={(loc) => {
                             setHotelId(loc.id);
                             commitHotelObj(loc);
