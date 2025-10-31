@@ -5,13 +5,37 @@ let _byId = new Map();
 
 function normalizePlace(p) {
     if (!p) return null;
-    const [lng, lat] = Array.isArray(p.location) ? p.location : [undefined, undefined];
-    const source = typeof lat === 'number' && typeof lng === 'number' ? [lat, lng] : null; // app uses [lat, lng]
+
+    let lat, lng;
+    if (Array.isArray(p.location) && p.location.length >= 2) {
+        // [lng, lat]
+        const [LNG, LAT] = p.location;
+        lat = Number(LAT);
+        lng = Number(LNG);
+    } else if (p.location && Array.isArray(p.location.coordinates) && p.location.coordinates.length >= 2) {
+        const [LNG, LAT] = p.location.coordinates; // GeoJSON
+        lat = Number(LAT);
+        lng = Number(LNG);
+    } else if (typeof p.lat === 'number' && typeof p.lng === 'number') {
+        lat = p.lat; lng = p.lng;
+    } else if (typeof p.latitude === 'number' && typeof p.longitude === 'number') {
+        lat = p.latitude; lng = p.longitude;
+    } else if (Array.isArray(p.source) && p.source.length === 2) {
+        // already in [lat, lng]
+        const [LAT, LNG] = p.source;
+        lat = Number(LAT);
+        lng = Number(LNG);
+    }
+
+    const source = (typeof lat === 'number' && !Number.isNaN(lat) && typeof lng === 'number' && !Number.isNaN(lng))
+        ? [lat, lng]
+        : null; // app uses [lat, lng]
+
     return {
         id: p._id || p.id,
         name: p.name || 'Unknown',
         source,
-        image: p.imageUrl || p.image || undefined,
+        image: p.imageUrl || p.image || (p.photos && p.photos[0]) || undefined,
         description: p.description || '',
         category: p.type || (Array.isArray(p.tags) ? p.tags[0] : undefined),
         tags: p.tags || [],
@@ -27,16 +51,19 @@ function getToken() {
 }
 
 export async function fetchPlacesAll(type = '') {
-    const url = new URL('/places/all', BASE_URL);
-    if (type) url.searchParams.set('type', type);
+    const url = new URL(`/places/all?type=`, BASE_URL);
+
     const headers = { 'Content-Type': 'application/json' };
     const token = getToken();
     if (token && token !== 'jwtToken' && token.split('.').length === 3) {
         headers.Authorization = `Bearer ${token}`;
     }
+
     const res = await fetch(url.toString(), { method: 'GET', headers });
+
     const raw = await res.text();
     let data; try { data = raw ? JSON.parse(raw) : []; } catch { data = []; }
+  
     if (!res.ok) throw new Error(data?.message || 'Failed to fetch places');
     const normalized = (Array.isArray(data) ? data : [])
         .map(normalizePlace)
@@ -60,7 +87,22 @@ export async function getAllPlacesCached(type = '') {
 }
 
 export async function searchPlaces(query = '', type = '') {
-    const items = await getAllPlacesCached(type);
+        let lat, lng;
+        // Helper: infer array order and return [lat, lng]
+        const toLatLng = (arr) => {
+            if (!Array.isArray(arr) || arr.length < 2) return [undefined, undefined];
+            const a = Number(arr[0]);
+            const b = Number(arr[1]);
+            if (!Number.isFinite(a) || !Number.isFinite(b)) return [undefined, undefined];
+            const aIsLat = Math.abs(a) <= 90;
+            const bIsLat = Math.abs(b) <= 90;
+            // If first looks like lng (>90) and second like lat (<=90) → [lng,lat]
+            if (!aIsLat && bIsLat) return [b, a];
+            // If first looks like lat and second like lng → [lat,lng]
+            if (aIsLat && !bIsLat) return [a, b];
+            // Ambiguous (both <=90 or both >90): assume [lat,lng]
+            return [a, b];
+        };
     const q = (query || '').toLowerCase();
     if (!q) return items;
     return items.filter(p => (

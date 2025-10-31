@@ -16,6 +16,22 @@ function getToken() {
     return match ? decodeURIComponent(match[1]) : null;
 }
 
+// Ensure a tuple is [lat, lng]; accept [lng, lat] and infer/swap by value ranges
+function toLatLng(arr) {
+    if (!Array.isArray(arr) || arr.length < 2) return null;
+    const a = Number(arr[0]);
+    const b = Number(arr[1]);
+    if (!Number.isFinite(a) || !Number.isFinite(b)) return null;
+    const aIsLat = Math.abs(a) <= 90;
+    const bIsLat = Math.abs(b) <= 90;
+    // If first looks like lng (>90) and second like lat (<=90) → [lng,lat] => swap
+    if (!aIsLat && bIsLat) return [b, a];
+    // If first looks like lat and second like lng → already [lat,lng]
+    if (aIsLat && !bIsLat) return [a, b];
+    // Ambiguous (both <=90 or both >90): assume [lat,lng]
+    return [a, b];
+}
+
 // Helper: แปลงวันที่ใดๆ เป็นสตริง YYYY-MM-DD (ยึดค่าปฏิทินท้องถิ่น โดยไม่บังคับ setHours)
 function toLocalYMD(d) {
     if (!d) return null;
@@ -39,7 +55,25 @@ function normalizeServerPlan(plan) {
     Object.keys(iti).forEach((k) => {
         const ok = /^\d{4}-\d{2}-\d{2}$/.test(k);
         const key = ok ? k : (toLocalYMD(k) || k);
-        newIti[key] = iti[k];
+        const day = iti[k] || {};
+        const locs = Array.isArray(day.locations) ? day.locations : [];
+        const mapped = locs.map((l, idx) => {
+            const id = l?.id ?? l?._id ?? `${key}:${idx}`;
+            let src = null;
+            if (Array.isArray(l?.source)) src = toLatLng(l.source);
+            else if (Array.isArray(l?.position)) src = toLatLng(l.position);
+            else if (Array.isArray(l?.location)) src = toLatLng(l.location);
+            else if (Array.isArray(l?.location?.coordinates)) src = toLatLng(l.location.coordinates);
+            else if (Array.isArray(l?.raw?.location)) src = toLatLng(l.raw.location);
+            const ord = typeof l?.order === 'number' ? l.order : (idx + 1);
+            return {
+                ...l,
+                id,
+                source: src || l?.source || null,
+                order: ord,
+            };
+        });
+        newIti[key] = { ...day, locations: mapped };
     });
 
     return { ...plan, startDate, endDate, itinerary: newIti };
@@ -96,8 +130,10 @@ export default function Plan() {
 
     const startMarker = useMemo(() => {
         const sp = currentData?.startPoint;
-        if (!sp?.position) return null;
-        return { ...sp, isStart: true, order: 0 };
+        if (!sp) return null;
+        const pos = toLatLng(sp.position || sp.source);
+        if (!pos) return null;
+        return { ...sp, position: pos, isStart: true, order: 0 };
     }, [currentData?.startPoint]);
 
     const markers = useMemo(() => {
@@ -110,17 +146,18 @@ export default function Plan() {
             const day = iti[dk] || {};
             const locs = Array.isArray(day.locations) ? day.locations : [];
             locs.forEach((loc, idx) => {
-                let pos = loc.source;
+                let pos = loc.source || loc.position || loc?.raw?.location;
                 if (!Array.isArray(pos)) {
                     const p = getPlaceById?.(loc.id);
                     if (p?.source) pos = p.source;
                 }
-                if (!Array.isArray(pos)) return;
+                const fixed = toLatLng(pos);
+                if (!fixed) return;
                 const orderInDay = typeof loc.order === 'number' ? loc.order : (idx + 1);
                 out.push({
                     id: `${dk}:${loc.id}:${orderInDay}`,
                     name: loc.name,
-                    position: pos,
+                    position: fixed,
                     order: base + orderInDay,
                 });
             });
@@ -128,6 +165,25 @@ export default function Plan() {
         });
         return out;
     }, [currentData?.itinerary]);
+
+    // DEBUG: Log what we send to Map for marker creation
+    useEffect(() => {
+        try {
+            // High-level objects
+            if (Array.isArray(markers)) {
+                // Compact table for quick inspection
+                console.table(markers.map(m => ({
+                    id: m.id,
+                    name: m.name,
+                    lat: Array.isArray(m.position) ? m.position[0] : undefined,
+                    lng: Array.isArray(m.position) ? m.position[1] : undefined,
+                    order: m.order,
+                })));
+            }
+        } catch (e) {
+            // noop
+        }
+    }, [markers, startMarker]);
 
     const handleSidebarItemClick = (item) => {
         if (fieldRef.current && fieldRef.current.scrollToSection) {
@@ -137,7 +193,9 @@ export default function Plan() {
 
     // รับการเปลี่ยนแปลงจาก Field โดยตรง
     const handleDataChange = (updatedData) => {
-        setCurrentData(updatedData);
+        // Normalize incoming updates (e.g., after save response merges _id/location)
+        const normalized = normalizeServerPlan(updatedData);
+        setCurrentData(normalized);
     };
 
     return (

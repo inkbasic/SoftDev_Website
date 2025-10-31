@@ -122,17 +122,29 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
             const locs = Array.isArray(day.locations) ? day.locations : [];
 
             const mappedLocations = locs.map((l) => {
-                // คำนวณพิกัดเป็นรูปแบบ backend [lng, lat]
-                let locArray = undefined;
-                if (Array.isArray(l?.raw?.location)) {
-                    locArray = l.raw.location;
-                } else if (Array.isArray(l?.source)) {
-                    const [lat, lng] = l.source;
-                    if (typeof lat === 'number' && typeof lng === 'number') locArray = [lng, lat];
+                // คำนวณพิกัดเป็นรูปแบบ backend [lng, lat] โดยอนุมาน order ของคู่ตัวเลข
+                const toLatLng = (arr) => {
+                    if (!Array.isArray(arr) || arr.length < 2) return [undefined, undefined];
+                    const a = Number(arr[0]);
+                    const b = Number(arr[1]);
+                    if (!Number.isFinite(a) || !Number.isFinite(b)) return [undefined, undefined];
+                    const aIsLat = Math.abs(a) <= 90;
+                    const bIsLat = Math.abs(b) <= 90;
+                    if (!aIsLat && bIsLat) return [b, a]; // [lng,lat] -> [lat,lng]
+                    if (aIsLat && !bIsLat) return [a, b]; // [lat,lng]
+                    return [a, b]; // ambiguous → assume [lat,lng]
+                };
+
+                let lat, lng;
+                if (Array.isArray(l?.source)) {
+                    [lat, lng] = toLatLng(l.source);
                 } else if (Array.isArray(l?.position)) {
-                    const [lat, lng] = l.position;
-                    if (typeof lat === 'number' && typeof lng === 'number') locArray = [lng, lat];
+                    [lat, lng] = toLatLng(l.position);
+                } else if (Array.isArray(l?.raw?.location)) {
+                    [lat, lng] = toLatLng(l.raw.location);
                 }
+
+                let locArray = (typeof lat === 'number' && typeof lng === 'number') ? [lng, lat] : undefined;
 
                 const obj = {
                     _id: l.id,
@@ -163,20 +175,18 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
             endDate: safe?.endDate,
             budget: safe?.budget,
             people: safe?.people,
-            transport: safe?.transport ? {
-                type: safe.transport.type,
-                rental: safe.transport.type === 'rental' && safe.transport.rental ? {
-                    providerId: safe.transport.rental.providerId,
-                    name: safe.transport.rental.name,
-                    link: safe.transport.rental.link,
-                    imageUrl: safe.transport.rental.imageUrl,
-                } : undefined,
-            } : undefined,
-            startPoint: safe?.startPoint ? {
-                type: safe.startPoint.type,
-                refId: safe.startPoint.refId || undefined,
-                position: safe.startPoint.position || safe.startPoint.source || undefined,
-            } : undefined,
+            ownerId: safe?.ownerId,
+            where: safe?.where,
+            transportation: "รถยนต์ส่วนตัว",
+            category: safe?.category,
+            // source: safe?.startPoint ? {
+            //     type: safe.startPoint.type,
+            //     refId: safe.startPoint.refId || undefined,
+            //     position: safe.startPoint.position || safe.startPoint.source || undefined,
+            // } : undefined,
+            source: safe?.startPoint ? 
+                safe.startPoint.position || safe.startPoint.source || undefined
+             : undefined,
             itinerary: outItinerary,
         };
 
@@ -268,6 +278,46 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
         setIsEditing(true);
     };
 
+    const copyToClipboard = async (text) => {
+        try {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(text);
+                return true;
+            }
+        } catch {}
+        // Fallback for non-secure context or older browsers
+        try {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.top = '-9999px';
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            const ok = document.execCommand('copy');
+            document.body.removeChild(ta);
+            return ok;
+        } catch {
+            return false;
+        }
+    };
+
+    const handleShare = async () => {
+        try {
+            const url = window?.location?.href || '';
+            const ok = await copyToClipboard(url);
+            setShowMenu(false);
+            if (ok) {
+                alert('คัดลอกลิงก์แล้ว');
+            } else {
+                alert('ไม่สามารถคัดลอกอัตโนมัติได้ กรุณาคัดลอกเอง: ' + url);
+            }
+        } catch (e) {
+            setShowMenu(false);
+            alert('เกิดข้อผิดพลาดในการคัดลอกลิงก์');
+        }
+    };
+
     const handleStartPointChange = (startPoint) => {
         const updated = { ...(data || {}), startPoint };
         setData(updated);
@@ -321,7 +371,7 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
                             <MeatButton onClick={handleToggleMenu} click={showMenu}>
                                 {showMenu && (
                                     <div ref={menuRef} className="absolute right-0 top-full mt-1 w-30 bg-white border border-neutral-200 rounded-md shadow-lg z-10 overflow-hidden">
-                                        <p className="px-2 py-1 cursor-pointer hover:bg-neutral-200">แชร์</p>
+                                        <p onClick={handleShare} className="px-2 py-1 cursor-pointer hover:bg-neutral-200">แชร์</p>
                                         <p onClick={handleEdit} className="px-2 py-1 cursor-pointer hover:bg-neutral-200">แก้ไข</p>
                                         <p onClick={() => navigate("/")} className="px-2 py-1 cursor-pointer hover:bg-neutral-200">ลบ</p>
                                     </div>

@@ -3,11 +3,23 @@ const thaiMonths = [
   "กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"
 ];
 
-const parseYMDLocal = (str) => {
-  if (!str) return null;
-  const [y, m, d] = str.split("-").map(Number);
-  if (!y || !m || !d) return null;
-  return new Date(y, m - 1, d);
+const parseYMDLocal = (input) => {
+  if (!input) return null;
+  if (input instanceof Date && !isNaN(input)) return new Date(input.getFullYear(), input.getMonth(), input.getDate());
+  const str = String(input);
+  // Handle YYYY-MM-DD or ISO starting with it
+  const m = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) {
+    const y = Number(m[1]);
+    const mo = Number(m[2]);
+    const d = Number(m[3]);
+    if (!y || !mo || !d) return null;
+    return new Date(y, mo - 1, d);
+  }
+  // Fallback: try Date parsing
+  const dt = new Date(str);
+  if (!isNaN(dt)) return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
+  return null;
 };
 
 const formatDateRangeThai = (startStr, endStr) => {
