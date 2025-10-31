@@ -10,7 +10,7 @@ export default function DateContainer({ title, dayData, dateKey, isEditing = fal
     const [locations, setLocations] = useState(dayData?.locations || []);
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const travelTimes = dayData?.travelTimes || [];
-    const description = dayData?.description || "Siam Paragon";
+    const description = dayData?.description || "description";
     const [descValue, setDescValue] = useState(description);
 
     // เพิ่ม droppable zone
