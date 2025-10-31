@@ -204,23 +204,9 @@ export default function Home() {
 
             console.log("Plan created successfully:", parsed);
 
-            console.log("Fetching created plan details...", parsed._id);
-
-            response = await fetch(`${base}/plans/${parsed._id}`, {
-                method: 'GET',
-                    headers
-                });
-            rawText = await response.text();
-            try { parsed = rawText ? JSON.parse(rawText) : null; } catch { parsed = rawText; }
-            console.log("GET /plans =>", response.status, parsed);
-
-            if (!response.ok) {
-                throw new Error(typeof parsed === 'string' ? parsed : (parsed?.message || 'Failed to create travel plan'));
-            }
-
-            navigate("/plan", {
+            const newId = parsed?._id || parsed?.id;
+            navigate(newId ? `/plan/${newId}` : "/plan", {
                 state: {
-                    planData: parsed,
                     isNew: true
                 }
             });
