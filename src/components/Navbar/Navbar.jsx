@@ -10,6 +10,8 @@ export default function Navbar() {
     const dropdownRef = useRef(null);
     const navigate = useNavigate();
 
+    const userRole = Cookies.get("role") || "";
+
     useEffect(() => {
         function handleClickOutside(event) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -63,6 +65,7 @@ export default function Navbar() {
         Cookies.remove("profileImage");
         Cookies.remove("username");
         Cookies.remove("userId");
+        Cookies.remove("role");
         
         // Reset user state
         setUser(null);
@@ -84,11 +87,18 @@ export default function Navbar() {
         
             <div className="flex flex-row items-center gap-6">
                 <div className="flex flex-row items-center gap-3">
-                    <a className="cursor-pointer" onClick={() => navigate("/")}>Home</a>
-                    <a className="cursor-pointer" onClick={() => navigate("/plan")}>Plan</a>
-                    <a className="cursor-pointer" onClick={() => navigate("/dashboard")}>Dashboard</a>
-                    <a className="cursor-pointer" onClick={() => navigate("/addlocation")}>Add Location</a>
-                    <a className="cursor-pointer" onClick={() => navigate("/save")}>Save</a>
+                    <a className="cursor-pointer" onClick={() => navigate("/")}>Create new trip</a>
+                    {/* <a className="cursor-pointer" onClick={() => navigate("/plan")}>Plan</a> */}
+
+                    { userRole === "provider" && (
+                        <>
+                            <a className="cursor-pointer" onClick={() => navigate("/dashboard")}>Dashboard</a>
+                            <a className="cursor-pointer" onClick={() => navigate("/addlocation")}>Add Location</a>
+                        </>
+                    )}
+
+
+                    <a className="cursor-pointer" onClick={() => navigate("/save")}>My plans</a>
                 </div>
                 
                 {user ? (

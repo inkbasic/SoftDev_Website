@@ -93,6 +93,7 @@ export default function Login() {
                 Cookies.set("email", user.email, { expires: 7, secure: false, sameSite: 'lax' });
                 Cookies.set("profileImage", user.profileImage, { expires: 7, secure: false, sameSite: 'lax' });
                 Cookies.set("username", user.name, { expires: 7, secure: false, sameSite: 'lax' });
+                Cookies.set("role", user.role, { expires: 7, secure: false, sameSite: 'lax' });
 
                 console.log("เก็บ user ทั้ง object:", user);
             }
