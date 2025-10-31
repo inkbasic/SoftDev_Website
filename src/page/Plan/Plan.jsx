@@ -55,7 +55,25 @@ function normalizeServerPlan(plan) {
     Object.keys(iti).forEach((k) => {
         const ok = /^\d{4}-\d{2}-\d{2}$/.test(k);
         const key = ok ? k : (toLocalYMD(k) || k);
-        newIti[key] = iti[k];
+        const day = iti[k] || {};
+        const locs = Array.isArray(day.locations) ? day.locations : [];
+        const mapped = locs.map((l, idx) => {
+            const id = l?.id ?? l?._id ?? `${key}:${idx}`;
+            let src = null;
+            if (Array.isArray(l?.source)) src = toLatLng(l.source);
+            else if (Array.isArray(l?.position)) src = toLatLng(l.position);
+            else if (Array.isArray(l?.location)) src = toLatLng(l.location);
+            else if (Array.isArray(l?.location?.coordinates)) src = toLatLng(l.location.coordinates);
+            else if (Array.isArray(l?.raw?.location)) src = toLatLng(l.raw.location);
+            const ord = typeof l?.order === 'number' ? l.order : (idx + 1);
+            return {
+                ...l,
+                id,
+                source: src || l?.source || null,
+                order: ord,
+            };
+        });
+        newIti[key] = { ...day, locations: mapped };
     });
 
     return { ...plan, startDate, endDate, itinerary: newIti };
@@ -175,7 +193,9 @@ export default function Plan() {
 
     // รับการเปลี่ยนแปลงจาก Field โดยตรง
     const handleDataChange = (updatedData) => {
-        setCurrentData(updatedData);
+        // Normalize incoming updates (e.g., after save response merges _id/location)
+        const normalized = normalizeServerPlan(updatedData);
+        setCurrentData(normalized);
     };
 
     return (
