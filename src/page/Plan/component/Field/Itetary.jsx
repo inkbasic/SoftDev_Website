@@ -53,6 +53,7 @@ const normalizeOrders = (itinerary) => {
 
 const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
     const [showPicker, setShowPicker] = useState(false);
+    const [pendingRange, setPendingRange] = useState(null);
     const pickerRef = useRef(null);
     const dayRefs = useRef({});
 
@@ -127,16 +128,94 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
         getDateList: () => dateList.map(date => date.sidebarFormat)
     }));
 
-    // ส่งข้อมูลกลับเมื่อ range เปลี่ยนจาก user interaction เท่านั้น
-    const handleRangeChangeComplete = (newRange) => {
-        if (onDataChange && newRange.startDate && newRange.endDate) {
-            const updatedData = {
-                ...planData,
-                startDate: toLocalYMD(newRange.startDate),
-                endDate: toLocalYMD(newRange.endDate),
-            };
-            onDataChange(updatedData);
+    // helper: สร้าง meta สำหรับช่วงวันที่
+    const buildDateMeta = (startDateObj, endDateObj) => {
+        if (!startDateObj || !endDateObj) return [];
+        const out = [];
+        const cur = new Date(startDateObj);
+        cur.setHours(0, 0, 0, 0);
+        const end = new Date(endDateObj);
+        end.setHours(0, 0, 0, 0);
+        while (cur <= end) {
+            const key = toLocalYMD(cur);
+            const dayName = cur.toLocaleDateString('th-TH', { weekday: 'long' });
+            const dateStr = cur.toLocaleDateString('th-TH', { day: 'numeric', month: 'long' });
+            out.push({ key, dayName, dateStr, dateObj: new Date(cur) });
+            cur.setDate(cur.getDate() + 1);
         }
+        return out;
+    };
+
+    // helper: ถ้าไม่มีช่วงวันที่เดิม ให้เรียงจาก keys เดิมแทน
+    const buildDateMetaFromKeys = (keys) => {
+        const out = [];
+        (keys || []).sort().forEach(k => {
+            const d = parseYMD(k);
+            if (!d) return;
+            const dayName = d.toLocaleDateString('th-TH', { weekday: 'long' });
+            const dateStr = d.toLocaleDateString('th-TH', { day: 'numeric', month: 'long' });
+            out.push({ key: k, dayName, dateStr, dateObj: d });
+        });
+        return out;
+    };
+
+    // เมื่อช่วงวันที่เปลี่ยน: อัปเดต start/end และ re-map itinerary ให้สอดคล้องกับลำดับวันใหม่
+    const handleRangeChangeComplete = (newRange) => {
+        if (!onDataChange || !newRange.startDate || !newRange.endDate) return;
+
+        const newStartYMD = toLocalYMD(newRange.startDate);
+        const newEndYMD = toLocalYMD(newRange.endDate);
+
+        // meta เดิมตามช่วงวันที่เดิม ถ้าไม่มีให้ fallback จาก keys ที่มีอยู่
+        let oldMeta = [];
+        if (planData?.startDate && planData?.endDate) {
+            oldMeta = buildDateMeta(parseYMD(planData.startDate), parseYMD(planData.endDate));
+        }
+        if (!oldMeta.length) {
+            oldMeta = buildDateMetaFromKeys(Object.keys(planData?.itinerary || {}));
+        }
+
+        // meta ใหม่ตามช่วงวันที่ใหม่
+        const newMeta = buildDateMeta(newRange.startDate, newRange.endDate);
+
+        // รวบรวมข้อมูลวันเดิมตามลำดับ (locations/travelTimes/description จะคงไว้, แต่ dayName/date จะปรับใหม่)
+        const oldDaysData = oldMeta.map(m => (planData?.itinerary?.[m.key]) || {
+            description: 'วันว่าง',
+            locations: [],
+            travelTimes: [],
+        });
+
+        const newItinerary = {};
+        const minLen = Math.min(oldDaysData.length, newMeta.length);
+        for (let i = 0; i < minLen; i++) {
+            const src = oldDaysData[i] || {};
+            const tgt = newMeta[i];
+            newItinerary[tgt.key] = {
+                ...src,
+                dayName: tgt.dayName,
+                date: tgt.dateStr,
+            };
+        }
+        // ถ้ามีวันใหม่ยาวกว่าเดิม เติมว่างให้ครบ
+        for (let i = minLen; i < newMeta.length; i++) {
+            const tgt = newMeta[i];
+            newItinerary[tgt.key] = {
+                dayName: tgt.dayName,
+                date: tgt.dateStr,
+                description: 'วันว่าง',
+                locations: [],
+                travelTimes: [],
+            };
+        }
+
+        const normalized = normalizeOrders(newItinerary);
+        const updatedData = {
+            ...planData,
+            startDate: newStartYMD,
+            endDate: newEndYMD,
+            itinerary: normalized,
+        };
+        onDataChange(updatedData);
     };
 
     useEffect(() => {
@@ -167,7 +246,9 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
         setRange(prev => {
             if (selection.startDate !== selection.endDate) {
                 const result = { startDate: selection.startDate, endDate: selection.endDate, key: "selection" };
-                setTimeout(() => handleRangeChangeComplete(result), 0);
+                // ตั้ง pending เพื่อ commit หลัง render แทนการอัปเดต parent ระหว่าง render
+                setPendingRange(result);
+                setShowPicker(false);
                 return result;
             }
 
@@ -179,13 +260,23 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
                 let end = selection.endDate;
                 if (end < start) [start, end] = [end, start];
                 const result = { startDate: prev.startDate, endDate: end, key: "selection" };
-                setTimeout(() => handleRangeChangeComplete(result), 0);
+                // ตั้ง pending เพื่อ commit หลัง render แทนการอัปเดต parent ระหว่าง render
+                setPendingRange(result);
+                setShowPicker(false);
                 return result;
             }
 
             return { startDate: selection.startDate, endDate: null, key: "selection" };
         });
     };
+
+    // Commit ช่วงวันที่หลัง render เสร็จ เพื่อลด warning update ขณะ render
+    useEffect(() => {
+        if (pendingRange && pendingRange.startDate && pendingRange.endDate) {
+            handleRangeChangeComplete(pendingRange);
+            setPendingRange(null);
+        }
+    }, [pendingRange]);
 
     const handleLocationUpdate = (dateKey, updatedLocations) => {
         const updatedItinerary = {
@@ -421,6 +512,18 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
                                 dateKey={dateInfo.key}
                                 isEditing={isEditing}
                                 onUpdateLocations={(locations) => handleLocationUpdate(dateInfo.key, locations)}
+                                onUpdateDescription={(desc) => {
+                                    const updatedItinerary = {
+                                        ...planData.itinerary,
+                                        [dateInfo.key]: {
+                                            ...planData.itinerary[dateInfo.key],
+                                            description: desc,
+                                        }
+                                    };
+                                    const normalized = normalizeOrders(updatedItinerary);
+                                    const updatedData = { ...planData, itinerary: normalized };
+                                    onDataChange?.(updatedData);
+                                }}
                             />
                         </SortableContext>
                     </div>

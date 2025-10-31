@@ -5,12 +5,13 @@ import { useDroppable } from '@dnd-kit/core';
 import LocationList from "./LocationList.jsx";
 import AddLocationPanel from "./AddLocationPanel.jsx";
 
-export default function DateContainer({ title, dayData, dateKey, isEditing = false, onUpdateLocations }) {
+export default function DateContainer({ title, dayData, dateKey, isEditing = false, onUpdateLocations, onUpdateDescription }) {
     const [showDetails, setShowDetails] = useState(true);
     const [locations, setLocations] = useState(dayData?.locations || []);
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const travelTimes = dayData?.travelTimes || [];
     const description = dayData?.description || "Siam Paragon";
+    const [descValue, setDescValue] = useState(description);
 
     // เพิ่ม droppable zone
     const { setNodeRef, isOver } = useDroppable({
@@ -20,6 +21,10 @@ export default function DateContainer({ title, dayData, dateKey, isEditing = fal
     useEffect(() => {
         setLocations(dayData?.locations || []);
     }, [dayData?.locations]);
+
+    // useEffect(() => {
+    //     setDescValue(dayData?.description || "");
+    // }, [dayData?.description]);
 
     const applyAndBubble = (updated) => {
         setLocations(updated);
@@ -78,9 +83,23 @@ export default function DateContainer({ title, dayData, dateKey, isEditing = fal
                     className={`w-6 h-6 absolute -left-6 top-[25%] transition-all duration-200 cursor-pointer ${!showDetails ? '-rotate-90' : ''}`}
                 />
                 <p className="font-bold">{title}</p>
-                <p className="text-neutral-500">
-                    {showDetails ? description : locations[0]?.name || "ไม่มีกิจกรรม"}
-                </p>
+                <div className="text-neutral-500">
+                    {isEditing && showDetails ? (
+                        <input
+                            type="text"
+                            className="w-full border border-neutral-200 rounded-md px-2 text-[1ุุ6px] outline-none focus:ring-2 focus:ring-blue-200"
+                            placeholder="เพิ่มคำอธิบายของวันนี้..."
+                            value={descValue}
+                            onChange={(e) => {
+                                const v = e.target.value;
+                                setDescValue(v);
+                                onUpdateDescription?.(v);
+                            }}
+                        />
+                    ) : (
+                        <p>{showDetails ? description : locations[0]?.name || "ไม่มีกิจกรรม"}</p>
+                    )}
+                </div>
             </div>
 
             <div
