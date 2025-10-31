@@ -100,7 +100,7 @@ export function TripCard({ id, title, date, badges, description, budget, provinc
                 throw new Error(errorData.message || `${res.status} ${res.statusText}`);
             }
 
-            alert("ลบแผนการท่องเที่ยวเรียบร้อยแล้ว!");
+            // alert("ลบแผนการท่องเที่ยวเรียบร้อยแล้ว!");
             if (onDelete) onDelete(id);
         } catch (error) {
             alert(`เกิดข้อผิดพลาดในการลบ: ${error.message}`);

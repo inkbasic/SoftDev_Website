@@ -9,6 +9,7 @@ export default function Navbar() {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
     const navigate = useNavigate();
+    const jwtToken = Cookies.get("jwtToken") || "";
 
     const userRole = Cookies.get("role") || "";
 
@@ -87,7 +88,15 @@ export default function Navbar() {
         
             <div className="flex flex-row items-center gap-6">
                 <div className="flex flex-row items-center gap-3">
-                    <a className="cursor-pointer" onClick={() => navigate("/")}>Create new trip</a>
+
+
+                    { jwtToken && (
+                        <>
+                            <a className="cursor-pointer" onClick={() => navigate("/")}>Create new trip</a>
+                            <a className="cursor-pointer" onClick={() => navigate("/save")}>My plans</a>
+                        </>
+                    )}
+                    
                     {/* <a className="cursor-pointer" onClick={() => navigate("/plan")}>Plan</a> */}
 
                     { userRole === "provider" && (
@@ -98,7 +107,6 @@ export default function Navbar() {
                     )}
 
 
-                    <a className="cursor-pointer" onClick={() => navigate("/save")}>My plans</a>
                 </div>
                 
                 {user ? (
@@ -141,8 +149,8 @@ export default function Navbar() {
                     </div>
                 ) : (
                     <div className="flex flex-row items-center gap-3">
-                        <a className="cursor-pointer" onClick={() => navigate("/login")}>Login</a>
-                        <a className="bg-primary text-white rounded-xl cursor-pointer" onClick={() => navigate("/signup")}>Sign Up</a>
+                        {/* <a className="cursor-pointer" onClick={() => navigate("/login")}>Login</a> */}
+                        <a className="bg-primary text-white rounded-xl cursor-pointer" onClick={() => navigate("/login")}>Login</a>
                     </div>
                 )}
             </div>

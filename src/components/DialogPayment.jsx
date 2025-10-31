@@ -15,9 +15,10 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { BanknoteArrowDown } from "lucide-react";
+import Cookies from 'js-cookie';    
 
 // ---------- ค่าคงที่และยูทิล ----------
-const API_BASE = import.meta.env.VITE_API_BASE_URL || ""; // เช่น https://api.example.com
+const API_BASE = import.meta.env.VITE_PUBLIC_API_URL || ""; // เช่น https://api.example.com
 const API_ENDPOINT = "/ad"; // ตามสเปกที่ให้มา
 const MONGO_ID_RX = /^[a-f0-9]{24}$/i;
 
@@ -76,7 +77,7 @@ export default function DialogPayment({ placeId }) {
     }, [open]);
 
     // ดึง JWT จาก localStorage แบบเมโม (ลดอ่านซ้ำ ๆ)
-    const jwtToken = useMemo(() => localStorage.getItem("jwtToken") || "", []);
+    const jwtToken = useMemo(() => Cookies.get("jwtToken") || "", []);
 
     // ---------- ยิง API ----------
     const handleSubmit = async (e) => {

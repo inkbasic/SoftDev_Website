@@ -124,7 +124,7 @@ export default function AddPlaceForm() {
                     method: "GET",
                     headers: {
                         "Content-Type": "application/json",
-                        Authorization: `Bearer ${getToken() || "jwtToken"}`,
+                        Authorization: `Bearer ${getToken()}`,
                     },
                 });
 
@@ -361,7 +361,7 @@ export default function AddPlaceForm() {
             <form onSubmit={handleSubmit} className="flex flex-col w-full max-w-5xl gap-12">
                 <FormSection
                     title={`กรอกข้อมูลสำหรับ “${typeLabelMap[type]}”`}
-                    description="* จำเป็นต้องกรอก name, imageUrl, location (string), description"
+                    description="* จำเป็นต้องกรอก name, imageUrl, location (ลิงก์ Google Maps), description"
                 >
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         {/* Common fields */}
@@ -380,9 +380,9 @@ export default function AddPlaceForm() {
                             onChange={(_, v) => setImageUrl(v)}
                         />
                         <InputField
-                            label="Location (string)"
+                            label="Location (ลิงก์ Google Maps)"
                             id="location"
-                            placeholder="เช่น 'Bangkok, Thailand' หรือ '100.5018,13.7563'"
+                            placeholder="https://maps.app.goo.gl/6ph23rMTyToF1DGA8"
                             value={locationStr}
                             onChange={(_, v) => setLocationStr(v)}
                         />

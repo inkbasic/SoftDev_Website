@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import Cookies from "js-cookie";
 
 /* ===================== Utilities ===================== */
 
@@ -20,10 +21,7 @@ export function hhmmToApiISO(hhmm) {
 
 /** ดึง JWT จาก local/session storage */
 export function getToken() {
-    const fromLocal = typeof window !== "undefined" ? localStorage.getItem("jwtToken") : "";
-    if (fromLocal) return fromLocal || "";
-    const fromSession = typeof window !== "undefined" ? sessionStorage.getItem("jwtToken") : "";
-    return fromSession || "";
+    return Cookies.get("jwtToken") || "";
 }
 
 export const clamp = (n, min, max) => Math.max(min, Math.min(n, max));
