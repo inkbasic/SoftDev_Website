@@ -24,7 +24,7 @@ export async function getTravelBetween(a, b, signal) {
     if (cache.has(key)) return cache.get(key);
 
     // ขอ geometry แบบ GeoJSON เพื่อวาดเส้นได้เลย
-    const url = `https://router.project-osrm.org/route/v1/driving/${lng1},${lat1};${lng2},${lat2}?overview=full&geometries=geojson&alternatives=false&steps=false`;
+    const url = `https://osrm.wannago.code4.dad/route/v1/driving/${lng1},${lat1};${lng2},${lat2}?overview=full&geometries=geojson&alternatives=false&steps=false`;
     const res = await fetch(url, { signal });
     if (!res.ok) return null;
 
@@ -45,6 +45,7 @@ export async function getTravelBetween(a, b, signal) {
 
     cache.set(key, result);
     return result;
+    // return null;
 }
 
 export async function computeTravelTimes(locations, signal) {

@@ -1,5 +1,5 @@
 import "../global.css";
-import "./css/Home.css";
+import "./css/home.css";
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { DateRange } from "react-date-range";
@@ -9,6 +9,7 @@ import { CalendarDays, PlusIcon, MinusIcon } from "lucide-react";
 import DropDownInput from "./component/DropDownInput.jsx";
 import DropDownMulti from "./component/DropDownMulti.jsx";
 import { ACTIVITY, TRAVEL } from "@/const/userPick";
+import "../Plan/css/plan.css";
 
 export default function Home() {
     const navigate = useNavigate();

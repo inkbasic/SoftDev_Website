@@ -25,6 +25,8 @@ const jsonData = {
 
 // เดิม: const mockData = generatePastData(jsonData, 20);
 const mockData = generatePastData([jsonData], 20); // ✅ ห่อให้เป็น array
+const API_BASE_URL = import.meta.env.VITE_PUBLIC_API_URL || "http://localhost:3000";
+
 
 // ===== Utilities =====
 const nfTH = new Intl.NumberFormat("th-TH");
@@ -41,9 +43,7 @@ const chartConfig = {
 
 /** ดึง JWT จาก storage (ถ้าไม่มีให้ fallback เป็นสตริงเฉย ๆ) */
 function getAuthToken() {
-    const fromLocal = localStorage.getItem("jwtToken");
-    const fromSession = sessionStorage.getItem("jwtToken");
-    return fromLocal || fromSession || "jwtToken";
+    return Cookies.get("jwtToken");
 }
 
 /** map ข้อมูลแถวของ API /ad -> แถวของตาราง AdTable (โค้ดเดิม) */
@@ -149,7 +149,7 @@ export default function Dashboard() {
 
             try {
                 const res = await fetchWithTimeout(
-                    "/ad",
+                    `${API_BASE_URL}/ad`,
                     {
                         method: "GET",
                         headers: {
@@ -233,7 +233,7 @@ export default function Dashboard() {
 
             try {
                 const res = await fetchWithTimeout(
-                    "/places", // === Required Inputs: api_endpoint ===
+                    `${API_BASE_URL}/places`, // === Required Inputs: api_endpoint ===
                     {
                         method: "GET", // === Required Inputs: api_method ===
                         headers: {
@@ -301,7 +301,7 @@ export default function Dashboard() {
 
         try {
             const res = await fetchWithTimeout(
-                "/ad",
+                `${API_BASE_URL}/ad`,
                 {
                     method: "GET",
                     headers: {
@@ -364,7 +364,7 @@ export default function Dashboard() {
 
         try {
             const res = await fetchWithTimeout(
-                "/places",
+                `${API_BASE_URL}/places`,
                 {
                     method: "GET",
                     headers: {

@@ -9,7 +9,7 @@ import { href, useNavigate } from "react-router-dom";
 import { MockLocations } from "../../mock/MockLocations.jsx";
 import StartPoint from "./StartPoint";
 
-const Field = forwardRef(({ planData, onDataChange }, ref) => {
+const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
     const [isEditing, setIsEditing] = useState(true);
     const [showMenu, setShowMenu] = useState(false);
     const [data, setData] = useState(planData || {});
@@ -107,6 +107,17 @@ const Field = forwardRef(({ planData, onDataChange }, ref) => {
         onDataChange?.(updated);
     };
 
+    // หา "สถานที่แรก" ของทริปจาก itinerary (วันที่แรกที่มี locations)
+    const firstLocation = (() => {
+        const iti = data?.itinerary || {};
+        const keys = Object.keys(iti).sort();
+        for (const k of keys) {
+            const locs = iti[k]?.locations || [];
+            if (locs.length > 0) return locs[0];
+        }
+        return null;
+    })();
+
     useImperativeHandle(ref, () => ({
         scrollToSection,
         getItineraryRef: () => dateRefs.current
@@ -115,7 +126,7 @@ const Field = forwardRef(({ planData, onDataChange }, ref) => {
 
     return (
         <div
-            className="h-full w-full flex flex-col gap-5 px-20 py-5 justify-start items-center bg-paper overflow-x-visible overflow-y-auto scroll-auto-hide"
+            className={`h-full w-full flex flex-col gap-5 ${padding} py-5 justify-start items-center bg-paper overflow-x-visible overflow-y-auto scroll-auto-hide`}
             ref={fieldRef}
         >
             {/* Overview Section */}
@@ -159,7 +170,11 @@ const Field = forwardRef(({ planData, onDataChange }, ref) => {
 
             {/* จุดเริ่มต้นการเดินทาง */}
             <div ref={startPointRef} className="w-full">
-                <StartPoint value={data?.startPoint} onChange={handleStartPointChange} />
+                <StartPoint
+                    value={data?.startPoint}
+                    onChange={handleStartPointChange}
+                    firstLocation={firstLocation}
+                />
             </div>
 
             {/* Itinerary Section */}

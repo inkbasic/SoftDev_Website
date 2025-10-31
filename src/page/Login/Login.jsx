@@ -3,33 +3,31 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
+import Cookies from 'js-cookie';
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Router, useNavigate } from "react-router-dom";
 import "../global.css";
+import { Cookie } from "lucide-react";
 
-const LOGIN_ENDPOINT = "/auth/login";
+const API_BASE_URL = import.meta.env.VITE_PUBLIC_API_URL || "http://localhost:3000";
+const LOGIN_ENDPOINT = `${API_BASE_URL}/auth/login`;
 
 export default function Login() {
-    // State ฟอร์ม
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-
-    // State สถานะ API / UI
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
-    const [isLoggedIn, setIsLoggedIn] = useState(false); // ✅ เติม state ที่ถูกเรียกใช้
+    const [isLoggedIn, setIsLoggedIn] = useState(false); 
 
     const navigate = useNavigate();
 
-    // ถ้ามี token อยู่แล้ว ให้เด้งไป home
+    // redirect to home if already logged in
     useEffect(() => {
-        const token = localStorage.getItem("jwtToken") || sessionStorage.getItem("jwtToken");
+        const token = Cookies.get("jwtToken");
         if (token) navigate("/", { replace: true });
     }, [navigate]);
 
-    // เข้าสู่ระบบ
     const handleLogin = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -50,18 +48,17 @@ export default function Login() {
 
             const data = await res.json();
 
-            // เก็บ token/message
-            localStorage.setItem("jwtToken", data.token);
-            localStorage.setItem("loginMessage", data.message || "Login success");
+            Cookies.set("jwtToken", data.token, { expires: 7, secure: false, sameSite: 'lax' });
+            Cookies.set("loginMessage", data.message || "Login success", { expires: 7 });
 
             setSuccess("เข้าสู่ระบบสำเร็จ 🎉");
             setIsLoggedIn(true);
 
-            // ✅ เรียก API /users เพื่อเอา _id
             await fetchUserId(data.token);
 
-            // นำทาง
-            navigate("/dashboard", { replace: true });
+            // change navigate() to window.location.href to force reload
+            window.location.href = "/profile";
+
         } catch (err) {
             setError(err.message || "เกิดข้อผิดพลาดในการเข้าสู่ระบบ ❌");
             console.error(err);
@@ -70,18 +67,17 @@ export default function Login() {
         }
     };
 
-    // ฟังก์ชันเรียก /users
     async function fetchUserId(token) {
         try {
-            const res = await fetch("/users", {
+            const res = await fetch(`${API_BASE_URL}/users`, {
                 method: "GET",
                 headers: {
                     Accept: "application/json",
-                    "Cache-Control": "no-cache", // hint ฝั่ง client
-                    Pragma: "no-cache", // เผื่อ proxy เก่า
+                    "Cache-Control": "no-cache", 
+                    Pragma: "no-cache", 
                     Authorization: `Bearer ${token}`,
                 },
-                cache: "no-store", // สำคัญ: สั่ง fetch ไม่ใช้ cache
+                cache: "no-store", 
             });
 
             if (!res.ok) {
@@ -89,13 +85,14 @@ export default function Login() {
                 throw new Error(err.message || `${res.status} ${res.statusText}`);
             }
 
-            const user = await res.json(); // ตอนนี้ควรได้ 200 + body
+            const user = await res.json();
             if (user) {
-                // ✅ แปลง object เป็น JSON string ก่อนเก็บ
-                localStorage.setItem("user", JSON.stringify(user));
 
-                // ถ้าอยากยังคงเก็บแค่ id แยกไว้ด้วยก็ได้
-                localStorage.setItem("userId", user._id);
+                Cookies.set("userId", user._id, { expires: 7, secure: false, sameSite: 'lax' });
+                Cookies.set("name", `${user.firstName} ${user.lastName}`, { expires: 7, secure: false, sameSite: 'lax' });
+                Cookies.set("email", user.email, { expires: 7, secure: false, sameSite: 'lax' });
+                Cookies.set("profileImage", user.profileImage, { expires: 7, secure: false, sameSite: 'lax' });
+                Cookies.set("username", user.name, { expires: 7, secure: false, sameSite: 'lax' });
 
                 console.log("เก็บ user ทั้ง object:", user);
             }
@@ -166,15 +163,11 @@ export default function Login() {
                 <CardFooter className="flex-col gap-3">
                     <Button
                         type="button"
-                        className="w-full text-sm bg-gradient-to-l from-[#FF7474] to-[#FF9F43]"
+                        className="w-full text-sm bg-gradient-to-l from-[#FF7474] to-[#FF9F43] hover:cursor-pointer"
                         onClick={handleLogin}
                         disabled={loading}
                     >
                         เข้าสู่ระบบ
-                    </Button>
-
-                    <Button variant="outline" className="w-full">
-                        เข้าสู่ระบบด้วย ชื่อผู้ใช้
                     </Button>
 
                     <div className="flex items-center justify-center gap-2 pt-3 text-sm">
@@ -185,13 +178,6 @@ export default function Login() {
                     </div>
                 </CardFooter>
             </Card>
-            {/* <Button
-                type="button"
-                className="w-auto text-sm bg-gradient-to-l from-[#FF7474] to-[#FF9F43]"
-                onClick={fetchUserId}
-            >
-                fetchUserId
-            </Button> */}
         </div>
     );
 }

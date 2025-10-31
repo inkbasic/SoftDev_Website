@@ -1,76 +1,104 @@
-import BackgroundBlurs from "@/components/BackgroundBlurs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
 import { useNavigate } from "react-router-dom";
 import "../global.css";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import Cookies from "js-cookie";
 
-const REGISTER_ENDPOINT = "/auth/register";
+const API_BASE_URL = import.meta.env.VITE_PUBLIC_API_URL || "http://localhost:3000";
+const REGISTER_ENDPOINT = `${API_BASE_URL}/auth/register`;
 
-export default function Signin() {
-    // State สำหรับฟอร์ม
+export default function Signup() {
     const [formData, setFormData] = useState({
         firstName: "",
         lastName: "",
         userName: "",
         email: "",
         password: "",
+        confirmPassword: "",
         profileImage: "",
         phoneNumber: "",
     });
 
-    // State สำหรับสถานะ API
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+    const [passwordMatch, setPasswordMatch] = useState(true);
 
     const navigate = useNavigate();
 
-    // ถ้ามี token อยู่แล้ว ให้เด้งไป home
     useEffect(() => {
-        const token = localStorage.getItem("jwtToken") || sessionStorage.getItem("jwtToken");
+        const token = Cookies.get("jwtToken");
         if (token) navigate("/", { replace: true });
     }, [navigate]);
 
-    // ฟังก์ชันจัดการการเปลี่ยนแปลงค่าในฟอร์ม
+    useEffect(() => {
+        if (formData.password && formData.confirmPassword) {
+            setPasswordMatch(formData.password === formData.confirmPassword);
+        } else {
+            setPasswordMatch(true);
+        }
+    }, [formData.password, formData.confirmPassword]);
+
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.id]: e.target.value });
     };
 
-    // ฟังก์ชันส่งฟอร์มไปยัง API
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        if (!passwordMatch) {
+            setError("รหัสผ่านไม่ตรงกัน ❌");
+            return;
+        }
+        
         setLoading(true);
         setError("");
         setSuccess("");
 
         try {
+            const dataToSubmit = { ...formData };
+            delete dataToSubmit.confirmPassword;
+
             const res = await fetch(REGISTER_ENDPOINT, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(formData), // แปลง formData เป็น JSON string
+                body: JSON.stringify(dataToSubmit),
             });
 
-            // ตรวจสอบว่า response status เป็น OK หรือไม่
             if (!res.ok) {
-                const errorData = await res.json(); // ดึงข้อมูล error จาก API
+                const errorData = await res.json();
                 throw new Error(errorData.message || "เกิดข้อผิดพลาดในการสมัครสมาชิก ❌");
             }
 
-            const data = await res.json(); // parse response JSON
+            const data = await res.json();
+            
+            if (data.token) {
+                Cookies.set("jwtToken", data.token, { expires: 7, secure: true, sameSite: 'strict' });
+                
+                const user = {
+                    userName: formData.userName,
+                    email: formData.email,
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    profileImage: formData.profileImage,
+                };
+                
+                Cookies.set("user", JSON.stringify(user), { expires: 7, secure: true, sameSite: 'strict' });
+                Cookies.set("name", `${formData.firstName} ${formData.lastName}`, { expires: 7, secure: true, sameSite: 'strict' });
+                Cookies.set("email", formData.email, { expires: 7, secure: true, sameSite: 'strict' });
+                Cookies.set("profileImage", formData.profileImage, { expires: 7, secure: true, sameSite: 'strict' });
+                Cookies.set("username", formData.userName, { expires: 7, secure: true, sameSite: 'strict' });
+            }
 
             setSuccess("สมัครสมาชิกสำเร็จ 🎉");
-            console.log("API Response:", data);
-
-            // ✅ นำทางทันทีหลัง login
-            navigate("/", { replace: true });
+            navigate("/login", { replace: true });
         } catch (err) {
-            setError(err.message); // แสดงข้อความ error
+            setError(err.message);
             console.error(err);
         } finally {
             setLoading(false);
@@ -79,10 +107,6 @@ export default function Signin() {
 
     return (
         <div className="flex items-center justify-center py-20 background">
-            {/* Background Glow Circle */}
-            {/* <BackgroundBlurs /> */}
-
-            {/* Content */}
             <Card className="z-10 w-full max-w-sm">
                 <CardHeader>
                     <CardTitle>สร้างบัญชีใหม่เพื่อเริ่มต้นการใช้งาน 🚀</CardTitle>
@@ -127,27 +151,45 @@ export default function Signin() {
                                     onChange={handleChange}
                                 />
                             </div>
-
+                            
                             <div className="grid gap-2">
-                                <Label htmlFor="firstName">ชื่อจริง (First Name)</Label>
+                                <Label htmlFor="confirmPassword">ยืนยันรหัสผ่าน (Confirm Password)</Label>
                                 <Input
-                                    id="firstName"
-                                    type="text"
-                                    placeholder="ชื่อจริง"
-                                    value={formData.firstName}
+                                    id="confirmPassword"
+                                    type="password"
+                                    placeholder="ยืนยันรหัสผ่านอีกครั้ง"
+                                    required
+                                    value={formData.confirmPassword}
                                     onChange={handleChange}
+                                    className={!passwordMatch ? "border-red-500" : ""}
                                 />
+                                {!passwordMatch && (
+                                    <p className="text-xs text-red-500 mt-1">รหัสผ่านไม่ตรงกัน</p>
+                                )}
                             </div>
 
-                            <div className="grid gap-2">
-                                <Label htmlFor="lastName">นามสกุล (Last Name)</Label>
-                                <Input
-                                    id="lastName"
-                                    type="text"
-                                    placeholder="นามสกุล"
-                                    value={formData.lastName}
-                                    onChange={handleChange}
-                                />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="firstName">ชื่อจริง (First Name)</Label>
+                                    <Input
+                                        id="firstName"
+                                        type="text"
+                                        placeholder="ชื่อจริง"
+                                        value={formData.firstName}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <Label htmlFor="lastName">นามสกุล (Last Name)</Label>
+                                    <Input
+                                        id="lastName"
+                                        type="text"
+                                        placeholder="นามสกุล"
+                                        value={formData.lastName}
+                                        onChange={handleChange}
+                                    />
+                                </div>
                             </div>
 
                             <div className="grid gap-2">
@@ -173,7 +215,6 @@ export default function Signin() {
                             </div>
                         </div>
 
-                        {/* แสดงสถานะ Loading / Error / Success */}
                         {loading && <p className="mt-3 text-sm text-blue-500">กำลังสมัครสมาชิก...</p>}
                         {error && <p className="mt-3 text-sm text-red-500">{error}</p>}
                         {success && <p className="mt-3 text-sm text-green-500">{success}</p>}
@@ -183,16 +224,16 @@ export default function Signin() {
                 <CardFooter className="flex-col gap-3">
                     <Button
                         type="submit"
-                        className="w-full text-sm bg-gradient-to-l from-[#FF7474] to-[#FF9F43]"
+                        className="w-full text-sm bg-gradient-to-l from-[#FF7474] to-[#FF9F43] hover:cursor-pointer"
                         onClick={handleSubmit}
-                        disabled={loading}
+                        disabled={loading || !passwordMatch}
                     >
                         สมัครสมาชิก
                     </Button>
 
                     <div className="flex items-center justify-center gap-2 text-sm">
                         มีบัญชีแล้ว?
-                        <a href="/login" className="!px-0 ml-auto text-sm text-black no-underline  hover:underline">
+                        <a href="/login" className="!px-0 ml-auto text-sm underline text-[#ff7474] hover:underline">
                             เข้าสู่ระบบ
                         </a>
                     </div>
