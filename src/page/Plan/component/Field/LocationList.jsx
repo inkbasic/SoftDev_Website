@@ -33,8 +33,11 @@ export default function LocationList({
 
   return (
     <div className="flex flex-col">
-      {locations.map((location, index) => (
-        <div key={location.id} className="relative">
+      {locations.map((location, index) => {
+        // Use a composite, per-instance key to avoid duplicates when the same place appears multiple times in a day
+        const key = `${location?.id ?? 'loc'}:${location?.order ?? index}`;
+        return (
+        <div key={key} className="relative">
           <Location
             index={index}
             locationData={location}
@@ -48,7 +51,7 @@ export default function LocationList({
             <TravelTime data={times?.[index]} />
           )}
         </div>
-      ))}
+      );})}
     </div>
   );
 }
