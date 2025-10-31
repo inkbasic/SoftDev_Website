@@ -13,6 +13,36 @@ function getToken() {
     return localStorage.getItem("jwtToken") || sessionStorage.getItem("jwtToken") || "jwtToken";
 }
 
+// Helper: แปลงวันที่ใดๆ ให้เป็นสตริงท้องถิ่นรูปแบบ YYYY-MM-DD
+function toLocalYMD(d) {
+    if (!d) return null;
+    const date = new Date(d);
+    if (Number.isNaN(date.getTime())) return null;
+    // ปรับเป็นเที่ยงคืนเวลาท้องถิ่นเพื่อตัดปัญหา timezone
+    date.setHours(0, 0, 0, 0);
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+}
+
+// Normalize โครงสร้างแผนจาก server → ใช้ YYYY-MM-DD
+function normalizeServerPlan(plan) {
+    if (!plan || typeof plan !== 'object') return plan;
+    const startDate = toLocalYMD(plan.startDate) || plan.startDate;
+    const endDate = toLocalYMD(plan.endDate) || plan.endDate;
+
+    const iti = plan.itinerary || {};
+    const newIti = {};
+    Object.keys(iti).forEach((k) => {
+        const ok = /^\d{4}-\d{2}-\d{2}$/.test(k);
+        const key = ok ? k : (toLocalYMD(k) || k);
+        newIti[key] = iti[k];
+    });
+
+    return { ...plan, startDate, endDate, itinerary: newIti };
+}
+
 async function fetchPlanById(id) {
     const headers = { 'Content-Type': 'application/json' };
     const token = getToken();
@@ -26,7 +56,7 @@ async function fetchPlanById(id) {
     let body; try { body = raw ? JSON.parse(raw) : null; } catch { body = raw; }
     console.log('GET', url, '=>', res.status, body);
     if (!res.ok) throw new Error(body?.message || 'Fetch plan failed');
-    return body;
+    return normalizeServerPlan(body);
 }
 
 export default function Plan() {
@@ -37,7 +67,6 @@ export default function Plan() {
 
     const [isHideMap, setIsHideMap] = useState(false);
 
-    console.log("Plan page loaded with state:", homeData.state);
     const isNewPlan = homeData.state?.isNew || false;
 
     const [currentData, setCurrentData] = useState(null);
