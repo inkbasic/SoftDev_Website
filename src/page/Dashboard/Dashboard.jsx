@@ -418,25 +418,32 @@ export default function Dashboard() {
             refetchAds();
             refetchPlaces();
         };
+        const onDeleted = () => {
+            console.log("onDeleted")
+            refetchAds();
+        };
 
         window.addEventListener("ad:dialog-opened", onDialogOpened);
         window.addEventListener("ad:created", onAdCreated);
+        window.addEventListener("ad-deleted", onDeleted);
 
         return () => {
             window.removeEventListener("ad:dialog-opened", onDialogOpened);
             window.removeEventListener("ad:created", onAdCreated);
+            window.removeEventListener("ad-deleted", onDeleted);
         };
     }, [refetchAds, refetchPlaces]);
 
     // (ทางเลือก) ฟัง event แล้วรีเฟรชข้อมูล
     // useEffect(() => {
     //     const onDeleted = () => {
-    //         // revalidate/refetch list
-    //         // e.g., call fetchAds() หรือใช้ SWR/React Query ให้ mutate()
+    //         refetchAds();
     //     };
     //     window.addEventListener("ad-deleted", onDeleted);
-    //     return () => window.removeEventListener("ad-deleted", onDeleted);
-    // }, []);
+    //     return () => {
+    //         window.removeEventListener("ad-deleted", onDeleted);
+    //     };
+    // }, [refetchAds, refetchPlaces]);
 
     // ===== ปุ่มนำทาง (เดิม) =====
     const handleAddLocation = () => navigate("/addlocation");
@@ -544,7 +551,6 @@ export default function Dashboard() {
                 <AdTable
                     data={adTableData}
                     onDelete={(row) => {
-                        /* เงียบไว้ตามคำสั่ง */
                     }}
                 />
             </div>

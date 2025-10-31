@@ -19,13 +19,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 /* =========================
    การตั้งค่าภายในไฟล์ (ไม่ต้องส่งเป็นพร็อพ)
    ========================= */
 
 // Base endpoint สำหรับลบโฆษณา
-const ENDPOINT_BASE = "/ad";
+const ENDPOINT_BASE = import.meta.env.VITE_PUBLIC_API_URL+"/ad";
 
 // แหล่ง JWT: ENV (Vite) → localStorage → ค่า fallback (ตัวอย่าง)
 // หมายเหตุ: ในโปรดักชันควรหลีกเลี่ยง fallback ฮาร์ดโค้ด
@@ -45,6 +46,8 @@ const TRIGGER_LABEL = "ลบโฆษณา";
  * - ปิดไดอะล็อกอัตโนมัติเมื่อสำเร็จ และยิง CustomEvent ("ad-deleted")
  */
 export default function DeleteAdDialog({ adId }) {
+
+    const navigate = useNavigate();
     // คุมการเปิด/ปิดภายในคอมโพเนนต์
     const [open, setOpen] = useState(false);
 
@@ -138,13 +141,16 @@ export default function DeleteAdDialog({ adId }) {
 
             // แจ้งส่วนอื่นของแอปว่าลบสำเร็จ (optional)
             // สามารถให้หน้า List ไปฟัง event นี้แล้วรีเฟรชข้อมูล
+            console.log("handle delete")
             window.dispatchEvent(new CustomEvent("ad-deleted", { detail: { adId } }));
+           
         } catch (err) {
             if (err?.name === "AbortError") return; // ผู้ใช้ยกเลิก
             setError(err?.message || "เกิดข้อผิดพลาดไม่ทราบสาเหตุ");
         } finally {
             setIsDeleting(false);
             abortRef.current = null;
+            setTimeout(() => window.location.reload(), 1000);
         }
     };
 

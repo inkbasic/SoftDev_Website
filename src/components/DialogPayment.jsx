@@ -17,7 +17,7 @@ import {
 import { BanknoteArrowDown } from "lucide-react";
 
 // ---------- ค่าคงที่และยูทิล ----------
-const API_BASE = import.meta.env.VITE_API_BASE_URL || ""; // เช่น https://api.example.com
+const API_BASE = import.meta.env.VITE_PUBLIC_API_URL || "http://localhost:3000"; // เช่น https://api.example.com
 const API_ENDPOINT = "/ad"; // ตามสเปกที่ให้มา
 const MONGO_ID_RX = /^[a-f0-9]{24}$/i;
 
