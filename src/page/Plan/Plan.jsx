@@ -10,7 +10,10 @@ import "./plan.css";
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 function getToken() {
-    return localStorage.getItem("jwtToken") || sessionStorage.getItem("jwtToken") || "jwtToken";
+    // Read jwtToken from cookies (prefer HttpOnly cookie flow; header added only if readable and valid)
+    if (typeof document === "undefined" || !document.cookie) return null;
+    const match = document.cookie.match(/(?:^|;\s*)jwtToken=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
 }
 
 // Helper: แปลงวันที่ใดๆ เป็นสตริง YYYY-MM-DD (ยึดค่าปฏิทินท้องถิ่น โดยไม่บังคับ setHours)
@@ -55,7 +58,7 @@ async function fetchPlanById(id) {
     let body; try { body = raw ? JSON.parse(raw) : null; } catch { body = raw; }
     console.log('GET', url, '=>', res.status, body);
     if (!res.ok) throw new Error(body?.message || 'Fetch plan failed');
-    return normalizeServerPlan(body);
+    return normalizeServerPlan(body.plan);
 }
 
 export default function Plan() {

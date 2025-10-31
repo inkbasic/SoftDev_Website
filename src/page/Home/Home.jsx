@@ -60,7 +60,10 @@ export default function Home() {
     };
 
     function getToken() {
-        return localStorage.getItem("jwtToken") || sessionStorage.getItem("jwtToken") || "jwtToken";
+        // Read jwtToken from cookies (prefer HttpOnly cookie flow; header added only if readable and valid)
+        if (typeof document === "undefined" || !document.cookie) return null;
+        const match = document.cookie.match(/(?:^|;\s*)jwtToken=([^;]+)/);
+        return match ? decodeURIComponent(match[1]) : null;
     }
 
     useEffect(() => {
