@@ -7,7 +7,7 @@ import { useLocation, useParams } from "react-router-dom";
 import { PlanMock } from "./mock/Mock.jsx";
 import { getPlaceById, getAllPlacesCached } from "@/lib/placesService";
 import "./plan.css";
-const BASE_URL = import.meta.env.VITE_BASE_URL;
+const BASE_URL = import.meta.env.VITE_PUBLIC_API_URL;
 
 function getToken() {
     // Read jwtToken from cookies (prefer HttpOnly cookie flow; header added only if readable and valid)

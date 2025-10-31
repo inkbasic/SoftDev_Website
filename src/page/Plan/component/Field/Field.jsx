@@ -9,7 +9,7 @@ import { useAutoHideScrollbar } from "@/lib/useAutoHideScrollbar";
 import { href, useNavigate } from "react-router-dom";
 import StartPoint from "./StartPoint";
 
-const BASE_URL = import.meta.env.VITE_BASE_URL;
+const BASE_URL = import.meta.env.VITE_PUBLIC_API_URL;
 
 function getToken() {
     // Read jwtToken from cookies (prefer HttpOnly cookie flow; header added only if readable and valid)
