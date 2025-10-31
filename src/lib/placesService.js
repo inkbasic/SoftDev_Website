@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+const BASE_URL = import.meta.env.VITE_PUBLIC_API_URL || 'http://localhost:3000';
 
 let _cache = null; // array of normalized places
 let _byId = new Map();

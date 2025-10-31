@@ -13,7 +13,7 @@ import "../Plan/css/plan.css";
 
 export default function Home() {
     const navigate = useNavigate();
-    const BASE_URL = import.meta.env.VITE_BASE_URL;
+    const BASE_URL = import.meta.env.VITE_PUBLIC_API_URL;
     const [selectedActivities, setSelectedActivities] = useState(null);
     const [selectedTravel, setSelectedTravel] = useState(null);
     const [destination, setDestination] = useState("");
@@ -202,6 +202,7 @@ export default function Home() {
             }
 
             const base = BASE_URL || 'http://localhost:3000';
+            console.log("Creating plan at:", `${base}/plans`);
             var response = await fetch(`${base}/plans`, {
                 method: 'POST',
                 headers,
