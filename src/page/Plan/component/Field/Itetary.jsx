@@ -30,12 +30,33 @@ const toLocalYMD = (date) => {
     return `${y}-${m}-${day}`;
 };
 
-const parseYMD = (str) => {
-    if (!str) return null;
-    const [y, m, d] = str.split("-").map(Number);
-    const dt = new Date(y, (m || 1) - 1, d || 1); // local midnight
-    dt.setHours(0, 0, 0, 0);
-    return dt;
+const parseYMD = (input) => {
+    if (!input) return null;
+    // If already a Date, normalize to local midnight
+    if (input instanceof Date && !isNaN(input)) {
+        const dt = new Date(input);
+        dt.setHours(0, 0, 0, 0);
+        return dt;
+    }
+    const str = String(input);
+    // Support ISO strings or any string that starts with YYYY-MM-DD
+    const m = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) {
+        const y = Number(m[1]);
+        const mon = Number(m[2]);
+        const day = Number(m[3]);
+        const dt = new Date(y, (mon || 1) - 1, day || 1);
+        dt.setHours(0, 0, 0, 0);
+        return dt;
+    }
+    // Fallback: try Date parsing then normalize
+    const parsed = new Date(str);
+    if (!isNaN(parsed)) {
+        const dt = new Date(parsed);
+        dt.setHours(0, 0, 0, 0);
+        return dt;
+    }
+    return null;
 };
 
 const normalizeOrders = (itinerary) => {
