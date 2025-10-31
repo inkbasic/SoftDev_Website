@@ -99,21 +99,30 @@ export default function Plan() {
     }, [currentData?.startPoint]);
 
     const markers = useMemo(() => {
-        const out = [];
-        const seen = new Set();
         const iti = currentData?.itinerary || {};
-        Object.values(iti).forEach(day => {
-            (day?.locations || []).forEach((loc, idx) => {
+        // เดินตามลำดับวันที่ที่เรียงแล้ว เพื่อให้หมายเลขต่อเนื่อง/ตรงกับลำดับในวัน
+        const dateKeys = Object.keys(iti).sort();
+        const out = [];
+        let base = 0;
+        dateKeys.forEach((dk) => {
+            const day = iti[dk] || {};
+            const locs = Array.isArray(day.locations) ? day.locations : [];
+            locs.forEach((loc, idx) => {
                 let pos = loc.source;
                 if (!Array.isArray(pos)) {
                     const p = getPlaceById?.(loc.id);
                     if (p?.source) pos = p.source;
                 }
                 if (!Array.isArray(pos)) return;
-                if (seen.has(`${loc.id}`)) return;
-                seen.add(`${loc.id}`);
-                out.push({ id: loc.id, name: loc.name, position: pos, order: loc.order ?? (idx + 1) });
+                const orderInDay = typeof loc.order === 'number' ? loc.order : (idx + 1);
+                out.push({
+                    id: `${dk}:${loc.id}:${orderInDay}`,
+                    name: loc.name,
+                    position: pos,
+                    order: base + orderInDay,
+                });
             });
+            base += locs.length;
         });
         return out;
     }, [currentData?.itinerary]);
