@@ -6,7 +6,6 @@ import { CancelButton, SaveButton, MeatButton } from "./Button";
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useAutoHideScrollbar } from "@/lib/useAutoHideScrollbar";
 import { href, useNavigate } from "react-router-dom";
-import { MockLocations } from "../../mock/MockLocations.jsx";
 import StartPoint from "./StartPoint";
 
 const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
@@ -154,7 +153,7 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
                         )}
                     </div>
                 </div>
-                <p className="text-neutral-500">แก้ไขล่าสุด : {data.lastModified}</p>
+                {/* <p className="text-neutral-500">แก้ไขล่าสุด : {data.lastModified}</p> */}
             </div>
 
             <Card>

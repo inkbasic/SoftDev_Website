@@ -5,7 +5,7 @@ import Side from "./component/Side/Side.jsx";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useLocation, useParams } from "react-router-dom";
 import { PlanMock } from "./mock/Mock.jsx";
-import { MockLocations } from "./mock/MockLocations.jsx";
+import { getPlaceById, getAllPlacesCached } from "@/lib/placesService";
 import "./plan.css";
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -101,21 +101,18 @@ export default function Plan() {
     const markers = useMemo(() => {
         const out = [];
         const seen = new Set();
-        const idToSource = new globalThis.Map(MockLocations.map(m => [m.id, m.source]));
         const iti = currentData?.itinerary || {};
         Object.values(iti).forEach(day => {
             (day?.locations || []).forEach((loc, idx) => {
-                const pos = loc.source || idToSource.get(loc.id);
+                let pos = loc.source;
+                if (!Array.isArray(pos)) {
+                    const p = getPlaceById?.(loc.id);
+                    if (p?.source) pos = p.source;
+                }
                 if (!Array.isArray(pos)) return;
-                // ใช้ครั้งแรกที่พบ เพื่อไม่ซ้ำ
                 if (seen.has(`${loc.id}`)) return;
                 seen.add(`${loc.id}`);
-                out.push({
-                    id: loc.id,
-                    name: loc.name,
-                    position: pos,
-                    order: loc.order ?? (idx + 1) // ส่ง order ไปให้ Map
-                });
+                out.push({ id: loc.id, name: loc.name, position: pos, order: loc.order ?? (idx + 1) });
             });
         });
         return out;
