@@ -5,20 +5,12 @@ import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Settings, Ellipsis } from "lucide-react";
 import DialogPayment from "@/components/DialogPayment";
+import { useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
 
-/* ----------------- Utils ----------------- */
-// อ่าน user จาก localStorage แบบปลอดภัย
-function getStoredUser() {
-    try {
-        const s = localStorage.getItem("user");
-        if (!s) return null;
-        return JSON.parse(s);
-    } catch {
-        return null;
-    }
-}
+const API_BASE_URL = import.meta.env.VITE_PUBLIC_API_URL || "http://localhost:3000";
 
-// สร้างตัวอักษรย่อสำหรับ Avatar
+// Create initials for Avatar
 function toInitials(firstName = "", lastName = "", userName = "") {
     const name = `${firstName || ""} ${lastName || ""}`.trim() || userName || "";
     if (!name) return "U";
@@ -27,22 +19,7 @@ function toInitials(firstName = "", lastName = "", userName = "") {
     return (parts[0][0] + parts[1][0]).toUpperCase();
 }
 
-// ฟอร์แมตวันที่ให้เป็นโซนไทย
-function formatDateTimeISO(iso) {
-    if (!iso) return "-";
-    try {
-        const d = new Date(iso);
-        return d.toLocaleString("th-TH", {
-            dateStyle: "medium",
-            timeStyle: "short",
-            timeZone: "Asia/Bangkok",
-        });
-    } catch {
-        return iso;
-    }
-}
-
-/* ----------------- Subcomponents เดิม ----------------- */
+// Subscription card component
 function SubscriptionCard({ title, features, price, per = "/เดือน", isCurrent = false, action }) {
     return (
         <Card className="flex flex-col justify-between gap-4 p-6">
@@ -68,6 +45,7 @@ function SubscriptionCard({ title, features, price, per = "/เดือน", is
     );
 }
 
+// About section component
 function AboutSection({ aboutMe, interests, profile }) {
     return (
         <>
@@ -92,7 +70,7 @@ function AboutSection({ aboutMe, interests, profile }) {
             <Card className="gap-3 p-6">
                 {profile.map((field, idx) => (
                     <div key={idx} className="space-y-1">
-                        <h4 className="font-medium">{field.label}</h4>
+                        <h5 className="font-medium">{field.label}</h5>
                         {Array.isArray(field.value) ? (
                             field.value.map((v, i) => (
                                 <p key={i} className="text-sm text-neutral-500">
@@ -109,22 +87,65 @@ function AboutSection({ aboutMe, interests, profile }) {
     );
 }
 
-/* ----------------- ค่าดีฟอลต์สำหรับ about & interests ----------------- */
 const aboutMeDefault =
     "สวัสดีค่ะ ฉันชอบการท่องเที่ยว ถ่ายภาพ และอ่านหนังสือแนวจิตวิทยา กำลังเรียนรู้การพัฒนาเว็บด้วย Next.js และ TailwindCSS สนใจเรื่องพลังงานและโหราศาสตร์";
 
 const interestsDefault = ["เทคโนโลยี & การเขียนโค้ด", "จักรวาล & ดวงดาว", "การเดินทาง & ไลฟ์สไตล์", "หนังสือจิตวิทยา"];
 
-/* ----------------- หน้า Profile (หลัก) ----------------- */
 export default function Profile() {
     const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const navigate = useNavigate();
 
+    // Fetch user data from API
     useEffect(() => {
-        setUser(getStoredUser());
-    }, []);
+        const token = Cookies.get("jwtToken");
+        if (!token) {
+            navigate("/login", { replace: true });
+            return;
+        }
 
-    // เตรียมข้อมูลสำหรับ Header
+        async function fetchUserProfile() {
+            try {
+                setLoading(true);
+                const res = await fetch(`${API_BASE_URL}/users`, {
+                    method: "GET",
+                    headers: {
+                        Accept: "application/json",
+                        Authorization: `Bearer ${token}`,
+                        "Cache-Control": "no-cache"
+                    },
+                    cache: "no-store"
+                });
+
+                if (!res.ok) {
+                    if (res.status === 401) {
+                        Cookies.remove("jwtToken");
+                        navigate("/login", { replace: true });
+                        throw new Error("โทเค็นหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง");
+                    }
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.message || `${res.status} ${res.statusText}`);
+                }
+
+                const userData = await res.json();
+                setUser(userData);
+
+            } catch (err) {
+                setError(err.message);
+                console.error("Failed to fetch user data:", err);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        fetchUserProfile();
+    }, [navigate]);
+
+    // Prepare header info
     const headerInfo = useMemo(() => {
+        // Default header info when no user; which should not happen due to redirect
         if (!user) {
             return {
                 title: "ชื่อผู้ใช้",
@@ -133,17 +154,20 @@ export default function Profile() {
                 fallback: "U",
             };
         }
+
         const title =
             user.firstName || user.lastName
                 ? `${user.firstName || ""} ${user.lastName || ""}`.trim()
                 : user.userName || "ผู้ใช้";
         const subtitle = user.email || user.role || "user";
-        const avatarUrl = user.profileImage && typeof user.profileImage === "string" ? user.profileImage : "";
+        const avatarUrl = user.profileImage && typeof user.profileImage === "string" ? user.profileImage : "https://ui-avatars.com/api/?background=random&name=" + 
+        (`${user.firstName} ${user.lastName}` || "User");
         const fallback = toInitials(user.firstName, user.lastName, user.userName);
+
         return { title, subtitle, avatarUrl, fallback };
     }, [user]);
 
-    // เตรียมข้อมูลสำหรับการ์ดรายละเอียด
+    // Prepare profile data
     const profileData = useMemo(() => {
         if (!user) {
             return [
@@ -152,8 +176,6 @@ export default function Profile() {
                 { label: "อีเมล", value: "-" },
                 { label: "เบอร์โทรศัพท์", value: "-" },
                 { label: "บทบาท", value: "-" },
-                { label: "สร้างเมื่อ", value: "-" },
-                { label: "อัปเดตล่าสุด", value: "-" },
                 {
                     label: "โซเชียลมีเดีย",
                     value: ["Facebook: -", "Instagram: -", "Twitter/X: -"],
@@ -169,9 +191,6 @@ export default function Profile() {
             { label: "อีเมล", value: user.email || "-" },
             { label: "เบอร์โทรศัพท์", value: user.phoneNumber || "-" },
             { label: "บทบาท", value: user.role || "-" },
-            { label: "สร้างเมื่อ", value: formatDateTimeISO(user.createdAt) },
-            { label: "อัปเดตล่าสุด", value: formatDateTimeISO(user.updatedAt) },
-            // ถ้าคุณมีลิงก์จริงค่อยแทนที่ด้านล่าง
             {
                 label: "โซเชียลมีเดีย",
                 value: ["Facebook: -", "Instagram: -", "Twitter/X: -"],
@@ -179,7 +198,35 @@ export default function Profile() {
         ];
     }, [user]);
 
-    // กรณียังไม่มี user ใน localStorage
+    // Show loading state
+    if (loading) {
+        return (
+            <div className="flex flex-col items-center justify-center gap-8 px-6 py-20">
+                <Card className="w-full max-w-5xl p-6 text-center">
+                    <p className="text-neutral-600">กำลังโหลดข้อมูลผู้ใช้...</p>
+                </Card>
+            </div>
+        );
+    }
+
+    // Show error state
+    if (error) {
+        return (
+            <div className="flex flex-col items-center justify-center gap-8 px-6 py-20">
+                <Card className="w-full max-w-5xl p-6 text-center">
+                    <p className="text-red-500">เกิดข้อผิดพลาด: {error}</p>
+                    <Button 
+                        onClick={() => navigate("/login")} 
+                        className="mt-4 bg-gradient-to-l from-[#FF7474] to-[#FF9F43]"
+                    >
+                        กลับไปหน้าเข้าสู่ระบบ
+                    </Button>
+                </Card>
+            </div>
+        );
+    }
+
+    // Case: no user yet
     if (!user) {
         return (
             <div className="flex flex-col items-center justify-center gap-8 px-6 py-20">
@@ -195,13 +242,13 @@ export default function Profile() {
                         </div>
                     </div>
                     <div className="flex items-center gap-1 lg:gap-4">
-                        <Button variant="outline" size="icon" className="size-9 lg:hidden">
+                        <Button variant="outline" size="icon" className="size-9 lg:hidden hover:cursor-pointer">
                             <Ellipsis />
                         </Button>
-                        <Button variant="outline" size="icon" className="hidden size-9 lg:flex">
+                        <Button variant="outline" size="icon" className="hidden size-9 lg:flex hover:cursor-pointer">
                             <Settings />
                         </Button>
-                        <Button variant="outline" className="hidden px-6 lg:flex" disabled>
+                        <Button variant="outline" className="hidden px-6 lg:flex hover:cursor-pointer" disabled>
                             แก้ไข
                         </Button>
                     </div>
@@ -209,21 +256,25 @@ export default function Profile() {
 
                 <Card className="w-full max-w-5xl p-6 text-center">
                     <p className="text-neutral-600">
-                        ยังไม่พบข้อมูลผู้ใช้ในเครื่อง โปรดเข้าสู่ระบบก่อน หรือให้ฝั่ง Login บันทึก{" "}
-                        <code>localStorage.setItem("user", JSON.stringify(userObject))</code>
+                        ไม่พบข้อมูลผู้ใช้ โปรดเข้าสู่ระบบก่อน
                     </p>
+                    <Button 
+                        onClick={() => navigate("/login")} 
+                        className="mt-4 bg-gradient-to-l from-[#FF7474] to-[#FF9F43]"
+                    >
+                        เข้าสู่ระบบ
+                    </Button>
                 </Card>
             </div>
         );
     }
 
-    // กรณีมี user แล้ว แสดงโปรไฟล์เต็ม
+    // Full profile view with data from API
     return (
         <div className="flex flex-col items-center justify-center gap-12 px-6 py-20">
             <header className="flex items-center justify-between w-full max-w-5xl">
                 <div className="flex gap-4 sm:flex-row lg:gap-7">
                     <Avatar className="size-[50px] lg:size-[150px]">
-                        {/* ถ้า profileImage เป็น URL จะโชว์; ถ้าไม่ เป็นค่าว่าง → fallback */}
                         <AvatarImage src={headerInfo.avatarUrl} />
                         <AvatarFallback>{headerInfo.fallback}</AvatarFallback>
                     </Avatar>
@@ -233,13 +284,17 @@ export default function Profile() {
                     </div>
                 </div>
                 <div className="flex items-center gap-1 lg:gap-4">
-                    <Button variant="outline" size="icon" className="size-9 lg:hidden">
+                    <Button variant="outline" size="icon" className="size-9 lg:hidden hover:cursor-pointer">
                         <Ellipsis />
                     </Button>
-                    <Button variant="outline" size="icon" className="hidden size-9 lg:flex">
+                    <Button variant="outline" size="icon" className="hidden size-9 lg:flex hover:cursor-pointer">
                         <Settings />
                     </Button>
-                    <Button variant="outline" className="hidden px-6 lg:flex">
+                    <Button 
+                        variant="outline" 
+                        className="hidden px-6 lg:flex hover:cursor-pointer"
+                        onClick={() => navigate("/profile/edit")}
+                    >
                         แก้ไข
                     </Button>
                 </div>
@@ -269,7 +324,7 @@ export default function Profile() {
                         ]}
                         price="199 บาท"
                         action={
-                            <Button className="w-full bg-gradient-to-l from-[#FF7474] to-[#FF9F43]">ชำระเงิน</Button>
+                            <Button className="w-full bg-gradient-to-l from-[#FF7474] to-[#FF9F43] hover:cursor-pointer">ชำระเงิน</Button>
                         }
                     />
                     <SubscriptionCard
@@ -282,7 +337,7 @@ export default function Profile() {
                         ]}
                         price="499 บาท"
                         action={
-                            <Button className="w-full bg-gradient-to-l from-[#FF7474] to-[#FF9F43]">ชำระเงิน</Button>
+                            <Button className="w-full bg-gradient-to-l from-[#FF7474] to-[#FF9F43] hover:cursor-pointer">ชำระเงิน</Button>
                         }
                     />
                 </div>

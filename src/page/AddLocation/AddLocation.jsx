@@ -124,7 +124,7 @@ export default function AddPlaceForm() {
                     method: "GET",
                     headers: {
                         "Content-Type": "application/json",
-                        Authorization: `Bearer ${getToken() || "jwtToken"}`,
+                        Authorization: `Bearer ${getToken()}`,
                     },
                 });
 
@@ -361,14 +361,14 @@ export default function AddPlaceForm() {
             <form onSubmit={handleSubmit} className="flex flex-col w-full max-w-5xl gap-12">
                 <FormSection
                     title={`กรอกข้อมูลสำหรับ “${typeLabelMap[type]}”`}
-                    description="* จำเป็นต้องกรอก name, imageUrl, location (string), description"
+                    description="* จำเป็นต้องกรอก name, imageUrl, location (ลิงก์ Google Maps), description"
                 >
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         {/* Common fields */}
                         <InputField
                             label="ชื่อ"
                             id="name"
-                            placeholder="Ocean View Resort / Emerald Pool / Jinda Noodle"
+                            placeholder="Ocean View Resort"
                             value={name}
                             onChange={(_, v) => setName(v)}
                         />
@@ -380,9 +380,9 @@ export default function AddPlaceForm() {
                             onChange={(_, v) => setImageUrl(v)}
                         />
                         <InputField
-                            label="Location (string)"
+                            label="Location (ลิงก์ Google Maps)"
                             id="location"
-                            placeholder="เช่น 'Bangkok, Thailand' หรือ '100.5018,13.7563'"
+                            placeholder="https://maps.app.goo.gl/6ph23rMTyToF1DGA8"
                             value={locationStr}
                             onChange={(_, v) => setLocationStr(v)}
                         />
@@ -491,9 +491,9 @@ export default function AddPlaceForm() {
                     <input type="hidden" name="tags" value={tags} />
 
                     {/* แสดงตัวอย่างค่า tags ที่จะส่ง */}
-                    <div className="mt-16 text-sm text-muted-foreground">
-                        <b>tags:</b> {tags || "(none)"}
-                    </div>
+                    {/* <div className="mt-16 text-sm text-muted-foreground">
+                        <b>tags:</b> {tags || ""}
+                    </div> */}
                 </FormSection>
 
                 {/* ---------- Preview Payload ---------- */}
@@ -504,7 +504,7 @@ export default function AddPlaceForm() {
                 </FormSection> */}
 
                 {/* ---------- Actions ---------- */}
-                <div className="flex justify-end gap-3">
+                <div className="flex justify-end gap-3 mt-24">
                     <Button
                         type="button"
                         variant="outline"

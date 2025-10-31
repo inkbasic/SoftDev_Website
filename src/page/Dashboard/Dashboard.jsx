@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { StatCard } from "./components/StatCard";
 import { AdTable } from "./components/AdTable";
 import { Plus } from "lucide-react";
+import Cookies from "js-cookie";
 
 // กราฟยังคงใช้ mock ตามโจทย์
 import { ChartAreaInteractive } from "@/components/Chart";
@@ -43,9 +44,7 @@ const chartConfig = {
 
 /** ดึง JWT จาก storage (ถ้าไม่มีให้ fallback เป็นสตริงเฉย ๆ) */
 function getAuthToken() {
-    const fromLocal = localStorage.getItem("jwtToken");
-    const fromSession = sessionStorage.getItem("jwtToken");
-    return fromLocal || fromSession || "jwtToken";
+    return Cookies.get("jwtToken");
 }
 
 /** map ข้อมูลแถวของ API /ad -> แถวของตาราง AdTable (โค้ดเดิม) */
@@ -198,6 +197,7 @@ export default function Dashboard() {
                 setTable(apiTable);
 
                 setChartData(generatePastData(apiGraph, 20));
+                // setChartData(apiGraph);
             } catch (err) {
                 if (err?.name === "AbortError" || err?.message?.includes("The operation was aborted")) {
                     return; // unmount/timeout — เงียบ ๆ
@@ -381,7 +381,11 @@ export default function Dashboard() {
             }
 
             const json = await parseJsonResponse(res);
-            const apiTable = json?.data?.table || [];
+            const data = json?.data ?? {};
+            console.log("Refetched /ad data:", data);
+            const apiTotals = data?.stats?.total || {};
+            const apiGraph = data?.graph || [];
+            const apiTable = data?.table || [];
 
             if (!isMountedRef.current) return;
 

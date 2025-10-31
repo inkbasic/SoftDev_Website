@@ -1,97 +1,16 @@
-// import { Badge } from "@/components/ui/badge";
-// import { Button } from "@/components/ui/button";
-// import { Card } from "@/components/ui/card";
-// import { Input } from "@/components/ui/input";
-// import { Funnel, ChevronDown, Ellipsis, Briefcase, Users } from "lucide-react";
-
-// export function TripCard({ title, date, badges, description, maxDescLength = 125 }) {
-//     const shortDesc = description.length > maxDescLength ? description.slice(0, maxDescLength) + " ..." : description;
-
-//     return (
-//         <Card className="p-6">
-//             <div className="flex flex-col gap-2">
-//                 <div className="flex justify-between">
-//                     <div className="flex flex-col gap-1">
-//                         <h4>{title}</h4>
-//                         <p className="text-sm text-neutral-500">{date}</p>
-//                     </div>
-//                     <Ellipsis />
-//                 </div>
-
-//                 {/* Badge */}
-//                 <div className="flex flex-wrap gap-1">
-//                     {badges.map((b, idx) => (
-//                         <Badge
-//                             key={idx}
-//                             variant="secondary"
-//                             style={b.color ? { backgroundColor: b.color } : undefined} // ใช้ style แทน class
-//                         >
-//                             {b.isProvince && <Briefcase className="w-4 h-4 mr-1" />}
-//                             {b.isPeople && <Users className="w-4 h-4 mr-1" />}
-//                             {b.label}
-//                         </Badge>
-//                     ))}
-//                 </div>
-//             </div>
-
-//             {/* detail */}
-//             <p className="mt-1 text-sm">{shortDesc}</p>
-//         </Card>
-//     );
-// }
-
-// export default function Save() {
-//     return (
-//         <div className="flex flex-col items-center justify-center gap-12 px-6 py-20">
-//             <header className="flex flex-col items-start justify-between w-full max-w-5xl gap-3 lg:flex-row lg:items-center">
-//                 <div className="flex flex-col w-full gap-2 sm:flex-row lg:gap-6 lg:max-w-xl">
-//                     <h1 className="text-2xl font-semibold text-nowrap">แผนท่องเที่ยวทั้งหมด</h1>
-//                     <Input type="text" placeholder="ค้นหาจากรายการผ่านชื่อ / แท็ก" />
-//                 </div>
-//                 <Button variant="destructive">
-//                     <Funnel />
-//                     ตัวกรอง
-//                     <ChevronDown />
-//                 </Button>
-//             </header>
-//             <main className="grid w-full max-w-5xl grid-cols-1 gap-4 md:grid-cols-3">
-//                 {Array.from({ length: 8 }).map((_, index) => (
-//                     <TripCard
-//                         key={index}
-//                         title="📍 ทริปเชียงใหม่สามวันสามคืน"
-//                         date="10–12 พฤศจิกายน 2025"
-//                         description="ทริปเชียงใหม่ 3 วัน 2 คืน เหมาะสำหรับคนชอบธรรมชาติและวัฒนธรรม เที่ยววัดพระธาตุดอยสุเทพ ชมวิวเมือง ปิดท้ายซื้อของฝากก่อนเดินทางกลับ กรุงเทพฯ"
-//                         badges={[
-//                             { label: "เชียงใหม่", color: "#DDFAE7", isProvince: true },
-//                             { label: "4 คน", color: "#DDF2FF", isPeople: true },
-//                             { label: "คนชรา", color: "#CBFAF0" },
-//                         ]}
-//                     />
-//                 ))}
-//             </main>
-//         </div>
-//     );
-// }
-
-// src/pages/SavePlans.jsx
+import { useNavigate } from "react-router-dom";
 import React, { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Funnel, ChevronDown, Ellipsis, Briefcase, Users } from "lucide-react";
+import Cookies from "js-cookie";
+import { Funnel, ChevronDown, Ellipsis, Briefcase, Users, CircleDollarSign, Trash2, Share2 } from "lucide-react";
 
 /* ----------------------------- Utilities ----------------------------- */
-// อ่าน token จาก localStorage/sessionStorage
+// อ่าน token จาก Cookies
 function getToken() {
-    return localStorage.getItem("jwtToken") || sessionStorage.getItem("jwtToken") || "jwtToken";
-}
-
-// รวม URL กันพลาดสแลชซ้ำ/ขาด (ถ้าใน dev ใช้ proxy, ให้ตั้ง API_BASE = "")
-function joinUrl(base, path) {
-    const b = (base || "").replace(/\/+$/, "");
-    const p = (path || "").replace(/^\/+/, "");
-    return `${b}/${p}`;
+    return Cookies.get("jwtToken") || ""; 
 }
 
 // ฟอร์แมต date-range ไทยจาก ISO (รับรูปแบบ ISO +07:00 ตามที่สเปกให้มา)
@@ -125,35 +44,165 @@ const COLOR = {
 };
 
 /* ----------------------------- UI: TripCard ----------------------------- */
-export function TripCard({ title, date, badges, description, maxDescLength = 125 }) {
+export function TripCard({ id, title, date, badges, description, budget, province, people, category, maxDescLength = 125, onDelete }) {
+    const navigate = useNavigate();
+    const [showMenu, setShowMenu] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    
     const shortDesc =
         (description || "").length > maxDescLength ? description.slice(0, maxDescLength) + " ..." : description || "-";
 
+    const handleCardClick = () => {
+        if (id && !showMenu) {
+            navigate(`/plan/${id}`);
+        }
+    };
+
+    const handleShare = async (e) => {
+        e.stopPropagation();
+        const url = `${window.location.origin}/plans/${id}`;
+        
+        try {
+            await navigator.clipboard.writeText(url);
+            alert("คัดลอกลิงก์เรียบร้อยแล้ว!");
+        } catch (error) {
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = url;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            alert("คัดลอกลิงก์เรียบร้อยแล้ว!");
+        }
+        setShowMenu(false);
+    };
+
+    const handleDelete = async (e) => {
+        e.stopPropagation();
+        
+        if (!confirm("คุณแน่ใจหรือไม่ที่จะลบแผนการท่องเที่ยวนี้?")) {
+            return;
+        }
+
+        setIsDeleting(true);
+        try {
+            const API_BASE = import.meta.env.VITE_PUBLIC_API_URL || "http://localhost:3000";
+            const res = await fetch(`${API_BASE}/plans/${id}`, {
+                method: "DELETE",
+                headers: {
+                    Authorization: `Bearer ${getToken()}`,
+                },
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.message || `${res.status} ${res.statusText}`);
+            }
+
+            // alert("ลบแผนการท่องเที่ยวเรียบร้อยแล้ว!");
+            if (onDelete) onDelete(id);
+        } catch (error) {
+            alert(`เกิดข้อผิดพลาดในการลบ: ${error.message}`);
+        } finally {
+            setIsDeleting(false);
+            setShowMenu(false);
+        }
+    };
+
     return (
-        <Card className="p-6">
+        <Card 
+            className="p-6 cursor-pointer hover:shadow-lg transition-shadow duration-200 relative" 
+            onClick={handleCardClick}
+        >
             <div className="flex flex-col gap-2">
                 <div className="flex justify-between">
                     <div className="flex flex-col gap-1">
                         <h4 className="font-semibold">{title}</h4>
                         <p className="text-sm text-neutral-500">{date}</p>
                     </div>
-                    <Ellipsis className="text-neutral-500" />
+                    <div className="relative">
+                        <Ellipsis 
+                            className="text-neutral-500 cursor-pointer hover:text-neutral-700" 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                setShowMenu(!showMenu);
+                            }}
+                        />
+                        
+                        {/* Dropdown Menu */}
+                        {showMenu && (
+                            <div className="absolute left-0 top-8 bg-white border border-gray-200 rounded-md shadow-lg z-99 min-w-[150px]">
+                                <button
+                                    onClick={handleShare}
+                                    className="flex items-center w-full px-3 py-2 text-sm text-left hover:bg-gray-100 transition-colors hover:cursor-pointer"
+                                >
+                                    <Share2 className="w-4 h-4 mr-2" />
+                                    แชร์
+                                </button>
+                                <button
+                                    onClick={handleDelete}
+                                    disabled={isDeleting}
+                                    className="flex items-center w-full px-3 py-2 text-sm text-left text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:cursor-pointer"
+                                >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    {isDeleting ? "กำลังลบ..." : "ลบ"}
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Badges */}
-                <div className="flex flex-wrap gap-1">
-                    {badges.map((b, idx) => (
-                        <Badge key={idx} variant="secondary" style={b.color ? { backgroundColor: b.color } : undefined}>
-                            {b.isProvince && <Briefcase className="w-4 h-4 mr-1" />}
-                            {b.isPeople && <Users className="w-4 h-4 mr-1" />}
-                            {b.label}
-                        </Badge>
-                    ))}
+                <div className="flex flex-col flex-wrap gap-1">
+                    <div className="flex flex-row gap-1">
+                        {province && (
+                            <Badge className="bg-green-100 text-green-800">
+                                <Briefcase className="w-4 h-4 mr-1" /> {province}
+                            </Badge>
+                        )}
+                        {people && (
+                            <Badge className="bg-blue-100 text-blue-800">
+                                <Users className="w-4 h-4 mr-1" /> {people} คน
+                            </Badge>
+                        )}
+                        {budget && (
+                            <Badge className="bg-yellow-100 text-yellow-800">
+                                <CircleDollarSign className="w-4 h-4 mr-1" /> {Number(budget).toLocaleString("th-TH")} บาท
+                            </Badge>
+                        )}
+                    </div>
+                        
+                    {/* Categories */}
+                    {category && category.length > 0 && (
+                        <div className="flex flex-row gap-1">
+                            {category.map((t, idx) => (
+                                <Badge
+                                    key={idx}
+                                    variant="secondary"
+                                    style={COLOR.tag ? { backgroundColor: COLOR.tag } : undefined}
+                                >
+                                    {t}
+                                </Badge>
+                            ))}
+                        </div>
+                    )}
                 </div>
+
+                {/* Description
+                {shortDesc && shortDesc !== "-" && (
+                    <p className="mt-1 text-sm text-neutral-600">{shortDesc}</p>
+                )} */}
             </div>
 
-            {/* detail */}
-            <p className="mt-1 text-sm">{shortDesc}</p>
+            {/* Click outside to close menu */}
+            {showMenu && (
+                <div 
+                    className="fixed inset-0 z-5" 
+                    onClick={() => setShowMenu(false)}
+                />
+            )}
         </Card>
     );
 }
@@ -161,7 +210,7 @@ export function TripCard({ title, date, badges, description, maxDescLength = 125
 /* ----------------------------- Main Page ----------------------------- */
 export default function SavePlans() {
     // ตั้ง base URL ผ่าน .env (ถ้าใช้ Vite proxy ให้ปล่อยว่าง)
-    const API_BASE = import.meta.env.VITE_API_BASE || "";
+    const API_BASE = import.meta.env.VITE_PUBLIC_API_URL || "http://localhost:3000";
     const ENDPOINT = "/plans";
 
     const [plans, setPlans] = useState([]); // ข้อมูลดิบจาก API (array)
@@ -178,8 +227,7 @@ export default function SavePlans() {
             setLoading(true);
             setError("");
             try {
-                const url = joinUrl(API_BASE, ENDPOINT);
-                const res = await fetch(url, {
+                const res = await fetch(`${API_BASE}${ENDPOINT}`, {
                     method: "GET",
                     headers: {
                         Accept: "application/json",
@@ -221,6 +269,11 @@ export default function SavePlans() {
             aborted = true;
         };
     }, [API_BASE]);
+
+    // Handle plan deletion
+    const handlePlanDelete = (deletedId) => {
+        setPlans(prevPlans => prevPlans.filter(plan => plan._id !== deletedId && plan.id !== deletedId));
+    };
 
     // แปลงข้อมูล plan -> props ของการ์ด + ค้นหา/กรอง
     const filtered = useMemo(() => {
@@ -301,9 +354,10 @@ export default function SavePlans() {
                 <main className="grid w-full max-w-5xl grid-cols-1 gap-4 md:grid-cols-3">
                     {filtered.map((plan, idx) => (
                         <TripCard
+                            id={plan._id || plan.id || idx}
                             key={plan._id || plan.id || idx}
-                            title={`📍 ${plan.name || "แผนทริป"}`}
-                            date={formatThaiRange(plan.startTime, plan.endTime)}
+                            title={`${plan.title || "แผนทริป"}`}
+                            date={formatThaiRange(plan.startDate, plan.endDate)}
                             description={[
                                 plan.source?.length ? `ออกเดินทางจาก: ${plan.source.join(", ")}` : null,
                                 plan.destination ? `จุดหมาย: ${plan.destination}` : null,
@@ -313,7 +367,12 @@ export default function SavePlans() {
                             ]
                                 .filter(Boolean)
                                 .join(" • ")}
-                            badges={toBadges(plan)}
+                            
+                            budget={plan.budget}
+                            province={plan.where}
+                            people={plan.people}
+                            category={plan.category}
+                            onDelete={handlePlanDelete}
                         />
                     ))}
                 </main>

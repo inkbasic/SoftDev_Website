@@ -22,12 +22,12 @@ export function StatCard({ title, value, change, trend, description, isUp = true
         <Card className="w-full gap-2 p-6">
             <div className="flex justify-between">
                 <p className="text-sm text-neutral-500">{title}</p>
-                {change && (
+                {/* {change && (
                     <Badge variant="outline" className="gap-1">
                         {isUp ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
                         {change}
                     </Badge>
-                )}
+                )} */}
             </div>
             <h2 className="text-2xl">{value}</h2>
             {(trend || description) && (
