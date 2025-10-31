@@ -54,7 +54,7 @@ export function TripCard({ id, title, date, badges, description, budget, provinc
 
     const handleCardClick = () => {
         if (id && !showMenu) {
-            navigate(`/plans/${id}`);
+            navigate(`/plan/${id}`);
         }
     };
 
