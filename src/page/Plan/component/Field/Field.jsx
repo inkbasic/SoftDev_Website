@@ -278,6 +278,46 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
         setIsEditing(true);
     };
 
+    const copyToClipboard = async (text) => {
+        try {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(text);
+                return true;
+            }
+        } catch {}
+        // Fallback for non-secure context or older browsers
+        try {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.top = '-9999px';
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            const ok = document.execCommand('copy');
+            document.body.removeChild(ta);
+            return ok;
+        } catch {
+            return false;
+        }
+    };
+
+    const handleShare = async () => {
+        try {
+            const url = window?.location?.href || '';
+            const ok = await copyToClipboard(url);
+            setShowMenu(false);
+            if (ok) {
+                alert('คัดลอกลิงก์แล้ว');
+            } else {
+                alert('ไม่สามารถคัดลอกอัตโนมัติได้ กรุณาคัดลอกเอง: ' + url);
+            }
+        } catch (e) {
+            setShowMenu(false);
+            alert('เกิดข้อผิดพลาดในการคัดลอกลิงก์');
+        }
+    };
+
     const handleStartPointChange = (startPoint) => {
         const updated = { ...(data || {}), startPoint };
         setData(updated);
@@ -331,7 +371,7 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
                             <MeatButton onClick={handleToggleMenu} click={showMenu}>
                                 {showMenu && (
                                     <div ref={menuRef} className="absolute right-0 top-full mt-1 w-30 bg-white border border-neutral-200 rounded-md shadow-lg z-10 overflow-hidden">
-                                        <p className="px-2 py-1 cursor-pointer hover:bg-neutral-200">แชร์</p>
+                                        <p onClick={handleShare} className="px-2 py-1 cursor-pointer hover:bg-neutral-200">แชร์</p>
                                         <p onClick={handleEdit} className="px-2 py-1 cursor-pointer hover:bg-neutral-200">แก้ไข</p>
                                         <p onClick={() => navigate("/")} className="px-2 py-1 cursor-pointer hover:bg-neutral-200">ลบ</p>
                                     </div>
