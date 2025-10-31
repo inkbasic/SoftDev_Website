@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { StatCard } from "./components/StatCard";
 import { AdTable } from "./components/AdTable";
 import { Plus } from "lucide-react";
+import Cookies from "js-cookie";
 
 // กราฟยังคงใช้ mock ตามโจทย์
 import { ChartAreaInteractive } from "@/components/Chart";
@@ -196,6 +197,7 @@ export default function Dashboard() {
                 setTable(apiTable);
 
                 setChartData(generatePastData(apiGraph, 20));
+                // setChartData(apiGraph);
             } catch (err) {
                 if (err?.name === "AbortError" || err?.message?.includes("The operation was aborted")) {
                     return; // unmount/timeout — เงียบ ๆ
@@ -328,6 +330,7 @@ export default function Dashboard() {
 
             const json = await parseJsonResponse(res);
             const data = json?.data ?? {};
+            console.log("Refetched /ad data:", data);
             const apiTotals = data?.stats?.total || {};
             const apiGraph = data?.graph || [];
             const apiTable = data?.table || [];

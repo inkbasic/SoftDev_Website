@@ -9,6 +9,9 @@ export default function Navbar() {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
     const navigate = useNavigate();
+    const jwtToken = Cookies.get("jwtToken") || "";
+
+    const userRole = Cookies.get("role") || "";
 
     useEffect(() => {
         function handleClickOutside(event) {
@@ -63,6 +66,7 @@ export default function Navbar() {
         Cookies.remove("profileImage");
         Cookies.remove("username");
         Cookies.remove("userId");
+        Cookies.remove("role");
         
         // Reset user state
         setUser(null);
@@ -84,11 +88,25 @@ export default function Navbar() {
         
             <div className="flex flex-row items-center gap-6">
                 <div className="flex flex-row items-center gap-3">
-                    <a className="cursor-pointer" onClick={() => navigate("/")}>Home</a>
-                    <a className="cursor-pointer" onClick={() => navigate("/plan")}>Plan</a>
-                    <a className="cursor-pointer" onClick={() => navigate("/dashboard")}>Dashboard</a>
-                    <a className="cursor-pointer" onClick={() => navigate("/addlocation")}>Add Location</a>
-                    <a className="cursor-pointer" onClick={() => navigate("/save")}>Save</a>
+
+
+                    { jwtToken && (
+                        <>
+                            <a className="cursor-pointer" onClick={() => navigate("/")}>Create new trip</a>
+                            <a className="cursor-pointer" onClick={() => navigate("/save")}>My plans</a>
+                        </>
+                    )}
+                    
+                    {/* <a className="cursor-pointer" onClick={() => navigate("/plan")}>Plan</a> */}
+
+                    { userRole === "provider" && (
+                        <>
+                            <a className="cursor-pointer" onClick={() => navigate("/dashboard")}>Dashboard</a>
+                            <a className="cursor-pointer" onClick={() => navigate("/addlocation")}>Add Location</a>
+                        </>
+                    )}
+
+
                 </div>
                 
                 {user ? (
@@ -131,8 +149,8 @@ export default function Navbar() {
                     </div>
                 ) : (
                     <div className="flex flex-row items-center gap-3">
-                        <a className="cursor-pointer" onClick={() => navigate("/login")}>Login</a>
-                        <a className="bg-primary text-white rounded-xl cursor-pointer" onClick={() => navigate("/signup")}>Sign Up</a>
+                        {/* <a className="cursor-pointer" onClick={() => navigate("/login")}>Login</a> */}
+                        <a className="bg-primary text-white rounded-xl cursor-pointer" onClick={() => navigate("/login")}>Login</a>
                     </div>
                 )}
             </div>

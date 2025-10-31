@@ -1,0 +1,17 @@
+@import "tailwindcss";
+@config "@/../tailwind.config.js";
+
+h1 {
+  @apply text-[48px] font-bold;
+  font-family: 'Sarabun', sans-serif;
+}
+
+h3 {
+  @apply text-[32px] font-bold;
+  font-family: 'Sarabun', sans-serif;
+}
+
+h4 {
+  @apply text-[28px] font-bold;
+  font-family: 'Sarabun', sans-serif;
+}

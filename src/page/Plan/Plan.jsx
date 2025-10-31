@@ -3,23 +3,96 @@ import Field from "./component/Field/Field.jsx";
 import MapView from "./component/Map/Map.jsx";
 import Side from "./component/Side/Side.jsx";
 import { useGeolocation } from "@/hooks/useGeolocation";
-import { useLocation } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { PlanMock } from "./mock/Mock.jsx";
-import { MockLocations } from "./mock/MockLocations.jsx";
-import { EyeIcon } from "lucide-react";
+import { getPlaceById, getAllPlacesCached } from "@/lib/placesService";
+import "./plan.css";
+const BASE_URL = import.meta.env.VITE_PUBLIC_API_URL;
+
+function getToken() {
+    // Read jwtToken from cookies (prefer HttpOnly cookie flow; header added only if readable and valid)
+    if (typeof document === "undefined" || !document.cookie) return null;
+    const match = document.cookie.match(/(?:^|;\s*)jwtToken=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
+}
+
+// Helper: แปลงวันที่ใดๆ เป็นสตริง YYYY-MM-DD (ยึดค่าปฏิทินท้องถิ่น โดยไม่บังคับ setHours)
+function toLocalYMD(d) {
+    if (!d) return null;
+    if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)) return d; // ถ้าเป็น Y-M-D แล้ว ส่งกลับเลย
+    const date = d instanceof Date ? d : new Date(d);
+    if (Number.isNaN(date.getTime())) return null;
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+}
+
+// Normalize โครงสร้างแผนจาก server → ใช้ YYYY-MM-DD
+function normalizeServerPlan(plan) {
+    if (!plan || typeof plan !== 'object') return plan;
+    const startDate = toLocalYMD(plan.startDate) || plan.startDate;
+    const endDate = toLocalYMD(plan.endDate) || plan.endDate;
+
+    const iti = plan.itinerary || {};
+    const newIti = {};
+    Object.keys(iti).forEach((k) => {
+        const ok = /^\d{4}-\d{2}-\d{2}$/.test(k);
+        const key = ok ? k : (toLocalYMD(k) || k);
+        newIti[key] = iti[k];
+    });
+
+    return { ...plan, startDate, endDate, itinerary: newIti };
+}
+
+async function fetchPlanById(id) {
+    const headers = { 'Content-Type': 'application/json' };
+    const token = getToken();
+    if (token && token !== 'jwtToken' && token.split('.').length === 3) {
+        headers.Authorization = `Bearer ${token}`;
+    }
+    const base = BASE_URL || 'http://localhost:3000';
+    const url = `${base}/plans/${id}`;
+    const res = await fetch(url, { method: 'GET', headers });
+    const raw = await res.text();
+    let body; try { body = raw ? JSON.parse(raw) : null; } catch { body = raw; }
+    console.log('GET', url, '=>', res.status, body);
+    if (!res.ok) throw new Error(body?.message || 'Fetch plan failed');
+    return normalizeServerPlan(body.plan);
+}
 
 export default function Plan() {
-    const location = useLocation();
+    const homeData = useLocation();
+    const { id } = useParams();
     const fieldRef = useRef(null);
     const { location: geoLocation, error, loading, getCurrentPosition } = useGeolocation();
 
     const [isHideMap, setIsHideMap] = useState(false);
 
-    const initialData = PlanMock;
-    const isNewPlan = location.state?.isNew || false;
+    const isNewPlan = homeData.state?.isNew || false;
 
-    // ย้ายประกาศ state ขึ้นมาก่อนใช้
-    const [currentData, setCurrentData] = useState(initialData);
+    const [currentData, setCurrentData] = useState(null);
+    const [loadingPlan, setLoadingPlan] = useState(true);
+
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                if (id) {
+                    const data = await fetchPlanById(id);
+                    if (!cancelled) setCurrentData(data);
+                } else {
+                    if (!cancelled) setCurrentData(PlanMock);
+                }
+            } catch (e) {
+                console.error(e);
+                if (!cancelled) setCurrentData(PlanMock);
+            } finally {
+                if (!cancelled) setLoadingPlan(false);
+            }
+        })();
+        return () => { cancelled = true; };
+    }, [id]);
 
     const startMarker = useMemo(() => {
         const sp = currentData?.startPoint;
@@ -27,31 +100,31 @@ export default function Plan() {
         return { ...sp, isStart: true, order: 0 };
     }, [currentData?.startPoint]);
 
-    useEffect(() => {
-        if (isNewPlan) {
-            console.log("New plan created with data:", initialData);
-        }
-    }, [isNewPlan, initialData]);
-
     const markers = useMemo(() => {
-        const out = [];
-        const seen = new Set();
-        const idToSource = new globalThis.Map(MockLocations.map(m => [m.id, m.source]));
         const iti = currentData?.itinerary || {};
-        Object.values(iti).forEach(day => {
-            (day?.locations || []).forEach((loc, idx) => {
-                const pos = loc.source || idToSource.get(loc.id);
+        // เดินตามลำดับวันที่ที่เรียงแล้ว เพื่อให้หมายเลขต่อเนื่อง/ตรงกับลำดับในวัน
+        const dateKeys = Object.keys(iti).sort();
+        const out = [];
+        let base = 0;
+        dateKeys.forEach((dk) => {
+            const day = iti[dk] || {};
+            const locs = Array.isArray(day.locations) ? day.locations : [];
+            locs.forEach((loc, idx) => {
+                let pos = loc.source;
+                if (!Array.isArray(pos)) {
+                    const p = getPlaceById?.(loc.id);
+                    if (p?.source) pos = p.source;
+                }
                 if (!Array.isArray(pos)) return;
-                // ใช้ครั้งแรกที่พบ เพื่อไม่ซ้ำ
-                if (seen.has(`${loc.id}`)) return;
-                seen.add(`${loc.id}`);
+                const orderInDay = typeof loc.order === 'number' ? loc.order : (idx + 1);
                 out.push({
-                    id: loc.id,
+                    id: `${dk}:${loc.id}:${orderInDay}`,
                     name: loc.name,
                     position: pos,
-                    order: loc.order ?? (idx + 1) // ส่ง order ไปให้ Map
+                    order: base + orderInDay,
                 });
             });
+            base += locs.length;
         });
         return out;
     }, [currentData?.itinerary]);
@@ -70,21 +143,29 @@ export default function Plan() {
     return (
         <div className="w-full h-full flex justify-center">
             <div className="flex w-full">
-                <Side
-                    onItemClick={handleSidebarItemClick}
-                    fieldRef={fieldRef}
-                    planData={currentData}
-                />
-                <Field
-                    ref={fieldRef}
-                    planData={currentData}
-                    onDataChange={handleDataChange}
-                    padding={isHideMap ? 'px-80' : 'px-20'}
-                />
+                {loadingPlan || !currentData ? (
+                    <div className="w-full flex items-center justify-center p-4">
+                        <h1>กำลังโหลด...</h1>
+                    </div>
+                ) : (
+                    <>
+                        <Side
+                            onItemClick={handleSidebarItemClick}
+                            fieldRef={fieldRef}
+                            planData={currentData}
+                        />
+                        <Field
+                            ref={fieldRef}
+                            planData={currentData}
+                            onDataChange={handleDataChange}
+                            padding={isHideMap ? 'px-80' : 'px-20'}
+                        />
+                    </>
+                )}
             </div>
 
             <div className={`w-full h-full flex items-center justify-center ` + (isHideMap ? 'hidden' : '')}>
-                {loading ? (
+                {loading || loadingPlan || !currentData ? (
                     <h1 className="p-4">กำลังโหลด...</h1>
                 ) : (
                     <MapView

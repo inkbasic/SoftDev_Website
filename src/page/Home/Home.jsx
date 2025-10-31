@@ -13,6 +13,7 @@ import "../Plan/css/plan.css";
 
 export default function Home() {
     const navigate = useNavigate();
+    const BASE_URL = import.meta.env.VITE_PUBLIC_API_URL;
     const [selectedActivities, setSelectedActivities] = useState(null);
     const [selectedTravel, setSelectedTravel] = useState(null);
     const [destination, setDestination] = useState("");
@@ -46,6 +47,24 @@ export default function Home() {
         endDate: null,
         key: "selection",
     });
+
+    const toLocalYMD = (d) => {
+        if (!d) return null;
+        if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)) return d;
+        const date = d instanceof Date ? d : new Date(d);
+        if (Number.isNaN(date.getTime())) return null;
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+    };
+
+    function getToken() {
+        // Read jwtToken from cookies (prefer HttpOnly cookie flow; header added only if readable and valid)
+        if (typeof document === "undefined" || !document.cookie) return null;
+        const match = document.cookie.match(/(?:^|;\s*)jwtToken=([^;]+)/);
+        return match ? decodeURIComponent(match[1]) : null;
+    }
 
     useEffect(() => {
         if (range && range.startDate && range.endDate) {
@@ -143,15 +162,16 @@ export default function Home() {
     // Prepare API payload
     const prepareApiPayload = () => {
         return {
-            destination: destination.trim(),
-            startDate: range.startDate ? range.startDate.toISOString().split('T')[0] : null,
-            endDate: range.endDate ? range.endDate.toISOString().split('T')[0] : null,
+            where: destination.trim(),
+            startDate: toLocalYMD(range.startDate),
+            endDate: toLocalYMD(range.endDate),
             people: people,
-            activities: selectedActivities || [],
+            category: selectedActivities || [],
             transportation: selectedTravel,
             budget: budget,
-            createdAt: new Date().toISOString(),
-            userId: null // จะได้จาก auth system ในอนาคต
+            source: [0, 0]
+            // createdAt: new Date().toISOString(),
+            // userId: null // จะได้จาก auth system ในอนาคต
         };
     };
 
@@ -159,7 +179,6 @@ export default function Home() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Clear previous errors
         setErrors({});
 
         // Validate form
@@ -175,28 +194,34 @@ export default function Home() {
         try {
             setIsLoading(true);
 
-            // TODO: Replace with actual API call
-            // const response = await fetch('/api/travel-plans', {
-            //     method: 'POST',
-            //     headers: {
-            //         'Content-Type': 'application/json',
-            //     },
-            //     body: JSON.stringify(payload)
-            // });
+            // Build headers conditionally (avoid sending malformed JWT)
+            const headers = { 'Content-Type': 'application/json' };
+            const token = getToken();
+            if (token && token !== 'jwtToken' && token.split('.').length === 3) {
+                headers.Authorization = `Bearer ${token}`;
+            }
 
-            // if (!response.ok) {
-            //     throw new Error('Failed to create travel plan');
-            // }
+            const base = BASE_URL || 'http://localhost:3000';
+            console.log("Creating plan at:", `${base}/plans`);
+            var response = await fetch(`${base}/plans`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(payload)
+            });
+            var rawText = await response.text();
+            let parsed;
+            try { parsed = rawText ? JSON.parse(rawText) : null; } catch { parsed = rawText; }
+            console.log("POST /plans =>", response.status, parsed);
 
-            // const result = await response.json();
+            if (!response.ok) {
+                throw new Error(typeof parsed === 'string' ? parsed : (parsed?.message || 'Failed to create travel plan'));
+            }
 
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            console.log("Plan created successfully:", parsed);
 
-            // Navigate to plan page with data
-            navigate("/plan", {
+            const newId = parsed?._id || parsed?.id;
+            navigate(newId ? `/plan/${newId}` : "/plan", {
                 state: {
-                    planData: payload,
                     isNew: true
                 }
             });

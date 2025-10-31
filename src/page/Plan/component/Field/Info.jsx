@@ -31,7 +31,12 @@ const formatDateRangeThai = (startStr, endStr) => {
   return `${sd} ${thaiMonths[sm]} ${sy} - ${ed} ${thaiMonths[em]} ${ey}`;
 };
 
-export default function Info({data}) {
+export default function Info({ data, isEditing = false, onChange }) {
+  const toNum = (v) => {
+    if (v === "" || v === null || v === undefined) return undefined;
+    const n = Number(v);
+    return Number.isNaN(n) ? undefined : n;
+  };
     return (
         <>
             <div className="grid grid-cols-2 gap-3">
@@ -49,11 +54,33 @@ export default function Info({data}) {
                 </div>
                 <div>
                     <p className="font-bold">ค่าใช้จ่าย</p>
-                    <p className="text-neutral-500">{data.budget} ฿</p>
+          {isEditing ? (
+            <input
+              type="number"
+              min={0}
+              className="border border-neutral-300 rounded-md px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-blue-200"
+              placeholder="เช่น 5000"
+              value={data?.budget ?? ""}
+              onChange={(e) => onChange?.({ budget: toNum(e.target.value) })}
+            />
+          ) : (
+            <p className="text-neutral-500">{data?.budget ?? "-"} ฿</p>
+          )}
                 </div>
                 <div>
                     <p className="font-bold">จำนวนคน</p>
-                    <p className="text-neutral-500">{data.people} คน</p>
+          {isEditing ? (
+            <input
+              type="number"
+              min={1}
+              className="border border-neutral-300 rounded-md px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-blue-200"
+              placeholder="เช่น 2"
+              value={data?.people ?? ""}
+              onChange={(e) => onChange?.({ people: toNum(e.target.value) })}
+            />
+          ) : (
+            <p className="text-neutral-500">{data?.people ?? "-"} คน</p>
+          )}
                 </div>
             </div>
         </>
