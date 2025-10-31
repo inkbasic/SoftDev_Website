@@ -134,13 +134,15 @@ export default function DeletePlaceDialog({ placeId }) {
             setOpen(false);
 
             // (ออปชัน) สามารถทำ side-effect ภายในได้ เช่น reload/refresh:
-            // window.dispatchEvent(new CustomEvent("place-deleted", { detail: { placeId } }));
+            window.dispatchEvent(new CustomEvent("place-deleted", { detail: { placeId } }));
         } catch (err) {
             if (err?.name === "AbortError") return;
             setError(err?.message || "เกิดข้อผิดพลาดไม่ทราบสาเหตุ");
         } finally {
             setIsDeleting(false);
             abortRef.current = null;
+            window.dispatchEvent(new CustomEvent("place-deleted", { detail: { placeId } }));
+            //setTimeout(() => window.location.reload(), 1000);
         }
     };
 

@@ -290,16 +290,76 @@ export default function Dashboard() {
     // ===== แปลงข้อมูลของตารางโฆษณา (เดิม) =====
     const adTableData = useMemo(() => (Array.isArray(table) ? table.map(mapApiRowToAdTableRow) : []), [table]);
 
-    // ===== 🆕 ฟังก์ชัน re-fetch เพื่อเรียกซ้ำได้ทุกเมื่อ =====
-    const refetchAds = useCallback(async () => {
+        // ===== 🆕 ฟังก์ชัน re-fetch เพื่อเรียกซ้ำได้ทุกเมื่อ =====
+        // const refetchAds = useCallback(async () => {
+        //     const token = getAuthToken();
+        //     if (!token || token === "undefined") {
+        //         navigate("/login", { replace: true });
+        //         return;
+        //     }
+
+        //     setLoading(true);
+        //     setError("");
+
+        //     try {
+        //         const res = await fetchWithTimeout(
+        //             `${API_BASE_URL}/ad`,
+        //             {
+        //                 method: "GET",
+        //                 headers: {
+        //                     Accept: "application/json",
+        //                     "Content-Type": "application/json",
+        //                     Authorization: `Bearer ${token}`,
+        //                 },
+        //             },
+        //             15000
+        //         );
+
+        //         if (res.status === 401 || res.status === 403) {
+        //             localStorage.removeItem("jwtToken");
+        //             sessionStorage.removeItem("jwtToken");
+        //             setError("เซสชันหมดอายุหรือสิทธิ์ไม่เพียงพอ (ต้องเข้าสู่ระบบใหม่)");
+        //             navigate("/login", { replace: true });
+        //             return;
+        //         }
+
+        //         if (!res.ok) {
+        //             const t = await res.text().catch(() => "");
+        //             throw new Error(`Request failed ${res.status}: ${t?.slice(0, 200) || "(no response body)"}`);
+        //         }
+
+        //         const json = await parseJsonResponse(res);
+        //         const data = json?.data ?? {};
+        //         const apiTotals = data?.stats?.total || {};
+        //         const apiGraph = data?.graph || [];
+        //         const apiTable = data?.table || [];
+
+        //         if (!isMountedRef.current) return;
+
+        //         setTotals({
+        //             views: Number(apiTotals.views || 0),
+        //             clicks: Number(apiTotals.clicks || 0),
+        //             contacts: Number(apiTotals.contacts || 0),
+        //             bookings: Number(apiTotals.bookings || 0),
+        //             ctr: Number(apiTotals.ctr || 0),
+        //         });
+        //         setGraph(apiGraph);
+        //         setTable(apiTable);
+        //         setChartData(generatePastData(apiGraph, 20));
+        //     } catch (err) {
+        //         if (!isMountedRef.current) return;
+        //         setError(err?.message || "ไม่สามารถดึงข้อมูลได้");
+        //     } finally {
+        //         if (isMountedRef.current) setLoading(false);
+        //     }
+        // }, [navigate]);
+
+        const refetchAds = useCallback(async () => {
         const token = getAuthToken();
         if (!token || token === "undefined") {
             navigate("/login", { replace: true });
             return;
         }
-
-        setLoading(true);
-        setError("");
 
         try {
             const res = await fetchWithTimeout(
@@ -315,44 +375,23 @@ export default function Dashboard() {
                 15000
             );
 
-            if (res.status === 401 || res.status === 403) {
-                localStorage.removeItem("jwtToken");
-                sessionStorage.removeItem("jwtToken");
-                setError("เซสชันหมดอายุหรือสิทธิ์ไม่เพียงพอ (ต้องเข้าสู่ระบบใหม่)");
-                navigate("/login", { replace: true });
-                return;
-            }
-
             if (!res.ok) {
                 const t = await res.text().catch(() => "");
                 throw new Error(`Request failed ${res.status}: ${t?.slice(0, 200) || "(no response body)"}`);
             }
 
             const json = await parseJsonResponse(res);
-            const data = json?.data ?? {};
-            const apiTotals = data?.stats?.total || {};
-            const apiGraph = data?.graph || [];
-            const apiTable = data?.table || [];
+            const apiTable = json?.data?.table || [];
 
             if (!isMountedRef.current) return;
 
-            setTotals({
-                views: Number(apiTotals.views || 0),
-                clicks: Number(apiTotals.clicks || 0),
-                contacts: Number(apiTotals.contacts || 0),
-                bookings: Number(apiTotals.bookings || 0),
-                ctr: Number(apiTotals.ctr || 0),
-            });
-            setGraph(apiGraph);
+            // อัปเดตเฉพาะ table
             setTable(apiTable);
-            setChartData(generatePastData(apiGraph, 20));
         } catch (err) {
-            if (!isMountedRef.current) return;
-            setError(err?.message || "ไม่สามารถดึงข้อมูลได้");
-        } finally {
-            if (isMountedRef.current) setLoading(false);
+            console.error("Failed to refetch ads:", err);
         }
     }, [navigate]);
+
 
     const refetchPlaces = useCallback(async () => {
         const token = getAuthToken();
@@ -418,32 +457,36 @@ export default function Dashboard() {
             refetchAds();
             refetchPlaces();
         };
-        const onDeleted = () => {
-            console.log("onDeleted")
-            refetchAds();
-        };
 
         window.addEventListener("ad:dialog-opened", onDialogOpened);
         window.addEventListener("ad:created", onAdCreated);
-        window.addEventListener("ad-deleted", onDeleted);
-
+       
         return () => {
             window.removeEventListener("ad:dialog-opened", onDialogOpened);
             window.removeEventListener("ad:created", onAdCreated);
-            window.removeEventListener("ad-deleted", onDeleted);
         };
     }, [refetchAds, refetchPlaces]);
 
     // (ทางเลือก) ฟัง event แล้วรีเฟรชข้อมูล
-    // useEffect(() => {
-    //     const onDeleted = () => {
-    //         refetchAds();
-    //     };
-    //     window.addEventListener("ad-deleted", onDeleted);
-    //     return () => {
-    //         window.removeEventListener("ad-deleted", onDeleted);
-    //     };
-    // }, [refetchAds, refetchPlaces]);
+    useEffect(() => {
+        const onDeleted = () => {
+             refetchAds();
+        };
+        window.addEventListener("ad-deleted", onDeleted);
+        return () => {
+            window.removeEventListener("ad-deleted", onDeleted);
+        };
+    }, [refetchAds]);
+
+    useEffect(() => {
+        const onDeleted = () => {
+            refetchPlaces();
+        };
+        window.addEventListener("place-deleted", onDeleted);
+        return () => {
+            window.removeEventListener("place-deleted", onDeleted);
+        };
+    }, [refetchPlaces]);
 
     // ===== ปุ่มนำทาง (เดิม) =====
     const handleAddLocation = () => navigate("/addlocation");

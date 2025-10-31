@@ -150,7 +150,8 @@ export default function DeleteAdDialog({ adId }) {
         } finally {
             setIsDeleting(false);
             abortRef.current = null;
-            setTimeout(() => window.location.reload(), 1000);
+            //setTimeout(() => window.location.reload(), 1000);
+            window.dispatchEvent(new CustomEvent("ad-deleted", { detail: { adId } }));
         }
     };
 
