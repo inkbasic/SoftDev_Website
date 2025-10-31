@@ -13,13 +13,12 @@ function getToken() {
     return localStorage.getItem("jwtToken") || sessionStorage.getItem("jwtToken") || "jwtToken";
 }
 
-// Helper: แปลงวันที่ใดๆ ให้เป็นสตริงท้องถิ่นรูปแบบ YYYY-MM-DD
+// Helper: แปลงวันที่ใดๆ เป็นสตริง YYYY-MM-DD (ยึดค่าปฏิทินท้องถิ่น โดยไม่บังคับ setHours)
 function toLocalYMD(d) {
     if (!d) return null;
-    const date = new Date(d);
+    if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)) return d; // ถ้าเป็น Y-M-D แล้ว ส่งกลับเลย
+    const date = d instanceof Date ? d : new Date(d);
     if (Number.isNaN(date.getTime())) return null;
-    // ปรับเป็นเที่ยงคืนเวลาท้องถิ่นเพื่อตัดปัญหา timezone
-    date.setHours(0, 0, 0, 0);
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");

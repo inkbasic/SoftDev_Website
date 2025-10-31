@@ -48,6 +48,17 @@ export default function Home() {
         key: "selection",
     });
 
+    const toLocalYMD = (d) => {
+        if (!d) return null;
+        if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)) return d;
+        const date = d instanceof Date ? d : new Date(d);
+        if (Number.isNaN(date.getTime())) return null;
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+    };
+
     function getToken() {
         return localStorage.getItem("jwtToken") || sessionStorage.getItem("jwtToken") || "jwtToken";
     }
@@ -149,8 +160,8 @@ export default function Home() {
     const prepareApiPayload = () => {
         return {
             where: destination.trim(),
-            startDate: range.startDate ? range.startDate.toISOString().split('T')[0] : null,
-            endDate: range.endDate ? range.endDate.toISOString().split('T')[0] : null,
+            startDate: toLocalYMD(range.startDate),
+            endDate: toLocalYMD(range.endDate),
             people: people,
             category: selectedActivities || [],
             transportation: selectedTravel,
