@@ -12,11 +12,10 @@ import StartPoint from "./StartPoint";
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 function getToken() {
-    return (
-        localStorage.getItem("jwtToken") ||
-        sessionStorage.getItem("jwtToken") ||
-        "jwtToken"
-    );
+    // Read jwtToken from cookies (prefer HttpOnly cookie flow; header added only if readable and valid)
+    if (typeof document === "undefined" || !document.cookie) return null;
+    const match = document.cookie.match(/(?:^|;\s*)jwtToken=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
 }
 
 const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
@@ -213,7 +212,7 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
             if (snapshot && snapshot._id) {
                 // ใช้ _id จาก snapshot เดิมเพื่อระบุ resource ที่จะอัปเดต
                 url = `${base}/plans/${snapshot._id}`;
-                method = "PATCH"; // หาก backend ต้องการ PATCH ให้สลับได้
+                method = "PUT"; // หาก backend ต้องการ PATCH ให้สลับได้
             }
 
             const res = await fetch(url, {
