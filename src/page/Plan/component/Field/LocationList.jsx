@@ -11,7 +11,8 @@ export default function LocationList({
   onReorder, 
   onStayChange, 
   onTimeChange,
-  enableDragDrop = true
+  enableDragDrop = true,
+  baseOrderOffset = 0,
 }) {
   const [computed, setComputed] = useState([]);
 
@@ -41,6 +42,7 @@ export default function LocationList({
             onRemove={() => onRemove?.(location.id)}
             onStayChange={(mins) => onStayChange?.(index, mins)}
             onTimeChange={(start, end) => onTimeChange?.(index, start, end)}
+            displayOrder={baseOrderOffset + index + 1}
           />
           {index < locations.length - 1 && (
             <TravelTime data={times?.[index]} />

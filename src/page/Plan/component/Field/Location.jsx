@@ -16,7 +16,8 @@ export default function Location({
     isEditing = false,
     onRemove,
     onStayChange,
-    onTimeChange
+    onTimeChange,
+    displayOrder,
 }) {
     const {
         id,
@@ -153,7 +154,7 @@ export default function Location({
                 )}
 
                 <div className="absolute -left-3 top-3 text-sm text-white bg-accent w-6 h-6 flex items-center justify-center rounded-full text-center font-bold">
-                    {order}
+                    {displayOrder ?? order}
                 </div>
             </div>
 

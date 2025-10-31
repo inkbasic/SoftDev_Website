@@ -5,7 +5,7 @@ import { useDroppable } from '@dnd-kit/core';
 import LocationList from "./LocationList.jsx";
 import AddLocationPanel from "./AddLocationPanel.jsx";
 
-export default function DateContainer({ title, dayData, dateKey, isEditing = false, onUpdateLocations, onUpdateDescription }) {
+export default function DateContainer({ title, dayData, dateKey, isEditing = false, onUpdateLocations, onUpdateDescription, baseOrderOffset = 0 }) {
     const [showDetails, setShowDetails] = useState(true);
     const [locations, setLocations] = useState(dayData?.locations || []);
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -122,6 +122,7 @@ export default function DateContainer({ title, dayData, dateKey, isEditing = fal
                             onReorder={handleReorderLocation}
                             onTimeChange={handleTimeChange}
                             enableDragDrop={false} // ปิดใน LocationList เพราะจัดการที่ Itinerary แล้ว
+                            baseOrderOffset={baseOrderOffset}
                         />
 
                         {isEditing && (

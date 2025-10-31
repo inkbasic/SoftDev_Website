@@ -496,8 +496,18 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
                     </div>
                 </div>
 
-                {/* ใช้ SortableContext แยกต่อวัน เพื่อลดการสลับชั่วคราวระหว่างวัน */}
-                {dateList.map((dateInfo) => (
+                {/* คำนวณ offset ของลำดับแบบต่อเนื่องข้ามวัน */}
+                {(() => {
+                    const offsets = {};
+                    let acc = 0;
+                    dateList.forEach((d) => {
+                        offsets[d.key] = acc;
+                        acc += (d?.data?.locations?.length || 0);
+                    });
+                    return (
+                        <>
+                        {/* ใช้ SortableContext แยกต่อวัน เพื่อลดการสลับชั่วคราวระหว่างวัน */}
+                        {dateList.map((dateInfo) => (
                     <div
                         key={dateInfo.key}
                         ref={(el) => (dayRefs.current[dateInfo.key] = el)}
@@ -524,10 +534,14 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
                                     const updatedData = { ...planData, itinerary: normalized };
                                     onDataChange?.(updatedData);
                                 }}
+                                        baseOrderOffset={offsets[dateInfo.key] || 0}
                             />
                         </SortableContext>
                     </div>
-                ))}
+                        ))}
+                        </>
+                    );
+                })()}
 
                 <DragOverlay>
                     {activeId && draggedLocation ? (
