@@ -14,7 +14,7 @@ L.Icon.Default.mergeOptions({
 });
 
 // เปลี่ยนชื่อคอมโพเนนต์เป็น MapView และรับ markers ด้วย
-export default function MapView({ center = [13.7563, 100.5018], markers = [], startMarker = null }) {
+export default function MapView({ center = [13.7563, 100.5018], markers = [], startMarker = null, onMapClick }) {
     const mapRef = useRef(null);
     const mapInstanceRef = useRef(null);
     const currentLocationMarkerRef = useRef(null);
@@ -48,6 +48,34 @@ export default function MapView({ center = [13.7563, 100.5018], markers = [], st
         };
     }, []);
 
+    // Click to get coordinates: show popup, log, and notify parent if provided
+    useEffect(() => {
+        const map = mapInstanceRef.current;
+        if (!map) return;
+        const handler = (e) => {
+            const lat = Number(e?.latlng?.lat?.toFixed?.(7) ?? e?.latlng?.lat);
+            const lng = Number(e?.latlng?.lng?.toFixed?.(7) ?? e?.latlng?.lng);
+            if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+            // Console log for quick inspection
+            try { console.log('[Map Click] lat,lng =', lat, lng); } catch {}
+            // Popup at clicked location
+            // const content = `<div style="font-family: ui-sans-serif, system-ui, -apple-system; font-size:12px; line-height:1.2;">
+            //     <div><strong>lat:</strong> ${lat}</div>
+            //     <div><strong>lng:</strong> ${lng}</div>
+            // </div>`;
+            // L.popup({ closeButton: false, offset: [0, -6] })
+            //     .setLatLng([lat, lng])
+            //     .setContent(content)
+            //     .openOn(map);
+            // Callback for parent usage
+            if (typeof onMapClick === 'function') {
+                try { onMapClick({ lat, lng }); } catch {}
+            }
+        };
+        map.on('click', handler);
+        return () => { map.off('click', handler); };
+    }, [onMapClick]);
+
     // วาง/อัปเดตหมุดจาก props.markers
     useEffect(() => {
         if (!mapInstanceRef.current || !markersLayerRef.current) return;
@@ -65,9 +93,10 @@ export default function MapView({ center = [13.7563, 100.5018], markers = [], st
             const icon = L.divIcon({
                 className: "order-marker",
                 html: `<div class="order-pin">${m.order ?? ""}</div>`,
-                iconSize: [32, 38],        // รวมส่วนหาง
-                iconAnchor: [16, 34],      // จุดอ้างอิงปลายหาง
-                popupAnchor: [0, -30]
+                // ปรับขนาด/จุดยึดให้สอดคล้องกับ CSS: วงกลม 32px + หาง ~19px - translateY(2px) ≈ 49px
+                iconSize: [32, 49],
+                iconAnchor: [16, 49], // ปลายหางตรงจุดพิกัดจริง
+                popupAnchor: [0, -40]
             });
 
             const marker = L.marker(ll, {
@@ -148,9 +177,9 @@ export default function MapView({ center = [13.7563, 100.5018], markers = [], st
         const icon = L.divIcon({
             className: "start-marker",
             html: `<div class="start-pin"></div>`,
-            iconSize: [32, 38],
-            iconAnchor: [16, 34],
-            popupAnchor: [0, -30]
+            iconSize: [32, 49],
+            iconAnchor: [16, 49],
+            popupAnchor: [0, -40]
         });
 
         const [lat, lng] = startMarker.position;

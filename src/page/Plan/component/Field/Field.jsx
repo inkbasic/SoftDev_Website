@@ -122,17 +122,29 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
             const locs = Array.isArray(day.locations) ? day.locations : [];
 
             const mappedLocations = locs.map((l) => {
-                // คำนวณพิกัดเป็นรูปแบบ backend [lng, lat]
-                let locArray = undefined;
-                if (Array.isArray(l?.raw?.location)) {
-                    locArray = l.raw.location;
-                } else if (Array.isArray(l?.source)) {
-                    const [lat, lng] = l.source;
-                    if (typeof lat === 'number' && typeof lng === 'number') locArray = [lng, lat];
+                // คำนวณพิกัดเป็นรูปแบบ backend [lng, lat] โดยอนุมาน order ของคู่ตัวเลข
+                const toLatLng = (arr) => {
+                    if (!Array.isArray(arr) || arr.length < 2) return [undefined, undefined];
+                    const a = Number(arr[0]);
+                    const b = Number(arr[1]);
+                    if (!Number.isFinite(a) || !Number.isFinite(b)) return [undefined, undefined];
+                    const aIsLat = Math.abs(a) <= 90;
+                    const bIsLat = Math.abs(b) <= 90;
+                    if (!aIsLat && bIsLat) return [b, a]; // [lng,lat] -> [lat,lng]
+                    if (aIsLat && !bIsLat) return [a, b]; // [lat,lng]
+                    return [a, b]; // ambiguous → assume [lat,lng]
+                };
+
+                let lat, lng;
+                if (Array.isArray(l?.source)) {
+                    [lat, lng] = toLatLng(l.source);
                 } else if (Array.isArray(l?.position)) {
-                    const [lat, lng] = l.position;
-                    if (typeof lat === 'number' && typeof lng === 'number') locArray = [lng, lat];
+                    [lat, lng] = toLatLng(l.position);
+                } else if (Array.isArray(l?.raw?.location)) {
+                    [lat, lng] = toLatLng(l.raw.location);
                 }
+
+                let locArray = (typeof lat === 'number' && typeof lng === 'number') ? [lng, lat] : undefined;
 
                 const obj = {
                     _id: l.id,
