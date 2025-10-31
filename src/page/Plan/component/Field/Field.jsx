@@ -1,6 +1,7 @@
 import Card from "./Card";
 import Info from "./Info";
 import Car from "/Car.png";
+import CarSection from "./CarSection";
 import Itetary from "./Itetary";
 import { CancelButton, SaveButton, MeatButton } from "./Button";
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
@@ -163,6 +164,15 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
             endDate: safe?.endDate,
             budget: safe?.budget,
             people: safe?.people,
+            transport: safe?.transport ? {
+                type: safe.transport.type,
+                rental: safe.transport.type === 'rental' && safe.transport.rental ? {
+                    providerId: safe.transport.rental.providerId,
+                    name: safe.transport.rental.name,
+                    link: safe.transport.rental.link,
+                    imageUrl: safe.transport.rental.imageUrl,
+                } : undefined,
+            } : undefined,
             startPoint: safe?.startPoint ? {
                 type: safe.startPoint.type,
                 refId: safe.startPoint.refId || undefined,
@@ -337,13 +347,17 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
                 />
             </Card>
 
-            {/* Car Section */}
-            <div ref={carRef} className="w-full flex justify-center items-center gap-3 py-2 cursor-pointer" onClick={() => window.open("https://thairentacar.com/", "_blank")}>
-                <div className="w-full flex flex-col gap-2">
-                    <div className="relative w-full h-fit rounded-[8px] overflow-hidden">
-                        <img src={Car} className="object-cover w-full h-full" />
-                    </div>
-                </div>
+            {/* Car / Rental Section */}
+            <div ref={carRef} className="w-full">
+                <CarSection
+                    value={data?.transport}
+                    onChange={(transport) => {
+                        const updated = { ...(data || {}), transport };
+                        setData(updated);
+                        latestPlanRef.current = updated;
+                        onDataChange?.(updated);
+                    }}
+                />
             </div>
 
             {/* จุดเริ่มต้นการเดินทาง */}
