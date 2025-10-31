@@ -20,6 +20,7 @@ export default function Signup() {
         confirmPassword: "",
         profileImage: "",
         phoneNumber: "",
+        isProvider: false,
     });
 
     const [loading, setLoading] = useState(false);
@@ -211,6 +212,16 @@ export default function Signup() {
                                     placeholder="วาง URL ของรูปภาพ"
                                     value={formData.profileImage}
                                     onChange={handleChange}
+                                />
+                            </div>
+
+                            <div className="flex gap-2">
+                                <Label htmlFor="isProvider">สมัครเป็นผู้ให้บริการ (Service Provider)</Label>
+                                <input
+                                    id="isProvider"
+                                    type="checkbox"
+                                    checked={formData.isProvider}
+                                    onChange={(e) => setFormData({ ...formData, isProvider: e.target.checked })}
                                 />
                             </div>
                         </div>
