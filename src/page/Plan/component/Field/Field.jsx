@@ -19,7 +19,7 @@ function getToken() {
     return match ? decodeURIComponent(match[1]) : null;
 }
 
-const Field = forwardRef(({ planData, onDataChange, padding, canEdit, autoEdit }, ref) => {
+const Field = forwardRef(({ planData, onDataChange, padding, canEdit, autoEdit, wasCloned }, ref) => {
     // เริ่มต้นในโหมดดูเสมอ; ผู้มีสิทธิ์แก้ไขสามารถกด "แก้ไข" เพื่อเข้าสู่โหมดแก้ไข
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -48,11 +48,21 @@ const Field = forwardRef(({ planData, onDataChange, padding, canEdit, autoEdit }
         }
     }, [canEdit]);
 
-    // เข้าโหมดแก้ไขอัตโนมัติเมื่อถูกขอ (เช่น แผนที่สร้างใหม่)
+    // เข้าโหมดแก้ไขอัตโนมัติเมื่อถูกขอ (เช่น แผนที่สร้างใหม่) และถ้ามาจากการคัดลอกให้เติม (คัดลอก)
     useEffect(() => {
         if (autoEdit && canEdit && !isEditing) {
-            // ตั้ง baseline ก่อนเข้าโหมดแก้ไขเพื่อให้ยกเลิกได้
-            revertSnapshotRef.current = deepClone(data);
+            let base = data || {};
+            if (wasCloned && typeof base.title === 'string') {
+                const t = base.title || '';
+                const hasSuffix = /\((copy|คัดลอก)\)\s*$/i.test(t);
+                if (!hasSuffix) {
+                    base = { ...base, title: `${t} (copy)` };
+                }
+            }
+            setData(base);
+            latestPlanRef.current = base;
+            // ตั้ง baseline ก่อนเข้าโหมดแก้ไขเพื่อให้ยกเลิกได้ และจะคง (คัดลอก) ไว้หากถูกเติมไว้
+            revertSnapshotRef.current = deepClone(base);
             setIsEditing(true);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -550,7 +560,7 @@ const Field = forwardRef(({ planData, onDataChange, padding, canEdit, autoEdit }
                 alert("คัดลอกสำเร็จ แต่ไม่พบรหัสแผนใหม่");
                 return;
             }
-            navigate(`/plan/${newId}`, { state: { isNew: true } });
+            navigate(`/plan/${newId}`, { state: { isNew: true, isClone: true } });
         } catch (err) {
             alert(`คัดลอกแผนไม่สำเร็จ: ${err?.message || err}`);
         } finally {

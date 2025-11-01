@@ -124,6 +124,7 @@ export default function Plan() {
     const [isHideMap, setIsHideMap] = useState(false);
 
     const isNewPlan = homeData.state?.isNew || false;
+    const wasCloned = homeData.state?.isClone || false;
 
     const [currentData, setCurrentData] = useState(null);
     const [canEdit, setCanEdit] = useState(true);
@@ -246,6 +247,7 @@ export default function Plan() {
                             padding={isHideMap ? 'px-80' : 'px-20'}
                             canEdit={canEdit}
                             autoEdit={isNewPlan}
+                            wasCloned={wasCloned}
                         />
                     </>
                 )}
