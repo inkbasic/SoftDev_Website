@@ -4,6 +4,7 @@ import { arrayMove } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
 import LocationList from "./LocationList.jsx";
 import AddLocationPanel from "./AddLocationPanel.jsx";
+import { trackAdAddedToPlan } from "@/lib/adService";
 
 export default function DateContainer({ title, dayData, dateKey, isEditing = false, onUpdateLocations, onUpdateDescription, baseOrderOffset = 0 }) {
     const [showDetails, setShowDetails] = useState(true);
@@ -52,6 +53,8 @@ export default function DateContainer({ title, dayData, dateKey, isEditing = fal
         const updated = [...locations, newLocation];
         setLocations(updated);
         onUpdateLocations?.(updated);
+        // แจ้ง backend เมื่อสถานที่ถูกเพิ่มเข้าแผน
+        try { trackAdAddedToPlan(newLocation.id); } catch {}
     };
 
     const handleAddCustomLocation = (custom) => {
