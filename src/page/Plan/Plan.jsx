@@ -6,14 +6,28 @@ import { useGeolocation } from "@/hooks/useGeolocation";
 import { useLocation, useParams } from "react-router-dom";
 import { PlanMock } from "./mock/Mock.jsx";
 import { getPlaceById, getAllPlacesCached } from "@/lib/placesService";
+import Cookies from "js-cookie";
 import "./plan.css";
 const BASE_URL = import.meta.env.VITE_PUBLIC_API_URL;
 
-function getToken() {
-    // Read jwtToken from cookies (prefer HttpOnly cookie flow; header added only if readable and valid)
-    if (typeof document === "undefined" || !document.cookie) return null;
-    const match = document.cookie.match(/(?:^|;\s*)jwtToken=([^;]+)/);
-    return match ? decodeURIComponent(match[1]) : null;
+async function getToken() {
+    const token = Cookies.get("jwtToken");
+    if (!token) {
+        let guestToken = Cookies.get("guestToken");
+        if (!guestToken) {
+            const base = BASE_URL || 'http://localhost:3000';
+            const res = await fetch(`${base}/auth/guest`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+            });
+            let body = res.json();
+
+            guestToken = body?.token;
+        }
+        return guestToken;
+    }
+
+    return token;
 }
 
 // Ensure a tuple is [lat, lng]; accept [lng, lat] and infer/swap by value ranges
@@ -81,7 +95,7 @@ function normalizeServerPlan(plan) {
 
 async function fetchPlanById(id) {
     const headers = { 'Content-Type': 'application/json' };
-    const token = getToken();
+    const token = await getToken();
     if (token && token !== 'jwtToken' && token.split('.').length === 3) {
         headers.Authorization = `Bearer ${token}`;
     }
