@@ -184,9 +184,9 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
             //     refId: safe.startPoint.refId || undefined,
             //     position: safe.startPoint.position || safe.startPoint.source || undefined,
             // } : undefined,
-            source: safe?.startPoint ? 
+            source: safe?.startPoint ?
                 safe.startPoint.position || safe.startPoint.source || undefined
-             : undefined,
+                : undefined,
             itinerary: outItinerary,
         };
 
@@ -284,7 +284,7 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
                 await navigator.clipboard.writeText(text);
                 return true;
             }
-        } catch {}
+        } catch { }
         // Fallback for non-secure context or older browsers
         try {
             const ta = document.createElement('textarea');
@@ -351,15 +351,19 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
             <div ref={overviewRef} className="w-full flex flex-col gap-1">
                 <div className="flex justify-between items-center w-full">
                     <h3>
-                        <input
-                            type="text"
-                            value={data.title}
-                            onChange={(e) => {
-                                const updated = { ...data, title: e.target.value };
-                                setData(updated);
-                                latestPlanRef.current = { ...latestPlanRef.current, title: e.target.value };
-                            }}
-                        />
+                        {isEditing ? (
+                            <input
+                                type="text"
+                                value={data.title}
+                                className="border border-neutral-300 rounded-md outline-none focus:ring-2 focus:ring-blue-200"
+                                onChange={(e) => {
+                                    const updated = { ...data, title: e.target.value };
+                                    setData(updated);
+                                    latestPlanRef.current = { ...latestPlanRef.current, title: e.target.value };
+                                }}
+                            />
+                        ) : (data.title || "แผนการเดินทางไม่ระบุชื่อ"
+                        )}
                     </h3>
                     <div className="flex gap-3 relative">
                         {isEditing ? (
