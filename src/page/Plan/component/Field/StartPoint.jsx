@@ -143,7 +143,7 @@ export default function StartPoint({ value, onChange, firstLocation, onRouteComp
         <>
             <div className="flex items-center justify-between w-full">
                 <h3 >จุดเริ่มต้นการเดินทาง</h3>
-                {isEditing ? (
+                {/* {isEditing ? (
                     <div className="flex gap-4">
                         <label className="flex items-center gap-2 cursor-pointer">
                             <input
@@ -170,7 +170,7 @@ export default function StartPoint({ value, onChange, firstLocation, onRouteComp
                     <h3 className="text-neutral-600">
                         {mode === 'hotel' ? 'โรงแรม' : 'ตำแหน่งปัจจุบัน'}
                     </h3>
-                )}
+                )} */}
             </div>
 
             {mode === "hotel" && (
