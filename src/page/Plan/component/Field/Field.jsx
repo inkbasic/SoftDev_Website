@@ -184,7 +184,8 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
 
         // สร้าง payload ที่ต้องการส่งจริง: ตัด field UI ออก เช่น dayName/date ในแต่ละวัน
         const transport = safe?.transport;
-        const transportation = transport?.type === 'rental' ? transport.rental.name : 'รถยนต์ส่วนตัว';
+        console.log(transport)
+        const transportation = transport?.type === 'rental' ? transport.rental.methodId : 'รถยนต์ส่วนตัว';
         // console.log(transport)
         const payload = {
             _id: safe?._id,

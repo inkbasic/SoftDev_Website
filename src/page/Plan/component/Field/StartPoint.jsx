@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { getTravelBetween } from "@/lib/routeService";
 import AddLocationPanel from "./AddLocationPanel.jsx";
-import Pool from "/img/pool.jpg";
+import mockImage from "/img/mockImage.png";
 
-const image = Pool;
 export default function StartPoint({ value, onChange, firstLocation, onRouteComputed }) {
     const [mode, setMode] = useState(value?.type || "current");
     const [hotelId, setHotelId] = useState(
@@ -15,6 +14,7 @@ export default function StartPoint({ value, onChange, firstLocation, onRouteComp
     const [travel, setTravel] = useState(null); // { distanceKm, durationMin, coords }
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [image, setImage] = useState("");
 
     useEffect(() => {
         if (value?.type === "hotel" && value?.refId) setHotelId(value.refId);
@@ -75,6 +75,7 @@ export default function StartPoint({ value, onChange, firstLocation, onRouteComp
         console.log(h);
         setHotelName(h.name || "");
         setHotelDescription(h.description || "");
+        setImage(h.image || h.imageUrl || mockImage);
     };
 
     // เลือกโรงแรมจากการค้นหาเท่านั้น

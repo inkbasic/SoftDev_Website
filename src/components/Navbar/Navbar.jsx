@@ -102,7 +102,7 @@ export default function Navbar() {
                     { userRole === "provider" && (
                         <>
                             <a className="cursor-pointer" onClick={() => navigate("/dashboard")}>Dashboard</a>
-                            <a className="cursor-pointer" onClick={() => navigate("/addlocation")}>Add Location</a>
+                            {/* <a className="cursor-pointer" onClick={() => navigate("/addlocation")}>Add Location</a> */}
                         </>
                     )}
 

@@ -68,7 +68,7 @@ export default function CarSection({ value, onChange }) {
 					) : (
 						<div className="flex gap-3 py-2">
 							{(providers || []).map((p) => {
-								const cardId = p.id || p._id || p.providerId;
+								const cardId = p.id || p._id;
 								return (
 									<div key={cardId} className={`basis-1/2 bg-white border border-neutral-200 rounded-[8px] overflow-hidden shadow-sm ${selectedId === cardId ? 'ring-2 ring-blue-400' : ''}`}>
 										<div className="h-32 bg-neutral-100 overflow-hidden">

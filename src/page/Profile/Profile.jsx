@@ -287,7 +287,7 @@ export default function Profile() {
                     <Button variant="outline" size="icon" className="size-9 lg:hidden hover:cursor-pointer">
                         <Ellipsis />
                     </Button>
-                    <Button variant="outline" size="icon" className="hidden size-9 lg:flex hover:cursor-pointer">
+                    {/* <Button variant="outline" size="icon" className="hidden size-9 lg:flex hover:cursor-pointer">
                         <Settings />
                     </Button>
                     <Button 
@@ -296,7 +296,7 @@ export default function Profile() {
                         onClick={() => navigate("/profile/edit")}
                     >
                         แก้ไข
-                    </Button>
+                    </Button> */}
                 </div>
             </header>
 
@@ -306,7 +306,7 @@ export default function Profile() {
             </div>
 
             {/* Billing & Subscription */}
-            <div className="flex flex-col w-full max-w-5xl gap-12">
+            {/* <div className="flex flex-col w-full max-w-5xl gap-12">
                 <h5 className="text-2xl font-semibold">Billing & Subscription</h5>
                 <div className="grid max-w-5xl grid-cols-1 gap-4 md:grid-cols-3">
                     <SubscriptionCard
@@ -341,7 +341,7 @@ export default function Profile() {
                         }
                     />
                 </div>
-            </div>
+            </div> */}
         </div>
     );
 }
