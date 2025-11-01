@@ -19,7 +19,7 @@ function getToken() {
     return match ? decodeURIComponent(match[1]) : null;
 }
 
-const Field = forwardRef(({ planData, onDataChange, padding, canEdit }, ref) => {
+const Field = forwardRef(({ planData, onDataChange, padding, canEdit, autoEdit }, ref) => {
     // เริ่มต้นในโหมดดูเสมอ; ผู้มีสิทธิ์แก้ไขสามารถกด "แก้ไข" เพื่อเข้าสู่โหมดแก้ไข
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -47,6 +47,16 @@ const Field = forwardRef(({ planData, onDataChange, padding, canEdit }, ref) => 
             setShowMenu(false);
         }
     }, [canEdit]);
+
+    // เข้าโหมดแก้ไขอัตโนมัติเมื่อถูกขอ (เช่น แผนที่สร้างใหม่)
+    useEffect(() => {
+        if (autoEdit && canEdit && !isEditing) {
+            // ตั้ง baseline ก่อนเข้าโหมดแก้ไขเพื่อให้ยกเลิกได้
+            revertSnapshotRef.current = deepClone(data);
+            setIsEditing(true);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [autoEdit, canEdit]);
 
     useEffect(() => {
         // Normalize transport for UI from 'transportation' (object) or 'providedCar' (id)

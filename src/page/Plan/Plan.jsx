@@ -245,6 +245,7 @@ export default function Plan() {
                             onDataChange={handleDataChange}
                             padding={isHideMap ? 'px-80' : 'px-20'}
                             canEdit={canEdit}
+                            autoEdit={isNewPlan}
                         />
                     </>
                 )}

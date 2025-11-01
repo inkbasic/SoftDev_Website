@@ -1,3 +1,5 @@
+import DropDownMulti from "@/page/Home/component/DropDownMulti.jsx";
+import { ACTIVITY } from "@/const/userPick";
 const thaiMonths = [
   "มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน",
   "กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"
@@ -49,14 +51,26 @@ export default function Info({ data, isEditing = false, onChange }) {
     const n = Number(v);
     return Number.isNaN(n) ? undefined : n;
   };
+  const categoryArray = Array.isArray(data?.category)
+    ? data.category
+    : (data?.category ? [data.category] : []);
     return (
         <>
             <div className="grid grid-cols-2 gap-3">
                 <div>
                     <p className="font-bold">หมวดหมู่</p>
-                    <p className="text-neutral-500">
-                      {Array.isArray(data.category) ? data.category.join(", ") : (data.category ?? "-")}
-                    </p>
+          {isEditing ? (
+            <DropDownMulti
+              placeholder="กิจกรรมที่สนใจ"
+              value={categoryArray}
+              onChange={(arr) => onChange?.({ category: arr })}
+              options={ACTIVITY}
+            />
+          ) : (
+            <p className="text-neutral-500">
+              {Array.isArray(data.category) ? data.category.join(", ") : (data.category ?? "-")}
+            </p>
+          )}
                 </div>
                 <div>
                     <p className="font-bold">วันที่</p>
