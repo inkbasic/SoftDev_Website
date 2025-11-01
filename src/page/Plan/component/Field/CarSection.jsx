@@ -7,6 +7,7 @@ export default function CarSection({ value, onChange, transportation, isEditing 
 	const [providers, setProviders] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState("");
+	const [needProviderWarn, setNeedProviderWarn] = useState(false);
 
 	// คำนวณโหมดจากทั้ง value และ transportation (รองรับ transportation เป็น object)
 	const derivedMode = useMemo(() => {
@@ -66,6 +67,24 @@ export default function CarSection({ value, onChange, transportation, isEditing 
 		return null;
 	}, [value?.rental, transportation]);
 
+	// สร้างข้อมูลสำหรับแสดงผล: ถ้า selectedRental ไม่มีชื่อ/รูป ให้เติมจาก providers ที่โหลดมา (อิง selectedId)
+	const displayRental = useMemo(() => {
+		const hasInfo = selectedRental && (selectedRental.name || selectedRental.imageUrl || selectedRental.contactInfo);
+		if (hasInfo) return selectedRental;
+		if (!selectedId) return selectedRental;
+		const match = (providers || []).find(p => String(p.id || p._id) === String(selectedId));
+		if (!match) return selectedRental;
+		return {
+			...selectedRental,
+			methodId: selectedRental?.methodId ?? selectedId,
+			name: selectedRental?.name ?? match.name,
+			imageUrl: selectedRental?.imageUrl ?? match.imageUrl,
+			contactInfo: selectedRental?.contactInfo ?? match.contactInfo,
+			hasBooking: selectedRental?.hasBooking ?? match.hasBooking,
+			providerId: selectedRental?.providerId ?? match.providerId,
+		};
+	}, [selectedRental, providers, selectedId]);
+
 	return (
 		<div className="w-full flex flex-col gap-3">
 			<div className="flex items-center justify-between w-full">
@@ -78,7 +97,7 @@ export default function CarSection({ value, onChange, transportation, isEditing 
 								name="car-mode"
 								checked={mode === "personal"}
 								className="cursor-pointer"
-								onChange={() => { if (!isEditing) return; setMode("personal"); onChange?.({ type: "personal" }); }}
+								onChange={() => { if (!isEditing) return; setNeedProviderWarn(false); setMode("personal"); onChange?.({ type: "personal" }); }}
 							/>
 							รถยนต์ส่วนตัว
 						</label>
@@ -88,7 +107,7 @@ export default function CarSection({ value, onChange, transportation, isEditing 
 								name="car-mode"
 								checked={mode === "rental"}
 								className="cursor-pointer"
-								onChange={() => { if (!isEditing) return; setMode("rental"); onChange?.({ type: "rental", rental: value?.rental }); }}
+								onChange={() => { if (!isEditing) return; setMode("rental"); onChange?.({ type: "rental", rental: value?.rental }); if (!selectedId) setNeedProviderWarn(true); }}
 							/>
 							รถเช่า
 						</label>
@@ -100,29 +119,35 @@ export default function CarSection({ value, onChange, transportation, isEditing 
 				)}
 			</div>
 
+			{isEditing && mode === 'rental' && needProviderWarn && (
+				<p className="text-amber-600 text-sm mt-1">โปรดเลือกผู้ให้บริการรถเช่าด้านล่าง</p>
+			)}
+
 			{mode === "rental" && (
 				<div className="w-full">
-					{!isEditing && selectedRental ? (
+					{!isEditing && displayRental ? (
 						// โหมดดูอย่างเดียว: แสดงเฉพาะรถเช่าที่เลือก
 						<div className="flex gap-3 py-2">
 							<div className="basis-1/2 bg-white border border-neutral-200 rounded-[8px] overflow-hidden shadow-sm ring-2 ring-blue-400">
 								<div className="h-32 bg-neutral-100 overflow-hidden">
-									{selectedRental.imageUrl ? (
-										<img src={selectedRental.imageUrl} className="object-cover w-full h-full" alt={selectedRental.name} />
+									{displayRental.imageUrl ? (
+										<img src={displayRental.imageUrl} className="object-cover w-full h-full" alt={displayRental.name || 'Selected rental'} />
 									) : (
 										<div className="w-full h-full flex items-center justify-center text-neutral-400">No Image</div>
 									)}
 								</div>
 								<div className="p-3 flex flex-col gap-2">
 									<div className="flex items-center justify-between gap-2">
-										<p className="font-bold truncate" title={selectedRental.name}>{selectedRental.name}</p>
-										{selectedRental.contactInfo && (
-											<a href={selectedRental.contactInfo} target="_blank" rel="noreferrer" className="text-blue-600 text-sm whitespace-nowrap pr-1">{selectedRental.hasBooking ? 'เยี่ยมชม' : 'ติดต่อ'}</a>
+										<p className="font-bold truncate" title={displayRental.name}>{displayRental.name || 'ผู้ให้บริการรถเช่าที่เลือก'}</p>
+										{displayRental.contactInfo && (
+											<a href={displayRental.contactInfo} target="_blank" rel="noreferrer" className="text-blue-600 text-sm whitespace-nowrap pr-1">{displayRental.hasBooking ? 'เยี่ยมชม' : 'ติดต่อ'}</a>
 										)}
 									</div>
 								</div>
 							</div>
 						</div>
+					) : !isEditing && !displayRental ? (
+						<p className="text-neutral-500 py-2">ยังไม่ได้เลือกผู้ให้บริการรถเช่า</p>
 					) : loading ? (
 						<p className="text-neutral-500">กำลังโหลดผู้ให้บริการ…</p>
 					) : error ? (
@@ -150,7 +175,7 @@ export default function CarSection({ value, onChange, transportation, isEditing 
 											</div>
 											<button
 											className={`px-3 py-1 rounded-md text-sm cursor-pointer ${selectedId === cardId ? 'bg-blue-600 text-white' : 'bg-neutral-100 hover:bg-neutral-200'} ${!isEditing ? 'opacity-60 cursor-not-allowed' : ''}`}
-											onClick={() => { if (!isEditing) return; onChange?.({ type: "rental", rental: { methodId: p.id || p._id, providerId: p.providerId, name: p.name, imageUrl: p.imageUrl, contactInfo: p.contactInfo, hasBooking: p.hasBooking } }); }}
+												onClick={() => { if (!isEditing) return; setNeedProviderWarn(false); onChange?.({ type: "rental", rental: { methodId: p.id || p._id, providerId: p.providerId, name: p.name, imageUrl: p.imageUrl, contactInfo: p.contactInfo, hasBooking: p.hasBooking } }); }}
 											>
 												{selectedId === cardId ? 'เลือกแล้ว' : 'เลือก'}
 											</button>

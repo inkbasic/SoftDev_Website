@@ -237,6 +237,14 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
 
     const handleSave = async () => {
         if (!data) return;
+        // Validate: if choosing rental but no provider selected, block save with a clear message
+        const t = data?.transport;
+        if (t?.type === 'rental' && !(t?.rental?.methodId || t?.rental?.id || t?.rental?._id)) {
+            if (typeof window !== 'undefined') {
+                alert('โปรดเลือกผู้ให้บริการรถเช่าก่อนบันทึก');
+            }
+            return;
+        }
         setIsSaving(true);
 
         try {
