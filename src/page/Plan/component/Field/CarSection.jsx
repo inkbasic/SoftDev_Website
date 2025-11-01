@@ -97,7 +97,7 @@ export default function CarSection({ value, onChange, transportation, isEditing 
 									<div className="flex items-center justify-between gap-2">
 										<p className="font-bold truncate" title={selectedRental.name}>{selectedRental.name}</p>
 										{selectedRental.contactInfo && (
-											<a href={selectedRental.contactInfo} target="_blank" rel="noreferrer" className="text-blue-600 text-sm whitespace-nowrap">{selectedRental.hasBooking ? 'ไปจอง' : 'ติดต่อ'}</a>
+											<a href={selectedRental.contactInfo} target="_blank" rel="noreferrer" className="text-blue-600 text-sm whitespace-nowrap pr-1">{selectedRental.hasBooking ? 'เยี่ยมชม' : 'ติดต่อ'}</a>
 										)}
 									</div>
 								</div>
@@ -125,7 +125,7 @@ export default function CarSection({ value, onChange, transportation, isEditing 
 											<div className="flex items-center justify-between gap-2">
 												<p className="font-bold truncate" title={p.name}>{p.name}</p>
 												{p.contactInfo && (
-													<a href={p.contactInfo} target="_blank" rel="noreferrer" className="text-blue-600 text-sm whitespace-nowrap">{p.hasBooking ? 'ไปจอง' : 'ติดต่อ'}</a>
+													<a href={p.contactInfo} target="_blank" rel="noreferrer" className="text-blue-600 text-sm whitespace-nowrap pr-1">{p.hasBooking ? 'เยี่ยมชม' : 'ติดต่อ'}</a>
 												)}
 											</div>
 											<button
