@@ -229,9 +229,16 @@ export default function Home() {
 
         } catch (error) {
             console.error("Error creating plan:", error);
-            setErrors({
-                general: "เกิดข้อผิดพลาดในการสร้างแผนการท่องเที่ยว กรุณาลองใหม่อีกครั้ง"
-            });
+            if (error.message === "category must contain at least 1 elements") {
+                setErrors({
+                    general: "กรุณาใส่กิจกรรมที่สนใจอย่างน้อย 1 รายการ"
+                });
+            }
+            else {
+                setErrors({
+                    general: "เกิดข้อผิดพลาดในการสร้างแผนการท่องเที่ยว กรุณาลองใหม่อีกครั้ง"
+                });
+            }
         } finally {
             setIsLoading(false);
         }

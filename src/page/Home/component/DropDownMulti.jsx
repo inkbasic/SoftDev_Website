@@ -48,7 +48,7 @@ export default function DropDownMulti({
 			>
 				<div className="flex flex-wrap gap-2 items-center">
 					{selected.size === 0 ? (
-						<p className="font-bold">{placeholder}</p>
+						<p className="font-bold">{placeholder} <span className="text-red-500">*</span></p>
 					) : (
 						Array.from(selected).map(opt => (
 							<span
