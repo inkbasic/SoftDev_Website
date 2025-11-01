@@ -194,23 +194,23 @@ export default function Plan() {
     }, [currentData?.itinerary]);
 
     // DEBUG: Log what we send to Map for marker creation
-    useEffect(() => {
-        try {
-            // High-level objects
-            if (Array.isArray(markers)) {
-                // Compact table for quick inspection
-                console.table(markers.map(m => ({
-                    id: m.id,
-                    name: m.name,
-                    lat: Array.isArray(m.position) ? m.position[0] : undefined,
-                    lng: Array.isArray(m.position) ? m.position[1] : undefined,
-                    order: m.order,
-                })));
-            }
-        } catch (e) {
-            // noop
-        }
-    }, [markers, startMarker]);
+    // useEffect(() => {
+    //     try {
+    //         // High-level objects
+    //         if (Array.isArray(markers)) {
+    //             // Compact table for quick inspection
+    //             console.table(markers.map(m => ({
+    //                 id: m.id,
+    //                 name: m.name,
+    //                 lat: Array.isArray(m.position) ? m.position[0] : undefined,
+    //                 lng: Array.isArray(m.position) ? m.position[1] : undefined,
+    //                 order: m.order,
+    //             })));
+    //         }
+    //     } catch (e) {
+    //         // noop
+    //     }
+    // }, [markers, startMarker]);
 
     const handleSidebarItemClick = (item) => {
         if (fieldRef.current && fieldRef.current.scrollToSection) {

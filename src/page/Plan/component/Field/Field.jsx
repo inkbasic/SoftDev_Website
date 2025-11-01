@@ -8,7 +8,7 @@ import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "re
 import { useAutoHideScrollbar } from "@/lib/useAutoHideScrollbar";
 import { href, useNavigate } from "react-router-dom";
 import StartPoint from "./StartPoint";
-import { Trash2, Share2, Edit2 } from "lucide-react";
+import { Trash2, Share2, Edit2, CopyPlus } from "lucide-react";
 
 const BASE_URL = import.meta.env.VITE_PUBLIC_API_URL;
 
@@ -221,10 +221,11 @@ const Field = forwardRef(({ planData, onDataChange, padding, canEdit, autoEdit }
 
         // สร้าง payload สำหรับ backend รุ่นใหม่: ส่ง transportation เป็นสตริง และส่ง providedCar เป็น id ของรถเช่า
         const transport = safe?.transport;
-        const providedCar = transport?.type === 'rental' ? (transport?.rental?.methodId || transport?.rental?.id || transport?.rental?._id) : undefined;
+        const providedCar = transport?.type === 'rental' ? (transport?.rental?.methodId._id || transport?.rental?.id || transport?.rental?._id) : undefined;
         const transportation = transport?.type === 'rental'
             ? 'รถเช่า'
             : (safe?.transportation === 'รถเช่า' ? 'รถเช่า' : 'รถยนต์ส่วนตัว');
+        console.log("DATA :", safe);
         const payload = {
             _id: safe?._id,
             title: safe?.title,
@@ -243,8 +244,8 @@ const Field = forwardRef(({ planData, onDataChange, padding, canEdit, autoEdit }
             //     position: safe.startPoint.position || safe.startPoint.source || undefined,
             // } : undefined,
             source: safe?.startPoint ?
-                safe.startPoint.position || safe.startPoint.source || undefined
-                : undefined,
+                safe.startPoint.position || safe.startPoint.source || safe?.source || undefined
+                : safe?.source || undefined,
             itinerary: outItinerary,
         };
 
@@ -256,9 +257,15 @@ const Field = forwardRef(({ planData, onDataChange, padding, canEdit, autoEdit }
 
     const handleSave = async () => {
         if (!data) return;
-        // Validate: if choosing rental but no provider selected, block save with a clear message
+        // Validate rental cases comprehensively (covers clones where transport may be unset but transportation='รถเช่า')
         const t = data?.transport;
-        if (t?.type === 'rental' && !(t?.rental?.methodId || t?.rental?.id || t?.rental?._id)) {
+        const providedCarFromTransport = t?.rental?.methodId._id || t?.rental?.id || t?.rental?._id;
+        const providedCarFromField = data?.providedCar;
+        const transportationStr = data?.transportation;
+        const effectiveProvidedCar = providedCarFromTransport || providedCarFromField;
+        const isRentalSelected = (t?.type === 'rental') || (transportationStr === 'รถเช่า');
+        console.log("Validating rental:", { t, transportationStr, isRentalSelected, effectiveProvidedCar });
+        if (isRentalSelected && !effectiveProvidedCar) {
             if (typeof window !== 'undefined') {
                 alert('โปรดเลือกผู้ให้บริการรถเช่าก่อนบันทึก');
             }
@@ -455,6 +462,7 @@ const Field = forwardRef(({ planData, onDataChange, padding, canEdit, autoEdit }
     };
 
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isCloning, setIsCloning] = useState(false);
 
     const handleDelete = async (e) => {
         e.stopPropagation();
@@ -483,6 +491,70 @@ const Field = forwardRef(({ planData, onDataChange, padding, canEdit, autoEdit }
             alert(`เกิดข้อผิดพลาดในการลบ: ${error.message}`);
         } finally {
             setIsDeleting(false);
+            setShowMenu(false);
+        }
+    };
+
+    const getUserPosition = async () => {
+        // Try geolocation, fallback to cached last coords or Bangkok center
+        const fromCache = () => {
+            try {
+                const raw = localStorage.getItem("startPoint:last");
+                const v = raw ? JSON.parse(raw) : null;
+                if (Array.isArray(v) && v.length === 2 && Number.isFinite(+v[0]) && Number.isFinite(+v[1])) return v;
+            } catch {}
+            return null;
+        };
+        if (navigator?.geolocation) {
+            try {
+                const pos = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 });
+                });
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                try { localStorage.setItem("startPoint:last", JSON.stringify([lat, lng])); } catch {}
+                return [lat, lng];
+            } catch {}
+        }
+        return fromCache() || [13.7563, 100.5018];
+    };
+
+    const handleClone = async (e) => {
+        e?.stopPropagation?.();
+        if (!data?._id) {
+            alert("ไม่พบรหัสแผนที่จะคัดลอก");
+            return;
+        }
+        const token = getToken();
+        if (!(token && token !== 'jwtToken' && token.split('.').length === 3)) {
+            alert("ฟีเจอร์คัดลอกใช้ได้เฉพาะผู้ที่เข้าสู่ระบบ กรุณาเข้าสู่ระบบก่อน");
+            return;
+        }
+        setIsCloning(true);
+        try {
+            const source = await getUserPosition();
+            const API_BASE = import.meta.env.VITE_PUBLIC_API_URL || "http://localhost:3000";
+            const res = await fetch(`${API_BASE}/plans/clone`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ originalPlanId: data._id, source }),
+            });
+            const raw = await res.text();
+            let body; try { body = raw ? JSON.parse(raw) : null; } catch { body = raw; }
+            if (!res.ok) throw new Error(body?.message || `${res.status} ${res.statusText}`);
+            const newId = body?._id || body?.id || body?.planId;
+            if (!newId) {
+                alert("คัดลอกสำเร็จ แต่ไม่พบรหัสแผนใหม่");
+                return;
+            }
+            navigate(`/plan/${newId}`, { state: { isNew: true } });
+        } catch (err) {
+            alert(`คัดลอกแผนไม่สำเร็จ: ${err?.message || err}`);
+        } finally {
+            setIsCloning(false);
             setShowMenu(false);
         }
     };
@@ -557,6 +629,14 @@ const Field = forwardRef(({ planData, onDataChange, padding, canEdit, autoEdit }
                                         >
                                             <Share2 className="w-4 h-4 mr-2" />
                                             แชร์
+                                        </button>
+                                        <button
+                                            onClick={handleClone}
+                                            disabled={isCloning}
+                                            className="flex items-center w-full px-3 py-2 text-sm text-left hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:cursor-pointer"
+                                        >
+                                            <CopyPlus className="w-4 h-4 mr-2" />
+                                            {isCloning ? "กำลังคัดลอก..." : "คัดลอกแผน"}
                                         </button>
                                         {canEdit && (
                                             <button
