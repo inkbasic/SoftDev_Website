@@ -7,6 +7,7 @@ export default function DropDownMulti({
 	onChange,
 	options = [],
 	maxSelected,
+	classModify = "",
 }) {
 	const [open, setOpen] = useState(false);
 	const [q, setQ] = useState("");
@@ -43,7 +44,7 @@ export default function DropDownMulti({
 	return (
 		<div ref={ref} className="relative">
 			<div
-				className="flex px-5 justify-between items-center gap-3 w-full py-5 bg-white border border-gray-300 rounded-xl cursor-pointer"
+				className={`${classModify}`}
 				onClick={() => setOpen(o => !o)}
 			>
 				<div className="flex flex-wrap gap-2 items-center">

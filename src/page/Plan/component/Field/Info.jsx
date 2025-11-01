@@ -65,6 +65,7 @@ export default function Info({ data, isEditing = false, onChange }) {
               value={categoryArray}
               onChange={(arr) => onChange?.({ category: arr })}
               options={ACTIVITY}
+              classModify="flex px-2 justify-between items-center gap-3 w-full py-1 bg-white border border-gray-300 rounded-md cursor-pointer "
             />
           ) : (
             <p className="text-neutral-500">

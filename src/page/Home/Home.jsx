@@ -358,6 +358,7 @@ export default function Home() {
                                 value={selectedActivities || []}
                                 onChange={setSelectedActivities}
                                 options={ACTIVITY}
+                                classModify="flex px-5 justify-between items-center gap-3 w-full py-5 bg-white border border-gray-300 rounded-xl cursor-pointer"
                             />
                             {errors.activities && (
                                 <span className="text-red-500 text-sm px-2">{errors.activities}</span>
