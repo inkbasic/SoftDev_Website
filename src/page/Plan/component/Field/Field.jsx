@@ -40,11 +40,29 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        setData(planData);
-        latestPlanRef.current = planData || {};
-        // ตั้ง baseline สำหรับย้อนกลับครั้งแรกเมื่อข้อมูลเข้ามา
-        if (revertSnapshotRef.current == null && planData) {
-            revertSnapshotRef.current = deepClone(planData);
+        // Normalize transport for UI from 'transportation' (object) or 'providedCar' (id)
+        const extractTransportFromTransportation = (t) => {
+            if (t && typeof t === 'object' && (t.type || t.rental)) {
+                return { type: t.type || (t.rental ? 'rental' : undefined), rental: t.rental };
+            }
+            return undefined;
+        };
+        const buildTransportFromProvidedCar = (id) => {
+            if (!id) return undefined;
+            return { type: 'rental', rental: { methodId: id } };
+        };
+        const normalized = planData ? {
+            ...planData,
+            transport:
+                planData.transport
+                ?? extractTransportFromTransportation(planData.transportation)
+                ?? buildTransportFromProvidedCar(planData.providedCar)
+        } : planData;
+
+        setData(normalized);
+        latestPlanRef.current = normalized || {};
+        if (revertSnapshotRef.current == null && normalized) {
+            revertSnapshotRef.current = deepClone(normalized);
         }
     }, [planData]);
 
@@ -164,7 +182,7 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
                 const obj = {
                     _id: l.id,
                     name: l.name,
-                    imageUrl: l.image || l?.raw?.imageUrl,
+                    image: l.image || l?.raw?.imageUrl,
                     location: locArray,
                     description: l.description ?? l?.raw?.description,
                     providerId: l?.raw?.providerId,
@@ -182,7 +200,12 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
             };
         }
 
-        // สร้าง payload ที่ต้องการส่งจริง: ตัด field UI ออก เช่น dayName/date ในแต่ละวัน
+        // สร้าง payload สำหรับ backend รุ่นใหม่: ส่ง transportation เป็นสตริง และส่ง providedCar เป็น id ของรถเช่า
+        const transport = safe?.transport;
+        const providedCar = transport?.type === 'rental' ? (transport?.rental?.methodId || transport?.rental?.id || transport?.rental?._id) : undefined;
+        const transportation = transport?.type === 'rental'
+            ? 'รถเช่า'
+            : (safe?.transportation === 'รถเช่า' ? 'รถเช่า' : 'รถยนต์ส่วนตัว');
         const payload = {
             _id: safe?._id,
             title: safe?.title,
@@ -192,7 +215,8 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
             people: safe?.people,
             ownerId: safe?.ownerId,
             where: safe?.where || "ไม่ระบุ",
-            transportation: "รถยนต์ส่วนตัว",
+            transportation,
+            providedCar,
             category: safe?.category,
             // source: safe?.startPoint ? {
             //     type: safe.startPoint.type,
@@ -543,6 +567,8 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
             <div ref={carRef} className="w-full">
                 <CarSection
                     value={data?.transport}
+                    transportation={data?.transportation}
+                    isEditing={isEditing}
                     onChange={(transport) => {
                         const updated = { ...(data || {}), transport };
                         setData(updated);
@@ -556,6 +582,7 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
             <div ref={startPointRef} className="w-full">
                 <StartPoint
                     value={data?.startPoint}
+                    isEditing={isEditing}
                     onChange={handleStartPointChange}
                     firstLocation={firstLocation}
                 />

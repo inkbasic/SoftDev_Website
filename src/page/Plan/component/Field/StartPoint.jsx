@@ -1,10 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { getTravelBetween } from "@/lib/routeService";
 import AddLocationPanel from "./AddLocationPanel.jsx";
-import Pool from "/img/pool.jpg";
+import mockImage from "/img/mockImage.png";
 
-const image = Pool;
-export default function StartPoint({ value, onChange, firstLocation, onRouteComputed }) {
+export default function StartPoint({ value, onChange, firstLocation, onRouteComputed, isEditing = true }) {
     const [mode, setMode] = useState(value?.type || "current");
     const [hotelId, setHotelId] = useState(
         value?.type === "hotel" ? value?.refId : null
@@ -15,10 +14,20 @@ export default function StartPoint({ value, onChange, firstLocation, onRouteComp
     const [travel, setTravel] = useState(null); // { distanceKm, durationMin, coords }
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [image, setImage] = useState("");
 
+    // Sync local state when value changes (e.g., load from server)
     useEffect(() => {
-        if (value?.type === "hotel" && value?.refId) setHotelId(value.refId);
-    }, [value?.type, value?.refId]);
+        if (value?.type === "hotel") {
+            if (value?.refId) setHotelId(value.refId);
+            setHotelName(value?.name || hotelName || "โรงแรมที่เลือก");
+            setHotelDescription(value?.description || hotelDescription || "");
+            setImage(value?.image || value?.imageUrl || value?.raw?.imageUrl || image || mockImage);
+        }
+        if (value?.type && value.type !== mode) {
+            setMode(value.type);
+        }
+    }, [value?.type, value?.refId, value?.name, value?.description, value?.image, value?.imageUrl]);
 
     const commitCurrent = () => {
         if (!navigator.geolocation) {
@@ -75,15 +84,19 @@ export default function StartPoint({ value, onChange, firstLocation, onRouteComp
         console.log(h);
         setHotelName(h.name || "");
         setHotelDescription(h.description || "");
+        setImage(h.image || h.imageUrl || mockImage);
     };
 
     // เลือกโรงแรมจากการค้นหาเท่านั้น
 
     useEffect(() => {
-        if (mode === "current") commitCurrent();
+        if (mode === "current") {
+            // อัปเดตตำแหน่งปัจจุบันเฉพาะเมื่ออยู่ในโหมดแก้ไข เพื่อไม่ให้แก้ค่าระหว่างดู
+            if (isEditing) commitCurrent();
+        }
         // เมื่อเปลี่ยนเป็นโหมดโรงแรม จะยังไม่เลือกใดๆ จนกว่าผู้ใช้จะค้นหาและกดเลือก
         setTravel(null);
-    }, [mode]);
+    }, [mode, isEditing]);
 
     useEffect(() => {
         const abort = new AbortController();
@@ -110,37 +123,82 @@ export default function StartPoint({ value, onChange, firstLocation, onRouteComp
         return () => abort.abort();
     }, [value?.position, value?.latitude, value?.longitude, firstLocation?.id]);
 
+    // ค่าที่เลือกไว้ (ใช้สำหรับแสดงผลแบบดูอย่างเดียว)
+    const selectedStart = useMemo(() => {
+        if (!value) return null;
+        if (value.type === 'hotel') {
+            return {
+                name: hotelName || value.name,
+                description: hotelDescription || value.description,
+                imageUrl: image || value.image || value.imageUrl || value?.raw?.imageUrl || mockImage,
+            };
+        }
+        if (value.type === 'current') {
+            return { name: 'ตำแหน่งปัจจุบัน' };
+        }
+        return null;
+    }, [value, hotelName, hotelDescription, image]);
+
     return (
         <>
             <div className="flex items-center justify-between w-full">
                 <h3 >จุดเริ่มต้นการเดินทาง</h3>
-                <div className="flex gap-4">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                            type="radio"
-                            name="start-mode"
-                            checked={mode === "current"}
-                            className="cursor-pointer"
-                            onChange={() => setMode("current")}
-                        />
-                        ตำแหน่งปัจจุบัน
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                            type="radio"
-                            name="start-mode"
-                            checked={mode === "hotel"}
-                            className="cursor-pointer"
-                            onChange={() => setMode("hotel")}
-                        />
-                        โรงแรม
-                    </label>
-                </div>
+                {isEditing ? (
+                    <div className="flex gap-4">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="radio"
+                                name="start-mode"
+                                checked={mode === "current"}
+                                className="cursor-pointer"
+                                onChange={() => setMode("current")}
+                            />
+                            ตำแหน่งปัจจุบัน
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="radio"
+                                name="start-mode"
+                                checked={mode === "hotel"}
+                                className="cursor-pointer"
+                                onChange={() => setMode("hotel")}
+                            />
+                            โรงแรม
+                        </label>
+                    </div>
+                ) : (
+                    <h3 className="text-neutral-600">
+                        {mode === 'hotel' ? 'โรงแรม' : 'ตำแหน่งปัจจุบัน'}
+                    </h3>
+                )}
             </div>
 
             {mode === "hotel" && (
                 <div className="mt-3">
-                    {hotelId && (
+                    {selectedStart && !isEditing && (
+                    <div
+                        className={`flex gap-2 h-40 w-full mb-5 bg-white relative location-card`}
+                    >
+                        <div className="flex flex-col gap-2 px-5 py-3 rounded-[8px] border border-neutral-200 w-full h-full relative">
+                            <div className="flex justify-between items-start">
+                                <div className="flex-1">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <p className="font-bold truncate">{selectedStart.name}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {selectedStart.description && (
+                                <p className="text-neutral-500 text-sm line-clamp-3">{selectedStart.description}</p>
+                            )}
+                        </div>
+
+                        <div className="flex items-center w-76 h-full bg-neutral-200 rounded-[8px] justify-center overflow-hidden">
+                            <img src={selectedStart.imageUrl} className="object-cover w-full h-full" />
+                        </div>
+                    </div>
+                    )}
+                    {isEditing && hotelId && (
                     <div
                         className={`flex gap-2 h-40 w-full mb-5 bg-white relative location-card`}
                     >
@@ -161,16 +219,18 @@ export default function StartPoint({ value, onChange, firstLocation, onRouteComp
                         </div>
                     </div>
                     )}
-                    <AddLocationPanel
-                        existing={[]}
-                        placeholder="ค้นหาโรงแรมที่ต้องการ..."
-                        filter={(arr) => arr.filter(x => (x.category === 'hotel') || (Array.isArray(x.tags) && x.tags.includes('hotel')) || /โรงแรม/i.test(x?.name))}
-                        onAdd={(loc) => {
-                            setHotelId(loc.id);
-                            commitHotelObj(loc);
-                        }}
-                        onOpenChange={() => { }}
-                    />
+                    {isEditing && (
+                        <AddLocationPanel
+                            existing={[]}
+                            placeholder="ค้นหาโรงแรมที่ต้องการ..."
+                            filter={(arr) => arr.filter(x => (x.category === 'hotel') || (Array.isArray(x.tags) && x.tags.includes('hotel')) || /โรงแรม/i.test(x?.name))}
+                            onAdd={(loc) => {
+                                setHotelId(loc.id);
+                                commitHotelObj(loc);
+                            }}
+                            onOpenChange={() => { }}
+                        />
+                    )}
                 </div>
             )}
 
