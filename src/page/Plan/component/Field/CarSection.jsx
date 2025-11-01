@@ -118,9 +118,9 @@ export default function CarSection({ value, onChange }) {
           ) : error ? (
             <p className="text-red-500">{error}</p>
           ) : (
-            <div className="flex gap-3 overflow-x-auto py-2">
+            <div className="flex gap-3 py-2">
               {(providers || []).map((p) => (
-                <div key={p.providerId} className={`min-w-64 w-64 flex-shrink-0 bg-white border border-neutral-200 rounded-[8px] overflow-hidden shadow-sm ${selectedId === p.providerId ? 'ring-2 ring-blue-400' : ''}`}>
+                <div key={p.providerId} className={`basis-1/2 bg-white border border-neutral-200 rounded-[8px] overflow-hidden shadow-sm ${selectedId === p.providerId ? 'ring-2 ring-blue-400' : ''}`}>
                   <div className="h-32 bg-neutral-100 overflow-hidden">
                     {p.imageUrl ? (
                       <img src={p.imageUrl} className="object-cover w-full h-full" alt={p.name} />
