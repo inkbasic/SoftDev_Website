@@ -164,7 +164,7 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
                 const obj = {
                     _id: l.id,
                     name: l.name,
-                    imageUrl: l.image || l?.raw?.imageUrl,
+                    image: l.image || l?.raw?.imageUrl,
                     location: locArray,
                     description: l.description ?? l?.raw?.description,
                     providerId: l?.raw?.providerId,
@@ -183,6 +183,9 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
         }
 
         // สร้าง payload ที่ต้องการส่งจริง: ตัด field UI ออก เช่น dayName/date ในแต่ละวัน
+        const transport = safe?.transport;
+        const transportation = transport?.type === 'rental' ? transport.rental.name : 'รถยนต์ส่วนตัว';
+        // console.log(transport)
         const payload = {
             _id: safe?._id,
             title: safe?.title,
@@ -192,7 +195,8 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
             people: safe?.people,
             ownerId: safe?.ownerId,
             where: safe?.where || "ไม่ระบุ",
-            transportation: "รถยนต์ส่วนตัว",
+            transportation,
+            // transport: transport,
             category: safe?.category,
             // source: safe?.startPoint ? {
             //     type: safe.startPoint.type,
