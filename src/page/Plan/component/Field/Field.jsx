@@ -25,12 +25,26 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
     const [data, setData] = useState(planData || {});
     // เก็บ snapshot ล่าสุดแบบ synchronous เพื่อกัน state lag (เช่น ขณะลาก/ปล่อย)
     const latestPlanRef = useRef(planData || {});
+    // เก็บ snapshot สำหรับย้อนกลับเมื่อกดยกเลิก
+    const revertSnapshotRef = useRef(null);
+
+    const deepClone = (obj) => {
+        try {
+            return typeof structuredClone === 'function' ? structuredClone(obj) : JSON.parse(JSON.stringify(obj));
+        } catch {
+            return JSON.parse(JSON.stringify(obj));
+        }
+    };
 
     const navigate = useNavigate();
 
     useEffect(() => {
         setData(planData);
         latestPlanRef.current = planData || {};
+        // ตั้ง baseline สำหรับย้อนกลับครั้งแรกเมื่อข้อมูลเข้ามา
+        if (revertSnapshotRef.current == null && planData) {
+            revertSnapshotRef.current = deepClone(planData);
+        }
     }, [planData]);
 
     // เพิ่ม callback สำหรับรับการเปลี่ยนแปลงจาก Itinerary
@@ -244,8 +258,44 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
                 throw new Error(body?.message || "บันทึกไม่สำเร็จ");
             }
 
+            // รวมข้อมูลจาก server กลับเข้ากับ client state
+            // แล้วพยายาม "รักษา" รูปภาพของสถานที่ (image/imageUrl) หาก server ไม่ส่งคืนมา
+            const preserveAssets = (oldIti, newIti) => {
+                if (!oldIti || !newIti) return newIti || oldIti;
+                const out = {};
+                const keys = Array.from(new Set([...Object.keys(oldIti), ...Object.keys(newIti)]));
+                for (const k of keys) {
+                    const oldDay = oldIti[k] || {};
+                    const newDay = newIti[k] || {};
+                    const oldLocs = Array.isArray(oldDay.locations) ? oldDay.locations : [];
+                    const newLocs = Array.isArray(newDay.locations) ? newDay.locations : [];
+                    const mergedLocs = newLocs.map((nl) => {
+                        const nid = nl?.id ?? nl?._id;
+                        const match = oldLocs.find((ol) => (ol?.id ?? ol?._id) === nid) ||
+                                      oldLocs.find((ol) => ol?.name && nl?.name && ol.name === nl.name);
+                        if (!match) return nl;
+                        const oldImage = match.image || match.imageUrl || match?.raw?.imageUrl;
+                        const hasNewImage = nl.image || nl.imageUrl || nl?.raw?.imageUrl;
+                        if (hasNewImage) return nl;
+                        const patched = { ...nl };
+                        if (oldImage) {
+                            // เติมทั้ง image และ imageUrl เพื่อรองรับฝั่งแสดงผลทุกกรณี
+                            patched.image = patched.image || oldImage;
+                            patched.imageUrl = patched.imageUrl || oldImage;
+                        }
+                        return patched;
+                    });
+                    out[k] = { ...newDay, locations: mergedLocs };
+                }
+                return out;
+            };
+
             // อัปเดตสถานะด้วยข้อมูลจาก server (กันค่า server ที่เติมให้ เช่น _id, updatedAt)
-            const updated = { ...data, ...(body || {}) };
+            const updatedRaw = { ...data, ...(body || {}) };
+            const updated = {
+                ...updatedRaw,
+                itinerary: preserveAssets(data?.itinerary, updatedRaw?.itinerary),
+            };
             setData(updated);
             onDataChange?.(updated);
 
@@ -253,7 +303,8 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
             if (method === "POST" && body && body._id) {
                 navigate(`/plan/${body._id}`, { replace: true });
             }
-
+            // บันทึกสำเร็จ → อัปเดต baseline สำหรับการยกเลิกครั้งถัดไป
+            revertSnapshotRef.current = deepClone(updated);
             setIsEditing(false);
         } catch (err) {
             console.error("Save plan failed:", err);
@@ -266,6 +317,13 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
     };
 
     const handleCancel = () => {
+        // ย้อนกลับข้อมูลเป็น snapshot ก่อนเริ่มแก้ไข
+        const baseline = revertSnapshotRef.current ? deepClone(revertSnapshotRef.current) : null;
+        if (baseline) {
+            setData(baseline);
+            latestPlanRef.current = baseline;
+            onDataChange?.(baseline);
+        }
         setIsEditing(false);
     };
 
@@ -275,6 +333,8 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
 
     const handleEdit = () => {
         setShowMenu(false)
+        // ตั้ง baseline ณ เวลาก่อนเข้าสู่โหมดแก้ไข
+        revertSnapshotRef.current = deepClone(data);
         setIsEditing(true);
     };
 

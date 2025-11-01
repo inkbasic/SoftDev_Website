@@ -1,4 +1,4 @@
-import Pool from "/img/pool.jpg";
+import mockImage from "/img/mockImage.png";
 import { GripVertical, Trash2, Clock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { TimePicker } from "antd";
@@ -19,16 +19,22 @@ export default function Location({
     onTimeChange,
     displayOrder,
 }) {
+    console.log("Rendering Location:", locationData);
     const {
         id,
         name = "Siam Paragon",
         openHours = "เปิด 10.00 - 22.00",
         description = "ห้างสรรพสินค้าขนาดใหญ่ที่มีร้านบูติกระดับไฮเอนด์และร้านทั่วไป ร้านอาหาร โบว์ลิ่ง และโรงภาพยนตร์มัลติเพล็กซ์",
-        image = Pool,
+        image,
+        imageUrl,
+        raw,
         order = 1,
         startTime,
         endTime
     } = locationData || {};
+
+    // รองรับทั้ง image และ imageUrl (รวมถึง raw.imageUrl) พร้อม fallback เป็น mockImage
+    const displayImage = image || imageUrl || (raw && raw.imageUrl) || mockImage;
 
     // ใช้ sortable hook สำหรับ drag & drop
     const {
@@ -159,7 +165,7 @@ export default function Location({
             </div>
 
             <div className="flex items-center w-76 h-full bg-neutral-200 rounded-[8px] justify-center overflow-hidden">
-                <img src={image} className="object-cover w-full h-full" alt={name} />
+                <img src={displayImage} className="object-cover w-full h-full" alt={name} />
             </div>
         </div>
     );
