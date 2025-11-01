@@ -375,7 +375,7 @@ export default function Dashboard() {
                 15000
             );
 
-            if (!res.ok) {
+            if (!res.ok && res.status != 404) {
                 const t = await res.text().catch(() => "");
                 throw new Error(`Request failed ${res.status}: ${t?.slice(0, 200) || "(no response body)"}`);
             }
@@ -421,7 +421,9 @@ export default function Dashboard() {
                 15000
             );
 
-            if (res.status === 401 || res.status === 403) {
+            // console.log('res:',res);
+
+            if ((res.status === 401 || res.status === 403) && (res.status != 404)) {
                 localStorage.removeItem("jwtToken");
                 sessionStorage.removeItem("jwtToken");
                 setPlacesError("เซสชันหมดอายุหรือสิทธิ์ไม่เพียงพอ (ต้องเข้าสู่ระบบใหม่)");
@@ -429,7 +431,7 @@ export default function Dashboard() {
                 return;
             }
 
-            if (!res.ok) {
+            if (!res.ok && res.status != 404) {
                 const t = await res.text().catch(() => "");
                 throw new Error(`Request failed ${res.status}: ${t?.slice(0, 200) || "(no response body)"}`);
             }
@@ -437,6 +439,9 @@ export default function Dashboard() {
             const json = await parseJsonResponse(res);
             const arr = Array.isArray(json) ? json : json?.data ?? [];
             const safe = Array.isArray(arr) ? arr.filter((x) => x && typeof x === "object" && x._id && x.name) : [];
+            
+            // console.log('safe: ', safe);
+
 
             if (!isMountedRef.current) return;
             setPlaces(safe);
@@ -485,12 +490,13 @@ export default function Dashboard() {
     useEffect(() => {
         const onDeleted = () => {
             refetchPlaces();
+            refetchAds();
         };
         window.addEventListener("place-deleted", onDeleted);
         return () => {
             window.removeEventListener("place-deleted", onDeleted);
         };
-    }, [refetchPlaces]);
+    }, [refetchPlaces,refetchAds ]);
 
     // ===== ปุ่มนำทาง (เดิม) =====
     const handleAddLocation = () => navigate("/addlocation");

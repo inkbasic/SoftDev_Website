@@ -112,6 +112,10 @@ export default function DeletePlaceDialog({ placeId }) {
                 signal: controller.signal,
             });
 
+            // window.location.reload();
+            window.dispatchEvent(new CustomEvent("place-deleted", { detail: { placeId } }));
+            return;
+
             // เผื่อกรณี 204 No Content
             let payload = null;
             const text = await res.text();

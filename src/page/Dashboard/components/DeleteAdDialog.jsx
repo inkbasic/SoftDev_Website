@@ -116,6 +116,11 @@ export default function DeleteAdDialog({ adId }) {
                 signal: controller.signal,
             });
 
+            console.log(res);
+
+            window.dispatchEvent(new CustomEvent("ad-deleted", { detail: { adId } }));
+            return;
+
             // รองรับทั้งกรณีมี/ไม่มี body (เช่น 204)
             let payload = null;
             const text = await res.text();
