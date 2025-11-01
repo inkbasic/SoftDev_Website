@@ -8,6 +8,7 @@ import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "re
 import { useAutoHideScrollbar } from "@/lib/useAutoHideScrollbar";
 import { href, useNavigate } from "react-router-dom";
 import StartPoint from "./StartPoint";
+import { Trash2, Share2, Edit2 } from "lucide-react";
 
 const BASE_URL = import.meta.env.VITE_PUBLIC_API_URL;
 
@@ -272,7 +273,7 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
                     const mergedLocs = newLocs.map((nl) => {
                         const nid = nl?.id ?? nl?._id;
                         const match = oldLocs.find((ol) => (ol?.id ?? ol?._id) === nid) ||
-                                      oldLocs.find((ol) => ol?.name && nl?.name && ol.name === nl.name);
+                            oldLocs.find((ol) => ol?.name && nl?.name && ol.name === nl.name);
                         if (!match) return nl;
                         const oldImage = match.image || match.imageUrl || match?.raw?.imageUrl;
                         const hasNewImage = nl.image || nl.imageUrl || nl?.raw?.imageUrl;
@@ -362,19 +363,71 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
         }
     };
 
+    // const handleShare = async () => {
+    //     try {
+    //         const url = window?.location?.href || '';
+    //         const ok = await copyToClipboard(url);
+    //         setShowMenu(false);
+    //         if (ok) {
+    //             alert('คัดลอกลิงก์แล้ว');
+    //         } else {
+    //             alert('ไม่สามารถคัดลอกอัตโนมัติได้ กรุณาคัดลอกเอง: ' + url);
+    //         }
+    //     } catch (e) {
+    //         setShowMenu(false);
+    //         alert('เกิดข้อผิดพลาดในการคัดลอกลิงก์');
+    //     }
+    // };
+
     const handleShare = async () => {
+        const url = window?.location?.href || '';
+        
         try {
-            const url = window?.location?.href || '';
-            const ok = await copyToClipboard(url);
-            setShowMenu(false);
-            if (ok) {
-                alert('คัดลอกลิงก์แล้ว');
-            } else {
-                alert('ไม่สามารถคัดลอกอัตโนมัติได้ กรุณาคัดลอกเอง: ' + url);
+            await navigator.clipboard.writeText(url);
+            alert("คัดลอกลิงก์เรียบร้อยแล้ว!");
+        } catch (error) {
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = url;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            alert("คัดลอกลิงก์เรียบร้อยแล้ว!");
+        }
+        setShowMenu(false);
+    };
+
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const handleDelete = async (e) => {
+        e.stopPropagation();
+        
+        if (!confirm("คุณแน่ใจหรือไม่ที่จะลบแผนการท่องเที่ยวนี้?")) {
+            return;
+        }
+
+        setIsDeleting(true);
+        try {
+            const API_BASE = import.meta.env.VITE_PUBLIC_API_URL || "http://localhost:3000";
+            const res = await fetch(`${API_BASE}/plans/${data._id}`, {
+                method: "DELETE",
+                headers: {
+                    Authorization: `Bearer ${getToken()}`,
+                },
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.message || `${res.status} ${res.statusText}`);
             }
-        } catch (e) {
+
+            navigate("/");
+        } catch (error) {
+            alert(`เกิดข้อผิดพลาดในการลบ: ${error.message}`);
+        } finally {
+            setIsDeleting(false);
             setShowMenu(false);
-            alert('เกิดข้อผิดพลาดในการคัดลอกลิงก์');
         }
     };
 
@@ -433,11 +486,37 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
                             </>
                         ) : (
                             <MeatButton onClick={handleToggleMenu} click={showMenu}>
-                                {showMenu && (
+                                {/* {showMenu && (
                                     <div ref={menuRef} className="absolute right-0 top-full mt-1 w-30 bg-white border border-neutral-200 rounded-md shadow-lg z-10 overflow-hidden">
                                         <p onClick={handleShare} className="px-2 py-1 cursor-pointer hover:bg-neutral-200">แชร์</p>
                                         <p onClick={handleEdit} className="px-2 py-1 cursor-pointer hover:bg-neutral-200">แก้ไข</p>
                                         <p onClick={() => navigate("/")} className="px-2 py-1 cursor-pointer hover:bg-neutral-200">ลบ</p>
+                                    </div>
+                                )} */}
+                                {showMenu && (
+                                    <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-md shadow-lg z-99 min-w-[150px]">
+                                        <button
+                                            onClick={handleShare}
+                                            className="flex items-center w-full px-3 py-2 text-sm text-left hover:bg-gray-100 transition-colors hover:cursor-pointer"
+                                        >
+                                            <Share2 className="w-4 h-4 mr-2" />
+                                            แชร์
+                                        </button>
+                                        <button
+                                            onClick={handleEdit}
+                                            className="flex items-center w-full px-3 py-2 text-sm text-left hover:bg-gray-100 transition-colors hover:cursor-pointer"
+                                        >
+                                            <Edit2 className="w-4 h-4 mr-2" />
+                                            แก้ไข
+                                        </button>
+                                        <button
+                                            onClick={handleDelete}
+                                            disabled={isDeleting}
+                                            className="flex items-center w-full px-3 py-2 text-sm text-left text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:cursor-pointer"
+                                        >
+                                            <Trash2 className="w-4 h-4 mr-2" />
+                                            {isDeleting ? "กำลังลบ..." : "ลบ"}
+                                        </button>
                                     </div>
                                 )}
                             </MeatButton>

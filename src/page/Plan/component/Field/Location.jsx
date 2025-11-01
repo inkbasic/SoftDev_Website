@@ -19,7 +19,7 @@ export default function Location({
     onTimeChange,
     displayOrder,
 }) {
-    console.log("Rendering Location:", locationData);
+    // console.log("Rendering Location:", locationData);
     const {
         id,
         name = "Siam Paragon",

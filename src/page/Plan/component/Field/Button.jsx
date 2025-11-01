@@ -30,7 +30,7 @@ export const MeatButton = ({ onClick, children, click = false, ...props }) => {
         <>
             <button
                 onClick={onClick}
-                className={`flex gap-1 cursor-pointer rounded-full p-1 hover:bg-neutral-200 ${click ? 'bg-neutral-200' : ''}`}
+                className={`flex gap-1 cursor-pointer p-1 text-neutral-500 hover:text-neutral-700`}
                 {...props}
             >
                 <LucideEllipsis />
