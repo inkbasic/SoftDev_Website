@@ -191,7 +191,7 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
             budget: safe?.budget,
             people: safe?.people,
             ownerId: safe?.ownerId,
-            where: safe?.where,
+            where: safe?.where || "ไม่ระบุ",
             transportation: "รถยนต์ส่วนตัว",
             category: safe?.category,
             // source: safe?.startPoint ? {
