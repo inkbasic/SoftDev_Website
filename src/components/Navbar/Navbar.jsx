@@ -80,7 +80,7 @@ export default function Navbar() {
         (user?.name || "User");
 
     return (
-        <nav className="flex w-full h-15 py-2 px-10 justify-between items-center bg-paperWhite shadow-sm z-50 relative">
+        <nav className="flex w-full h-15 py-2 px-10 justify-between items-center bg-paperWhite shadow-sm z-[2000] relative" style={{ zIndex: 2000 }}>
             <div className="flex flex-row items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
                 <img src={logo} alt="WannaGo Logo" />
                 <div className="font-krub text-2xl font-bold">WannaGo!</div>
@@ -125,7 +125,7 @@ export default function Navbar() {
                         
                         {/* Custom dropdown with Tailwind */}
                         {isDropdownOpen && (
-                            <div className="absolute right-0 mt-2 w-48 py-2 bg-white rounded-md shadow-lg z-50 border border-gray-100">
+                            <div className="absolute right-0 mt-2 w-48 py-2 bg-white rounded-md shadow-lg z-[2100] border border-gray-100" style={{ zIndex: 2100 }}>
                                 <a 
                                     className="block px-4 py-2 text-gray-800 hover:bg-gray-100 cursor-pointer"
                                     onClick={() => {

@@ -81,6 +81,7 @@
 /* Smooth zoom transitions */
 .leaflet-container {
     transition: all 0.3s ease;
+    z-index: 0 !important; /* keep map below app overlays like Navbar dropdown */
 }
 
 /* Custom control styles */
