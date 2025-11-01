@@ -106,7 +106,7 @@ export default function Login() {
     }
 
     return (
-        <div className="flex items-center justify-center h-screen background">
+        <div className="flex items-center justify-center h-full background">
             {/* <BackgroundBlurs /> */}
 
             <Card className="z-10 w-full max-w-sm">

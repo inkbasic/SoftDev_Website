@@ -107,7 +107,7 @@ export default function Signup() {
     };
 
     return (
-        <div className="flex items-center justify-center py-20 background">
+        <div className="flex items-center justify-center background h-full">
             <Card className="z-10 w-full max-w-sm">
                 <CardHeader>
                     <CardTitle>สร้างบัญชีใหม่เพื่อเริ่มต้นการใช้งาน 🚀</CardTitle>
