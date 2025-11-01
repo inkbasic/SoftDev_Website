@@ -528,7 +528,7 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
                     return (
                         <>
                         {/* ใช้ SortableContext แยกต่อวัน เพื่อลดการสลับชั่วคราวระหว่างวัน */}
-                        {dateList.map((dateInfo) => (
+                        {dateList.map((dateInfo, idx) => (
                     <div
                         key={dateInfo.key}
                         ref={(el) => (dayRefs.current[dateInfo.key] = el)}
@@ -537,6 +537,12 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
                             items={(dateInfo.data.locations || []).map((l) => l.id)}
                             strategy={verticalListSortingStrategy}
                         >
+                            {(() => {
+                                // หา location สุดท้ายของวันก่อนหน้า (ถ้ามี)
+                                const prevDay = idx > 0 ? dateList[idx - 1] : null;
+                                const prevLocs = prevDay?.data?.locations || [];
+                                const prevLastLocation = prevLocs.length > 0 ? prevLocs[prevLocs.length - 1] : null;
+                                return (
                             <DateContainer
                                 title={dateInfo.fullTitle}
                                 dayData={dateInfo.data}
@@ -556,7 +562,10 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
                                     onDataChange?.(updatedData);
                                 }}
                                         baseOrderOffset={offsets[dateInfo.key] || 0}
+                                        prevLastLocation={prevLastLocation}
                             />
+                                );
+                            })()}
                         </SortableContext>
                     </div>
                         ))}

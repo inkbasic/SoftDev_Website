@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Location from "./Location";
 import TravelTime from "./TravelTime";
-import { computeTravelTimes } from "@/lib/routeService";
+import { computeTravelTimes, getTravelBetween } from "@/lib/routeService";
 
 export default function LocationList({ 
   locations = [], 
@@ -13,8 +13,10 @@ export default function LocationList({
   onTimeChange,
   enableDragDrop = true,
   baseOrderOffset = 0,
+  prevLastLocation = null,
 }) {
   const [computed, setComputed] = useState([]);
+  const [topTravel, setTopTravel] = useState(null);
 
   useEffect(() => {
     const abort = new AbortController();
@@ -29,10 +31,35 @@ export default function LocationList({
     return () => abort.abort();
   }, [locations]);
 
+  // คำนวณเวลาเดินทางจากวันก่อนหน้า → สถานที่แรกของวันนี้ (ถ้ามี)
+  useEffect(() => {
+    const abort = new AbortController();
+    (async () => {
+      try {
+        if (!prevLastLocation || !locations?.[0]) {
+          setTopTravel(null);
+          return;
+        }
+        const route = await getTravelBetween(prevLastLocation, locations[0], abort.signal);
+        setTopTravel(route || null);
+      } catch {
+        setTopTravel(null);
+      }
+    })();
+    return () => abort.abort();
+  }, [prevLastLocation, locations && locations[0]]);
+
   const times = computed.length ? computed : travelTimes;
 
   return (
     <div className="flex flex-col">
+      {/* แสดงเวลาเดินทางจากวันก่อนหน้า → สถานที่แรกของวันนี้ */}
+      {prevLastLocation && locations.length > 0 && (
+        <div className="relative">
+          <TravelTime data={topTravel} />
+        </div>
+      )}
+
       {locations.map((location, index) => {
         // Use a composite, per-instance key to avoid duplicates when the same place appears multiple times in a day
         const key = `${location?.id ?? 'loc'}:${location?.order ?? index}`;
