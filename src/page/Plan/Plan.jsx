@@ -109,7 +109,10 @@ async function fetchPlanById(id) {
     let body; try { body = raw ? JSON.parse(raw) : null; } catch { body = raw; }
     console.log('GET', url, '=>', res.status, body);
     if (!res.ok) throw new Error(body?.message || 'Fetch plan failed');
-    return normalizeServerPlan(body.plan);
+    return {
+        plan: normalizeServerPlan(body.plan),
+        isOwner: !!body?.isOwner,
+    };
 }
 
 export default function Plan() {
@@ -123,6 +126,7 @@ export default function Plan() {
     const isNewPlan = homeData.state?.isNew || false;
 
     const [currentData, setCurrentData] = useState(null);
+    const [canEdit, setCanEdit] = useState(true);
     const [loadingPlan, setLoadingPlan] = useState(true);
 
     useEffect(() => {
@@ -130,10 +134,16 @@ export default function Plan() {
         (async () => {
             try {
                 if (id) {
-                    const data = await fetchPlanById(id);
-                    if (!cancelled) setCurrentData(data);
+                    const res = await fetchPlanById(id);
+                    if (!cancelled) {
+                        setCurrentData(res.plan);
+                        setCanEdit(!!res.isOwner);
+                    }
                 } else {
-                    if (!cancelled) setCurrentData(PlanMock);
+                    if (!cancelled) {
+                        setCurrentData(PlanMock);
+                        setCanEdit(true);
+                    }
                 }
             } catch (e) {
                 console.error(e);
@@ -234,6 +244,7 @@ export default function Plan() {
                             planData={currentData}
                             onDataChange={handleDataChange}
                             padding={isHideMap ? 'px-80' : 'px-20'}
+                            canEdit={canEdit}
                         />
                     </>
                 )}

@@ -19,8 +19,9 @@ function getToken() {
     return match ? decodeURIComponent(match[1]) : null;
 }
 
-const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
-    const [isEditing, setIsEditing] = useState(true);
+const Field = forwardRef(({ planData, onDataChange, padding, canEdit }, ref) => {
+    // เริ่มต้นในโหมดดูเสมอ; ผู้มีสิทธิ์แก้ไขสามารถกด "แก้ไข" เพื่อเข้าสู่โหมดแก้ไข
+    const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
     const [data, setData] = useState(planData || {});
@@ -38,6 +39,14 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
     };
 
     const navigate = useNavigate();
+
+    // หากสิทธิ์เปลี่ยนเป็นไม่สามารถแก้ไข ให้บังคับออกจากโหมดแก้ไข
+    useEffect(() => {
+        if (!canEdit && isEditing) {
+            setIsEditing(false);
+            setShowMenu(false);
+        }
+    }, [canEdit]);
 
     useEffect(() => {
         // Normalize transport for UI from 'transportation' (object) or 'providedCar' (id)
@@ -365,6 +374,11 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
     }
 
     const handleEdit = () => {
+        if (!canEdit) {
+            // กันกรณีกดได้จาก DOM อื่น ๆ
+            setShowMenu(false);
+            return;
+        }
         setShowMenu(false)
         // ตั้ง baseline ณ เวลาก่อนเข้าสู่โหมดแก้ไข
         revertSnapshotRef.current = deepClone(data);
@@ -526,7 +540,7 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
                                     </div>
                                 )} */}
                                 {showMenu && (
-                                    <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-md shadow-lg z-99 min-w-[150px]">
+                                    <div ref={menuRef} className="absolute right-0 top-8 bg-white border border-gray-200 rounded-md shadow-lg z-99 min-w-[150px]">
                                         <button
                                             onClick={handleShare}
                                             className="flex items-center w-full px-3 py-2 text-sm text-left hover:bg-gray-100 transition-colors hover:cursor-pointer"
@@ -534,21 +548,25 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
                                             <Share2 className="w-4 h-4 mr-2" />
                                             แชร์
                                         </button>
-                                        <button
-                                            onClick={handleEdit}
-                                            className="flex items-center w-full px-3 py-2 text-sm text-left hover:bg-gray-100 transition-colors hover:cursor-pointer"
-                                        >
-                                            <Edit2 className="w-4 h-4 mr-2" />
-                                            แก้ไข
-                                        </button>
-                                        <button
-                                            onClick={handleDelete}
-                                            disabled={isDeleting}
-                                            className="flex items-center w-full px-3 py-2 text-sm text-left text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:cursor-pointer"
-                                        >
-                                            <Trash2 className="w-4 h-4 mr-2" />
-                                            {isDeleting ? "กำลังลบ..." : "ลบ"}
-                                        </button>
+                                        {canEdit && (
+                                            <button
+                                                onClick={handleEdit}
+                                                className="flex items-center w-full px-3 py-2 text-sm text-left hover:bg-gray-100 transition-colors hover:cursor-pointer"
+                                            >
+                                                <Edit2 className="w-4 h-4 mr-2" />
+                                                แก้ไข
+                                            </button>
+                                        )}
+                                        {canEdit && (
+                                            <button
+                                                onClick={handleDelete}
+                                                disabled={isDeleting}
+                                                className="flex items-center w-full px-3 py-2 text-sm text-left text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:cursor-pointer"
+                                            >
+                                                <Trash2 className="w-4 h-4 mr-2" />
+                                                {isDeleting ? "กำลังลบ..." : "ลบ"}
+                                            </button>
+                                        )}
                                     </div>
                                 )}
                             </MeatButton>
