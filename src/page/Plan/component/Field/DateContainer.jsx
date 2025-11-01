@@ -4,8 +4,9 @@ import { arrayMove } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
 import LocationList from "./LocationList.jsx";
 import AddLocationPanel from "./AddLocationPanel.jsx";
+import { trackAdAddedToPlan } from "@/lib/adService";
 
-export default function DateContainer({ title, dayData, dateKey, isEditing = false, onUpdateLocations, onUpdateDescription, baseOrderOffset = 0 }) {
+export default function DateContainer({ title, dayData, dateKey, isEditing = false, onUpdateLocations, onUpdateDescription, baseOrderOffset = 0, prevLastLocation = null }) {
     const [showDetails, setShowDetails] = useState(true);
     const [locations, setLocations] = useState(dayData?.locations || []);
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -52,6 +53,8 @@ export default function DateContainer({ title, dayData, dateKey, isEditing = fal
         const updated = [...locations, newLocation];
         setLocations(updated);
         onUpdateLocations?.(updated);
+        // แจ้ง backend เมื่อสถานที่ถูกเพิ่มเข้าแผน
+        try { trackAdAddedToPlan(newLocation.id); } catch {}
     };
 
     const handleAddCustomLocation = (custom) => {
@@ -123,6 +126,7 @@ export default function DateContainer({ title, dayData, dateKey, isEditing = fal
                             onTimeChange={handleTimeChange}
                             enableDragDrop={false} // ปิดใน LocationList เพราะจัดการที่ Itinerary แล้ว
                             baseOrderOffset={baseOrderOffset}
+                            prevLastLocation={prevLastLocation}
                         />
 
                         {isEditing && (
