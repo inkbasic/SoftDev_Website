@@ -63,6 +63,7 @@ export async function fetchPlacesAll(type = '') {
 
     const raw = await res.text();
     let data; try { data = raw ? JSON.parse(raw) : []; } catch { data = []; }
+    console.log(data);
   
     if (!res.ok) throw new Error(data?.message || 'Failed to fetch places');
     const normalized = (Array.isArray(data) ? data : [])
@@ -87,27 +88,13 @@ export async function getAllPlacesCached(type = '') {
 }
 
 export async function searchPlaces(query = '', type = '') {
-        let lat, lng;
-        // Helper: infer array order and return [lat, lng]
-        const toLatLng = (arr) => {
-            if (!Array.isArray(arr) || arr.length < 2) return [undefined, undefined];
-            const a = Number(arr[0]);
-            const b = Number(arr[1]);
-            if (!Number.isFinite(a) || !Number.isFinite(b)) return [undefined, undefined];
-            const aIsLat = Math.abs(a) <= 90;
-            const bIsLat = Math.abs(b) <= 90;
-            // If first looks like lng (>90) and second like lat (<=90) → [lng,lat]
-            if (!aIsLat && bIsLat) return [b, a];
-            // If first looks like lat and second like lng → [lat,lng]
-            if (aIsLat && !bIsLat) return [a, b];
-            // Ambiguous (both <=90 or both >90): assume [lat,lng]
-            return [a, b];
-        };
-    const q = (query || '').toLowerCase();
+    // Ensure we have a list to search (prefer cache, fallback to fetch)
+    const items = _cache && Array.isArray(_cache) ? _cache : await fetchPlacesAll(type);
+    const q = (query || '').trim().toLowerCase();
     if (!q) return items;
     return items.filter(p => (
-        p.name?.toLowerCase().includes(q) ||
-        p.description?.toLowerCase().includes(q) ||
+        (p.name && p.name.toLowerCase().includes(q)) ||
+        (p.description && p.description.toLowerCase().includes(q)) ||
         (Array.isArray(p.tags) && p.tags.join(' ').toLowerCase().includes(q))
     ));
 }
