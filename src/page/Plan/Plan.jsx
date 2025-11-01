@@ -158,11 +158,31 @@ export default function Plan() {
 
     const startMarker = useMemo(() => {
         const sp = currentData?.startPoint;
-        if (!sp) return null;
-        const pos = toLatLng(sp.position || sp.source);
+        let pos = null;
+        if (sp) {
+            pos = toLatLng(sp.position || sp.source);
+        }
+        if (!pos) {
+            // fallback: last cached coords or geolocation
+            try {
+                const raw = typeof localStorage !== 'undefined' ? localStorage.getItem('startPoint:last') : null;
+                const cached = raw ? JSON.parse(raw) : null;
+                if (Array.isArray(cached) && cached.length === 2) {
+                    pos = toLatLng(cached);
+                }
+            } catch {}
+        }
+        if (!pos && geoLocation) {
+            pos = [geoLocation.latitude, geoLocation.longitude];
+        }
         if (!pos) return null;
-        return { ...sp, position: pos, isStart: true, order: 0 };
-    }, [currentData?.startPoint]);
+        return {
+            name: sp?.name || 'จุดเริ่มต้น (ตำแหน่งของคุณ)',
+            position: pos,
+            isStart: true,
+            order: 0,
+        };
+    }, [currentData?.startPoint, geoLocation?.latitude, geoLocation?.longitude]);
 
     const markers = useMemo(() => {
         const iti = currentData?.itinerary || {};
