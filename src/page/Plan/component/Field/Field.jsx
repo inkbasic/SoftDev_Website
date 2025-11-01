@@ -40,22 +40,27 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        // Normalize transport from 'transportation' if backend returns only 'transportation'
-        const extractTransport = (t) => {
+        // Normalize transport for UI from 'transportation' (object) or 'providedCar' (id)
+        const extractTransportFromTransportation = (t) => {
             if (t && typeof t === 'object' && (t.type || t.rental)) {
-                // expect shape { type: 'rental', rental: { ... } }
                 return { type: t.type || (t.rental ? 'rental' : undefined), rental: t.rental };
             }
             return undefined;
         };
+        const buildTransportFromProvidedCar = (id) => {
+            if (!id) return undefined;
+            return { type: 'rental', rental: { methodId: id } };
+        };
         const normalized = planData ? {
             ...planData,
-            transport: planData.transport ?? extractTransport(planData.transportation)
+            transport:
+                planData.transport
+                ?? extractTransportFromTransportation(planData.transportation)
+                ?? buildTransportFromProvidedCar(planData.providedCar)
         } : planData;
 
         setData(normalized);
         latestPlanRef.current = normalized || {};
-        // ตั้ง baseline สำหรับย้อนกลับครั้งแรกเมื่อข้อมูลเข้ามา
         if (revertSnapshotRef.current == null && normalized) {
             revertSnapshotRef.current = deepClone(normalized);
         }
@@ -195,24 +200,12 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
             };
         }
 
-        // สร้าง payload ที่ต้องการส่งจริง: backend รับเฉพาะ 'transportation' (ไม่รับ 'transport')
-        // - หากเป็นรถเช่า ให้บันทึกรายละเอียดทั้งหมดไว้ใน transportation เป็น object
-        // - หากเป็นรถส่วนตัว ให้เป็นสตริง 'รถยนต์ส่วนตัว' หรือ fallback จากค่าที่มี
+        // สร้าง payload สำหรับ backend รุ่นใหม่: ส่ง transportation เป็นสตริง และส่ง providedCar เป็น id ของรถเช่า
         const transport = safe?.transport;
-        const transportation = (() => {
-            if (transport?.type === 'rental' && transport?.rental) {
-                return { type: 'rental', rental: { ...transport.rental } };
-            }
-            // กรณี backend/ต้นทางใส่มาเป็น object อยู่แล้ว ให้คงไว้
-            if (safe?.transportation && typeof safe.transportation === 'object') {
-                return safe.transportation;
-            }
-            // รองรับกรณี Home ส่งเป็นสตริง 'รถเช่า' มา โดยที่ยังไม่ได้เลือกผู้ให้บริการ
-            if (safe?.transportation === 'รถเช่า') {
-                return 'รถเช่า';
-            }
-            return 'รถยนต์ส่วนตัว';
-        })();
+        const providedCar = transport?.type === 'rental' ? (transport?.rental?.methodId || transport?.rental?.id || transport?.rental?._id) : undefined;
+        const transportation = transport?.type === 'rental'
+            ? 'รถเช่า'
+            : (safe?.transportation === 'รถเช่า' ? 'รถเช่า' : 'รถยนต์ส่วนตัว');
         const payload = {
             _id: safe?._id,
             title: safe?.title,
@@ -223,6 +216,7 @@ const Field = forwardRef(({ planData, onDataChange, padding }, ref) => {
             ownerId: safe?.ownerId,
             where: safe?.where || "ไม่ระบุ",
             transportation,
+            providedCar,
             category: safe?.category,
             // source: safe?.startPoint ? {
             //     type: safe.startPoint.type,

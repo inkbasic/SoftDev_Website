@@ -10,7 +10,6 @@ export default function CarSection({ value, onChange, transportation, isEditing 
 
 	// คำนวณโหมดจากทั้ง value และ transportation (รองรับ transportation เป็น object)
 	const derivedMode = useMemo(() => {
-		console.log(value?.type)
 		if (value?.type) return value.type;
 		if (transportation && typeof transportation === 'object') {
 			if (transportation.type === 'rental' || transportation.rental) return 'rental';
@@ -38,12 +37,33 @@ export default function CarSection({ value, onChange, transportation, isEditing 
 		return () => abort.abort();
 	}, [mode]);
 
+	// helper: normalize id to string from various shapes (string | number | { _id } | { id })
+	const toId = (v) => {
+		if (v == null) return null;
+		if (typeof v === 'string' || typeof v === 'number') return String(v);
+		if (typeof v === 'object') {
+			const raw = v._id ?? v.id;
+			return raw != null ? String(raw) : null;
+		}
+		return null;
+	};
 	// ใช้ method id ที่ไม่ซ้ำเป็นตัวอ้างอิง เพื่อหลีกเลี่ยงกรณี providerId ซ้ำกันหลาย method
-	const selectedId = value?.rental?.methodId || value?.rental?.id || value?.rental?._id || value?.rental?.providerId || (typeof transportation === 'object' ? (transportation.rental?.methodId || transportation.rental?.id || transportation.rental?._id) : null) || null;
-
+	const selectedId = (
+		toId(value?.rental?.methodId) ||
+		toId(value?.rental?.id) ||
+		toId(value?.rental?._id) ||
+		(transportation && typeof transportation === 'object' && transportation.rental
+			? (toId(transportation.rental.methodId) || toId(transportation.rental.id) || toId(transportation.rental._id))
+			: null)
+	) || null;
+	
 	// สร้างตัวช่วยดึงข้อมูลรถเช่าที่เลือก (จาก value หรือ transportation)
 	const selectedRental = useMemo(() => {
-		return (value?.rental) || (typeof transportation === 'object' ? transportation.rental : null) || null;
+		if (value?.rental) return value.rental;
+		if (transportation && typeof transportation === 'object' && transportation.rental) {
+			return transportation.rental;
+		}
+		return null;
 	}, [value?.rental, transportation]);
 
 	return (
@@ -110,7 +130,7 @@ export default function CarSection({ value, onChange, transportation, isEditing 
 					) : (
 						<div className="flex gap-3 py-2">
 							{(providers || []).map((p) => {
-								const cardId = p.id || p._id;
+								const cardId = String(p.id || p._id);
 								// ถ้าอยู่ในโหมดแก้ไข แสดงทุกรายการให้เลือก; ถ้าไม่ใช่ ให้โชว์เฉพาะที่เลือก (handled earlier)
 								return (
 									<div key={cardId} className={`basis-1/2 bg-white border border-neutral-200 rounded-[8px] overflow-hidden shadow-sm ${selectedId === cardId ? 'ring-2 ring-blue-400' : ''}`}>

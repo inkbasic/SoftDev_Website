@@ -119,18 +119,18 @@ export default function Profile() {
                     cache: "no-store"
                 });
 
-                // if (!res.ok) {
-                //     if (res.status === 401) {
-                //         Cookies.remove("jwtToken");
-                //         navigate("/login", { replace: true });
-                //         throw new Error("โทเค็นหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง");
-                //     }
-                //     const err = await res.json().catch(() => ({}));
-                //     throw new Error(err.message || `${res.status} ${res.statusText}`);
-                // }
+                if (!res.ok) {
+                    if (res.status === 401) {
+                        Cookies.remove("jwtToken");
+                        navigate("/login", { replace: true });
+                        throw new Error("โทเค็นหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง");
+                    }
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.message || `${res.status} ${res.statusText}`);
+                }
 
-                // const userData = await res.json();
-                // setUser(userData);
+                const userData = await res.json();
+                setUser(userData);
 
             } catch (err) {
                 setError(err.message);

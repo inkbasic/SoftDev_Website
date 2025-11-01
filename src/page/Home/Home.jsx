@@ -219,7 +219,7 @@ export default function Home() {
 
             console.log("Plan created successfully:", parsed);
 
-            const newId = parsed?.createdPlan?._id || parsed?.createdPlan?.id;
+            const newId = parsed?._id || parsed?.id;
             console.log("Navigating to plan ID:", newId);
             navigate(newId ? `/plan/${newId}` : "/plan", {
                 state: {
