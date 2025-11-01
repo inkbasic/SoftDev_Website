@@ -20,7 +20,9 @@ async function getToken() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
             });
-            let body = res.json();
+            const raw = await res.text();
+            let body; try { body = raw ? JSON.parse(raw) : null; } catch { body = raw; }
+            console.log(body)
 
             guestToken = body?.token;
         }
@@ -96,6 +98,7 @@ function normalizeServerPlan(plan) {
 async function fetchPlanById(id) {
     const headers = { 'Content-Type': 'application/json' };
     const token = await getToken();
+    console.log(token)
     if (token && token !== 'jwtToken' && token.split('.').length === 3) {
         headers.Authorization = `Bearer ${token}`;
     }
