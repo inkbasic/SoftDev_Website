@@ -230,12 +230,9 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
         }
 
         const normalized = normalizeOrders(newItinerary);
-        // ส่งเฉพาะ patch ของฟิลด์ที่เกี่ยวข้อง เพื่อลดการทับค่าจากส่วนอื่น (เช่น Info)
-        onDataChange({
-            startDate: newStartYMD,
-            endDate: newEndYMD,
-            itinerary: normalized,
-        });
+        try { console.log('[Itinerary.handleRangeChangeComplete] patch', { startDate: newStartYMD, endDate: newEndYMD, itinerary: normalized }); } catch {}
+        // ส่งเฉพาะ patchของฟิลด์ที่เกี่ยวข้อง เพื่อลดการทับค่าจากส่วนอื่น (เช่น Info)
+        onDataChange({ startDate: newStartYMD, endDate: newEndYMD, itinerary: normalized });
     };
 
     useEffect(() => {
@@ -306,9 +303,10 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
                 locations: updatedLocations
             }
         };
-        const normalized = normalizeOrders(updatedItinerary);
-        // ส่งเฉพาะ patch ของ itinerary
-        onDataChange?.({ itinerary: normalized });
+    const normalized = normalizeOrders(updatedItinerary);
+    try { console.log('[Itinerary.handleLocationUpdate] patch', { dateKey, itinerary: normalized }); } catch {}
+    // ส่งเฉพาะ patch ของ itinerary
+    onDataChange?.({ itinerary: normalized });
     };
 
     // ถ้าข้อมูลจากภายนอกเข้ามาแล้ว order ไม่ต่อกัน ให้ normalize หนึ่งครั้ง
@@ -318,7 +316,10 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
         // เช็คว่ามีความต่างไหมก่อนยิง onDataChange
         const same =
             JSON.stringify(planData.itinerary) === JSON.stringify(normalized);
-    if (!same) onDataChange?.({ itinerary: normalized });
+        if (!same) {
+            try { console.log('[Itinerary.normalizeEffect] patch', { itinerary: normalized }); } catch {}
+            onDataChange?.({ itinerary: normalized });
+        }
     }, [planData?.itinerary]);
 
     const formatDate = (date) =>
@@ -444,6 +445,7 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
             };
 
             const normalized = normalizeOrders(updatedItinerary);
+            try { console.log('[Itinerary.moveLocationWithinDay] patch', { itinerary: normalized }); } catch {}
             onDataChange?.({ itinerary: normalized });
         } else {
             // ย้ายข้ามวัน: บังคับไปท้ายรายการเสมอ (ไม่ใช้ targetIndex)
@@ -467,6 +469,7 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
             };
 
             const normalized = normalizeOrders(updatedItinerary);
+            try { console.log('[Itinerary.moveLocationAcrossDays] patch', { itinerary: normalized }); } catch {}
             onDataChange?.({ itinerary: normalized });
         }
     };
@@ -555,6 +558,7 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
                                         }
                                     };
                                     const normalized = normalizeOrders(updatedItinerary);
+                                    try { console.log('[Itinerary.updateDescription] patch', { dateKey: dateInfo.key, itinerary: normalized }); } catch {}
                                     // ส่งเฉพาะ patch ของ itinerary
                                     onDataChange?.({ itinerary: normalized });
                                 }}

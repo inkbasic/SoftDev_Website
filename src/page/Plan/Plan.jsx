@@ -63,6 +63,7 @@ function toLocalYMD(d) {
 // Normalize โครงสร้างแผนจาก server → ใช้ YYYY-MM-DD
 function normalizeServerPlan(plan) {
     if (!plan || typeof plan !== 'object') return plan;
+    try { console.log('[normalizeServerPlan] input', plan); } catch {}
     const startDate = toLocalYMD(plan.startDate) || plan.startDate;
     const endDate = toLocalYMD(plan.endDate) || plan.endDate;
 
@@ -92,7 +93,9 @@ function normalizeServerPlan(plan) {
         newIti[key] = { ...day, locations: mapped };
     });
 
-    return { ...plan, startDate, endDate, itinerary: newIti };
+    const out = { ...plan, startDate, endDate, itinerary: newIti };
+    try { console.log('[normalizeServerPlan] output', out); } catch {}
+    return out;
 }
 
 async function fetchPlanById(id) {
@@ -239,11 +242,33 @@ export default function Plan() {
     };
 
     // รับการเปลี่ยนแปลงจาก Field โดยตรง
-    const handleDataChange = (updatedData) => {
-        // Merge patch/full updates with current plan to avoid dropping unsaved fields
+    const handleDataChange = (rawUpdate) => {
+        try { console.log('[Plan.handleDataChange] incoming', rawUpdate); } catch {}
+        let updatedData = rawUpdate || {};
+        const source = updatedData.__source;
+        if (source) {
+            try { console.log('[Plan.handleDataChange] source', source); } catch {}
+            try { delete updatedData.__source; } catch {}
+        }
         const base = currentData || {};
-        const merged = { ...base, ...(updatedData || {}) };
+        try { console.log('[Plan.handleDataChange] base', base); } catch {}
+
+        // Heuristic guard: ignore unintended budget reset to 0 from non-Info patches
+        if (
+            typeof updatedData?.budget === 'number' && updatedData.budget === 0 &&
+            typeof base?.budget === 'number' && base.budget !== 0 &&
+            'itinerary' in updatedData &&
+            !('title' in updatedData) && !('people' in updatedData) && !('category' in updatedData)
+        ) {
+            try { console.warn('[Plan.handleDataChange] dropping suspicious budget=0 from itinerary-only patch'); } catch {}
+            const { budget, ...rest } = updatedData;
+            updatedData = rest;
+        }
+
+        const merged = { ...base, ...updatedData };
+        try { console.log('[Plan.handleDataChange] merged', merged); } catch {}
         const normalized = normalizeServerPlan(merged);
+        try { console.log('[Plan.handleDataChange] normalized', normalized); } catch {}
         setCurrentData(normalized);
     };
 

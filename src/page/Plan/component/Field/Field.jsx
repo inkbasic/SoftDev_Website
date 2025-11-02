@@ -61,13 +61,13 @@ const Field = forwardRef(({ planData, onDataChange, padding, canEdit, autoEdit, 
             }
             setData(base);
             latestPlanRef.current = base;
-            // ตั้ง baseline ก่อนเข้าโหมดแก้ไขเพื่อให้ยกเลิกได้ และจะคง (คัดลอก) ไว้หากถูกเติมไว้
             revertSnapshotRef.current = deepClone(base);
             setIsEditing(true);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [autoEdit, canEdit]);
 
+    // ตอบสนองต่อการเปลี่ยนของ planData: normalize และ merge เฉพาะฟิลด์ที่ไม่ทับ input ขณะกำลังแก้ไข
     useEffect(() => {
         // Normalize transport for UI from 'transportation' (object) or 'providedCar' (id)
         const extractTransportFromTransportation = (t) => {
@@ -80,25 +80,27 @@ const Field = forwardRef(({ planData, onDataChange, padding, canEdit, autoEdit, 
             if (!id) return undefined;
             return { type: 'rental', rental: { methodId: id } };
         };
-        const normalized = planData ? {
-            ...planData,
-            transport:
-                planData.transport
-                ?? extractTransportFromTransportation(planData.transportation)
-                ?? buildTransportFromProvidedCar(planData.providedCar)
-        } : planData;
+
+        const normalizedTransport = (() => {
+            // Only infer rental from providedCar when transportation indicates rental
+            if (planData?.transport) return planData.transport;
+            const fromObj = extractTransportFromTransportation(planData?.transportation);
+            if (fromObj) return fromObj;
+            if (planData?.transportation === 'รถเช่า') return buildTransportFromProvidedCar(planData?.providedCar);
+            return undefined;
+        })();
+
+        const normalized = planData ? { ...planData, transport: normalizedTransport } : planData;
 
         if (isEditing) {
+            try { console.log('[Field.useEffect planData] editing merge, planData:', normalized); } catch {}
             // ขณะกำลังแก้ไข: อย่าทับค่าที่ผู้ใช้กำลังพิมพ์ใน Info
-            // อัปเดตเฉพาะส่วนโครงสร้างที่อาจเปลี่ยนจากภายนอก
+            // อัปเดตเฉพาะส่วนโครงสร้างที่อาจเปลี่ยนจากภายนอก (ยกเว้น transport/transportation/providedCar ขณะแก้ไข)
             setData((prev) => ({
                 ...(prev || {}),
                 startDate: normalized?.startDate ?? prev?.startDate,
                 endDate: normalized?.endDate ?? prev?.endDate,
                 itinerary: normalized?.itinerary ?? prev?.itinerary,
-                transport: normalized?.transport ?? prev?.transport,
-                transportation: normalized?.transportation ?? prev?.transportation,
-                providedCar: normalized?.providedCar ?? prev?.providedCar,
                 startPoint: normalized?.startPoint ?? prev?.startPoint,
             }));
             latestPlanRef.current = {
@@ -106,12 +108,10 @@ const Field = forwardRef(({ planData, onDataChange, padding, canEdit, autoEdit, 
                 startDate: normalized?.startDate ?? latestPlanRef.current?.startDate,
                 endDate: normalized?.endDate ?? latestPlanRef.current?.endDate,
                 itinerary: normalized?.itinerary ?? latestPlanRef.current?.itinerary,
-                transport: normalized?.transport ?? latestPlanRef.current?.transport,
-                transportation: normalized?.transportation ?? latestPlanRef.current?.transportation,
-                providedCar: normalized?.providedCar ?? latestPlanRef.current?.providedCar,
                 startPoint: normalized?.startPoint ?? latestPlanRef.current?.startPoint,
             };
         } else {
+            try { console.log('[Field.useEffect planData] replace setData with normalized', normalized); } catch {}
             setData(normalized);
             latestPlanRef.current = normalized || {};
             if (revertSnapshotRef.current == null && normalized) {
@@ -124,6 +124,7 @@ const Field = forwardRef(({ planData, onDataChange, padding, canEdit, autoEdit, 
     // หมายเหตุ: Itinerary ส่งทั้ง planData กลับมา แต่เพื่อไม่ให้ค่า Info ที่แก้อยู่ถูกทับ
     // เราจะ merge เฉพาะส่วนที่เกี่ยวกับ itinerary/startDate/endDate เท่านั้น
     const handleItineraryDataChange = (updatedData) => {
+        try { console.log('[Field.handleItineraryDataChange] incoming', updatedData); } catch {}
         const merged = {
             ...(latestPlanRef.current || data || {}),
             startDate: updatedData?.startDate ?? (latestPlanRef.current?.startDate ?? data?.startDate),
@@ -131,10 +132,18 @@ const Field = forwardRef(({ planData, onDataChange, padding, canEdit, autoEdit, 
             itinerary: updatedData?.itinerary ?? (latestPlanRef.current?.itinerary ?? data?.itinerary),
         };
 
+        try { console.log('[Field.handleItineraryDataChange] merged -> setData', merged); } catch {}
         setData(merged);
         latestPlanRef.current = merged; // sync snapshot ล่าสุดทันที
         // ส่งต่อไปยัง parent
-        onDataChange?.(merged);
+        // ส่งเฉพาะ patch ขึ้นไป (ให้ parent รวมเอง) เพื่อเลี่ยงการทับฟิลด์อื่นที่กำลังแก้ไข
+        const patchOnly = {};
+        if ('startDate' in updatedData) patchOnly.startDate = updatedData.startDate;
+        if ('endDate' in updatedData) patchOnly.endDate = updatedData.endDate;
+        if ('itinerary' in updatedData) patchOnly.itinerary = updatedData.itinerary;
+        patchOnly.__source = 'Field.Itinerary';
+        try { console.log('[Field.handleItineraryDataChange] patchOnly -> onDataChange', patchOnly); } catch {}
+        onDataChange?.(patchOnly);
     };
 
     const fieldRef = useRef(null);
@@ -562,7 +571,8 @@ const Field = forwardRef(({ planData, onDataChange, padding, canEdit, autoEdit, 
 
     const handleClone = async (e) => {
         e?.stopPropagation?.();
-        if (!data?._id) {
+        if (isEditing) {
+            try { console.log('[Field.useEffect planData] editing merge, planData:', normalized); } catch {}
             alert("ไม่พบรหัสแผนที่จะคัดลอก");
             return;
         }
@@ -586,7 +596,8 @@ const Field = forwardRef(({ planData, onDataChange, padding, canEdit, autoEdit, 
             const raw = await res.text();
             let body; try { body = raw ? JSON.parse(raw) : null; } catch { body = raw; }
             if (!res.ok) throw new Error(body?.message || `${res.status} ${res.statusText}`);
-            const newId = body?._id || body?.id || body?.planId;
+            try { console.log('[Field.useEffect planData] replace setData with normalized', normalized); } catch {}
+            setData(normalized);
             if (!newId) {
                 alert("คัดลอกสำเร็จ แต่ไม่พบรหัสแผนใหม่");
                 return;
@@ -712,10 +723,12 @@ const Field = forwardRef(({ planData, onDataChange, padding, canEdit, autoEdit, 
                     data={data}
                     isEditing={isEditing}
                     onChange={(patch) => {
+                        try { console.log('[Field.Info.onChange] patch', patch); } catch {}
                         const updated = { ...(data || {}), ...(patch || {}) };
+                        try { console.log('[Field.Info.onChange] updated', updated); } catch {}
                         setData(updated);
                         latestPlanRef.current = updated;
-                        onDataChange?.(updated);
+                        onDataChange?.({ ...patch, __source: 'Field.Info' });
                     }}
                 />
             </Card>
@@ -743,7 +756,12 @@ const Field = forwardRef(({ planData, onDataChange, padding, canEdit, autoEdit, 
                         }
                         setData(next);
                         latestPlanRef.current = next;
-                        onDataChange?.(next);
+                        onDataChange?.({
+                            transport: next.transport,
+                            transportation: next.transportation,
+                            providedCar: next.providedCar,
+                            __source: 'Field.CarSection'
+                        });
                     }}
                 />
             </div>
@@ -753,7 +771,10 @@ const Field = forwardRef(({ planData, onDataChange, padding, canEdit, autoEdit, 
                 <StartPoint
                     value={data?.startPoint}
                     isEditing={isEditing}
-                    onChange={handleStartPointChange}
+                    onChange={(startPoint) => {
+                        handleStartPointChange(startPoint);
+                        onDataChange?.({ startPoint, __source: 'Field.StartPoint' });
+                    }}
                     firstLocation={firstLocation}
                 />
             </div>

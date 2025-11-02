@@ -28,11 +28,13 @@ export default function DateContainer({ title, dayData, dateKey, isEditing = fal
     // }, [dayData?.description]);
 
     const applyAndBubble = (updated) => {
+        try { console.log('[DateContainer.applyAndBubble]', { dateKey, updated }); } catch {}
         setLocations(updated);
         onUpdateLocations?.(updated);
     };
 
     const handleRemoveLocation = (locationId) => {
+        try { console.log('[DateContainer.handleRemoveLocation]', { dateKey, locationId }); } catch {}
         const updated = locations
             .filter(l => l.id !== locationId)
             .map((l, i) => ({ ...l, order: i + 1 }));
@@ -40,6 +42,7 @@ export default function DateContainer({ title, dayData, dateKey, isEditing = fal
     };
 
     const handleReorderLocation = (oldIndex, newIndex) => {
+        try { console.log('[DateContainer.handleReorderLocation]', { dateKey, oldIndex, newIndex }); } catch {}
         const reorderedLocations = arrayMove(locations, oldIndex, newIndex);
         const updated = reorderedLocations.map((l, i) => ({ ...l, order: i + 1 }));
         applyAndBubble(updated);
@@ -50,6 +53,7 @@ export default function DateContainer({ title, dayData, dateKey, isEditing = fal
             ...loc,
             id: loc.id || `location-${Date.now()}-${Math.random()}`,
         };
+        try { console.log('[DateContainer.handleAddLocation]', { dateKey, newLocation }); } catch {}
         const updated = [...locations, newLocation];
         setLocations(updated);
         onUpdateLocations?.(updated);
@@ -62,12 +66,14 @@ export default function DateContainer({ title, dayData, dateKey, isEditing = fal
             ...custom,
             id: custom.id || `custom-${Date.now()}-${Math.random()}`,
         };
+        try { console.log('[DateContainer.handleAddCustomLocation]', { dateKey, newLoc }); } catch {}
         const updated = [...locations, newLoc];
         setLocations(updated);
         onUpdateLocations?.(updated);
     };
 
     const handleTimeChange = (index, start, end) => {
+        try { console.log('[DateContainer.handleTimeChange]', { dateKey, index, start, end }); } catch {}
         const updated = [...locations];
         updated[index] = {
             ...updated[index],
