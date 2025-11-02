@@ -605,6 +605,7 @@ const Field = forwardRef(({ planData, onDataChange, padding, canEdit, autoEdit, 
             }
             navigate(`/plan/${body._id}`, { state: { isNew: true, isClone: true } });
         } catch (err) {
+            console.log("Clone plan failed:", err);
             alert(`คัดลอกแผนไม่สำเร็จ: ${err?.message || err}`);
         } finally {
             setIsCloning(false);

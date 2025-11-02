@@ -244,32 +244,35 @@ export default function Plan() {
     // รับการเปลี่ยนแปลงจาก Field โดยตรง
     const handleDataChange = (rawUpdate) => {
         try { console.log('[Plan.handleDataChange] incoming', rawUpdate); } catch {}
-        let updatedData = rawUpdate || {};
-        const source = updatedData.__source;
-        if (source) {
-            try { console.log('[Plan.handleDataChange] source', source); } catch {}
-            try { delete updatedData.__source; } catch {}
-        }
-        const base = currentData || {};
-        try { console.log('[Plan.handleDataChange] base', base); } catch {}
+        setCurrentData((prev) => {
+            let updatedData = rawUpdate || {};
+            const source = updatedData.__source;
+            if (source) {
+                try { console.log('[Plan.handleDataChange] source', source); } catch {}
+                try { delete updatedData.__source; } catch {}
+            }
 
-        // Heuristic guard: ignore unintended budget reset to 0 from non-Info patches
-        if (
-            typeof updatedData?.budget === 'number' && updatedData.budget === 0 &&
-            typeof base?.budget === 'number' && base.budget !== 0 &&
-            'itinerary' in updatedData &&
-            !('title' in updatedData) && !('people' in updatedData) && !('category' in updatedData)
-        ) {
-            try { console.warn('[Plan.handleDataChange] dropping suspicious budget=0 from itinerary-only patch'); } catch {}
-            const { budget, ...rest } = updatedData;
-            updatedData = rest;
-        }
+            const base = prev || {};
+            try { console.log('[Plan.handleDataChange] base', base); } catch {}
 
-        const merged = { ...base, ...updatedData };
-        try { console.log('[Plan.handleDataChange] merged', merged); } catch {}
-        const normalized = normalizeServerPlan(merged);
-        try { console.log('[Plan.handleDataChange] normalized', normalized); } catch {}
-        setCurrentData(normalized);
+            // Heuristic guard: ignore unintended budget reset to 0 from non-Info patches
+            if (
+                typeof updatedData?.budget === 'number' && updatedData.budget === 0 &&
+                typeof base?.budget === 'number' && base.budget !== 0 &&
+                'itinerary' in updatedData &&
+                !('title' in updatedData) && !('people' in updatedData) && !('category' in updatedData)
+            ) {
+                try { console.warn('[Plan.handleDataChange] dropping suspicious budget=0 from itinerary-only patch'); } catch {}
+                const { budget, ...rest } = updatedData;
+                updatedData = rest;
+            }
+
+            const merged = { ...base, ...updatedData };
+            try { console.log('[Plan.handleDataChange] merged', merged); } catch {}
+            const normalized = normalizeServerPlan(merged);
+            try { console.log('[Plan.handleDataChange] normalized', normalized); } catch {}
+            return normalized;
+        });
     };
 
     return (
