@@ -596,13 +596,14 @@ const Field = forwardRef(({ planData, onDataChange, padding, canEdit, autoEdit, 
             const raw = await res.text();
             let body; try { body = raw ? JSON.parse(raw) : null; } catch { body = raw; }
             if (!res.ok) throw new Error(body?.message || `${res.status} ${res.statusText}`);
-            try { console.log('[Field.useEffect planData] replace setData with normalized', normalized); } catch {}
-            setData(normalized);
-            if (!newId) {
+            // try { console.log('[Field.useEffect planData] replace setData with normalized', normalized); } catch {}
+            // setData(normalized);
+            console.log("Clone plan response:", body);
+            if (!body._id) {
                 alert("คัดลอกสำเร็จ แต่ไม่พบรหัสแผนใหม่");
                 return;
             }
-            navigate(`/plan/${newId}`, { state: { isNew: true, isClone: true } });
+            navigate(`/plan/${body._id}`, { state: { isNew: true, isClone: true } });
         } catch (err) {
             alert(`คัดลอกแผนไม่สำเร็จ: ${err?.message || err}`);
         } finally {
