@@ -17,7 +17,6 @@ async function patch(endpoint) {
         // ไม่ต้อง throw หากไม่สำเร็จ เพื่อลดผลกระทบกับ UX
         const raw = await res.text();
         let data; try { data = raw ? JSON.parse(raw) : []; } catch { data = []; }
-        console.log(data);
         if (!res.ok) {
             const text = await res.text();
             console.warn('Ad track failed', res.status, endpoint, text);

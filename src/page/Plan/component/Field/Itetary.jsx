@@ -230,13 +230,12 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
         }
 
         const normalized = normalizeOrders(newItinerary);
-        const updatedData = {
-            ...planData,
+        // ส่งเฉพาะ patch ของฟิลด์ที่เกี่ยวข้อง เพื่อลดการทับค่าจากส่วนอื่น (เช่น Info)
+        onDataChange({
             startDate: newStartYMD,
             endDate: newEndYMD,
             itinerary: normalized,
-        };
-        onDataChange(updatedData);
+        });
     };
 
     useEffect(() => {
@@ -308,8 +307,8 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
             }
         };
         const normalized = normalizeOrders(updatedItinerary);
-        const updatedData = { ...planData, itinerary: normalized };
-        onDataChange?.(updatedData);
+        // ส่งเฉพาะ patch ของ itinerary
+        onDataChange?.({ itinerary: normalized });
     };
 
     // ถ้าข้อมูลจากภายนอกเข้ามาแล้ว order ไม่ต่อกัน ให้ normalize หนึ่งครั้ง
@@ -319,7 +318,7 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
         // เช็คว่ามีความต่างไหมก่อนยิง onDataChange
         const same =
             JSON.stringify(planData.itinerary) === JSON.stringify(normalized);
-        if (!same) onDataChange?.({ ...planData, itinerary: normalized });
+    if (!same) onDataChange?.({ itinerary: normalized });
     }, [planData?.itinerary]);
 
     const formatDate = (date) =>
@@ -445,8 +444,7 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
             };
 
             const normalized = normalizeOrders(updatedItinerary);
-            const updatedData = { ...planData, itinerary: normalized };
-            onDataChange?.(updatedData);
+            onDataChange?.({ itinerary: normalized });
         } else {
             // ย้ายข้ามวัน: บังคับไปท้ายรายการเสมอ (ไม่ใช้ targetIndex)
             const sourceLocations = [...(currentItinerary[sourceDate]?.locations || [])];
@@ -469,8 +467,7 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
             };
 
             const normalized = normalizeOrders(updatedItinerary);
-            const updatedData = { ...planData, itinerary: normalized };
-            onDataChange?.(updatedData);
+            onDataChange?.({ itinerary: normalized });
         }
     };
 
@@ -558,8 +555,8 @@ const Itinerary = forwardRef(({ planData, isEditing, onDataChange }, ref) => {
                                         }
                                     };
                                     const normalized = normalizeOrders(updatedItinerary);
-                                    const updatedData = { ...planData, itinerary: normalized };
-                                    onDataChange?.(updatedData);
+                                    // ส่งเฉพาะ patch ของ itinerary
+                                    onDataChange?.({ itinerary: normalized });
                                 }}
                                         baseOrderOffset={offsets[dateInfo.key] || 0}
                                         prevLastLocation={prevLastLocation}

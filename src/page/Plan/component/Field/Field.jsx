@@ -88,21 +88,53 @@ const Field = forwardRef(({ planData, onDataChange, padding, canEdit, autoEdit, 
                 ?? buildTransportFromProvidedCar(planData.providedCar)
         } : planData;
 
-        setData(normalized);
-        latestPlanRef.current = normalized || {};
-        if (revertSnapshotRef.current == null && normalized) {
-            revertSnapshotRef.current = deepClone(normalized);
+        if (isEditing) {
+            // ขณะกำลังแก้ไข: อย่าทับค่าที่ผู้ใช้กำลังพิมพ์ใน Info
+            // อัปเดตเฉพาะส่วนโครงสร้างที่อาจเปลี่ยนจากภายนอก
+            setData((prev) => ({
+                ...(prev || {}),
+                startDate: normalized?.startDate ?? prev?.startDate,
+                endDate: normalized?.endDate ?? prev?.endDate,
+                itinerary: normalized?.itinerary ?? prev?.itinerary,
+                transport: normalized?.transport ?? prev?.transport,
+                transportation: normalized?.transportation ?? prev?.transportation,
+                providedCar: normalized?.providedCar ?? prev?.providedCar,
+                startPoint: normalized?.startPoint ?? prev?.startPoint,
+            }));
+            latestPlanRef.current = {
+                ...(latestPlanRef.current || {}),
+                startDate: normalized?.startDate ?? latestPlanRef.current?.startDate,
+                endDate: normalized?.endDate ?? latestPlanRef.current?.endDate,
+                itinerary: normalized?.itinerary ?? latestPlanRef.current?.itinerary,
+                transport: normalized?.transport ?? latestPlanRef.current?.transport,
+                transportation: normalized?.transportation ?? latestPlanRef.current?.transportation,
+                providedCar: normalized?.providedCar ?? latestPlanRef.current?.providedCar,
+                startPoint: normalized?.startPoint ?? latestPlanRef.current?.startPoint,
+            };
+        } else {
+            setData(normalized);
+            latestPlanRef.current = normalized || {};
+            if (revertSnapshotRef.current == null && normalized) {
+                revertSnapshotRef.current = deepClone(normalized);
+            }
         }
-    }, [planData]);
+    }, [planData, isEditing]);
 
     // เพิ่ม callback สำหรับรับการเปลี่ยนแปลงจาก Itinerary
+    // หมายเหตุ: Itinerary ส่งทั้ง planData กลับมา แต่เพื่อไม่ให้ค่า Info ที่แก้อยู่ถูกทับ
+    // เราจะ merge เฉพาะส่วนที่เกี่ยวกับ itinerary/startDate/endDate เท่านั้น
     const handleItineraryDataChange = (updatedData) => {
-        setData(updatedData);
-        latestPlanRef.current = updatedData; // sync snapshot ล่าสุดทันที
+        const merged = {
+            ...(latestPlanRef.current || data || {}),
+            startDate: updatedData?.startDate ?? (latestPlanRef.current?.startDate ?? data?.startDate),
+            endDate: updatedData?.endDate ?? (latestPlanRef.current?.endDate ?? data?.endDate),
+            itinerary: updatedData?.itinerary ?? (latestPlanRef.current?.itinerary ?? data?.itinerary),
+        };
+
+        setData(merged);
+        latestPlanRef.current = merged; // sync snapshot ล่าสุดทันที
         // ส่งต่อไปยัง parent
-        if (onDataChange) {
-            onDataChange(updatedData);
-        }
+        onDataChange?.(merged);
     };
 
     const fieldRef = useRef(null);
@@ -231,10 +263,9 @@ const Field = forwardRef(({ planData, onDataChange, padding, canEdit, autoEdit, 
 
         // สร้าง payload สำหรับ backend รุ่นใหม่: ส่ง transportation เป็นสตริง และส่ง providedCar เป็น id ของรถเช่า
         const transport = safe?.transport;
-        const providedCar = transport?.type === 'rental' ? (transport?.rental?.methodId._id || transport?.rental?.id || transport?.rental?._id) : undefined;
-        const transportation = transport?.type === 'rental'
-            ? 'รถเช่า'
-            : (safe?.transportation === 'รถเช่า' ? 'รถเช่า' : 'รถยนต์ส่วนตัว');
+        const providedCar = transport?.type === 'rental' ? (transport?.rental?.methodId?._id || transport?.rental?.methodId || transport?.rental?.id || transport?.rental?._id) : undefined;
+        // Derive strictly from transport.type to avoid stale transportation strings lingering in state
+        const transportation = transport?.type === 'rental' ? 'รถเช่า' : 'รถยนต์ส่วนตัว';
         console.log("DATA :", safe);
         const payload = {
             _id: safe?._id,
@@ -269,12 +300,12 @@ const Field = forwardRef(({ planData, onDataChange, padding, canEdit, autoEdit, 
         if (!data) return;
         // Validate rental cases comprehensively (covers clones where transport may be unset but transportation='รถเช่า')
         const t = data?.transport;
-        const providedCarFromTransport = t?.rental?.methodId._id || t?.rental?.id || t?.rental?._id;
+        console.log("Validating rental before save:", data?.transport);
+        const providedCarFromTransport = t?.rental?.methodId?._id || t?.rental?.methodId || t?.rental?.id || t?.rental?._id;
         const providedCarFromField = data?.providedCar;
-        const transportationStr = data?.transportation;
         const effectiveProvidedCar = providedCarFromTransport || providedCarFromField;
-        const isRentalSelected = (t?.type === 'rental') || (transportationStr === 'รถเช่า');
-        console.log("Validating rental:", { t, transportationStr, isRentalSelected, effectiveProvidedCar });
+        const isRentalSelected = (t?.type === 'rental');
+        console.log("Validating rental:", { t, isRentalSelected, effectiveProvidedCar });
         if (isRentalSelected && !effectiveProvidedCar) {
             if (typeof window !== 'undefined') {
                 alert('โปรดเลือกผู้ให้บริการรถเช่าก่อนบันทึก');
@@ -696,10 +727,23 @@ const Field = forwardRef(({ planData, onDataChange, padding, canEdit, autoEdit, 
                     transportation={data?.transportation}
                     isEditing={isEditing}
                     onChange={(transport) => {
-                        const updated = { ...(data || {}), transport };
-                        setData(updated);
-                        latestPlanRef.current = updated;
-                        onDataChange?.(updated);
+                        // Normalize toggle effects between rental and personal
+                        const next = { ...(data || {}), transport };
+                        if (transport?.type === 'rental') {
+                            next.transportation = 'รถเช่า';
+                            const pid = transport?.rental?.methodId?._id || transport?.rental?.methodId || transport?.rental?.id || transport?.rental?._id;
+                            if (pid) next.providedCar = pid; else delete next.providedCar;
+                        } else {
+                            // Switching to personal: clear rental-specific fields
+                            next.transportation = 'รถยนต์ส่วนตัว';
+                            delete next.providedCar;
+                            if (next.transport && next.transport.rental) {
+                                next.transport = { type: 'personal' };
+                            }
+                        }
+                        setData(next);
+                        latestPlanRef.current = next;
+                        onDataChange?.(next);
                     }}
                 />
             </div>

@@ -98,7 +98,6 @@ function normalizeServerPlan(plan) {
 async function fetchPlanById(id) {
     const headers = { 'Content-Type': 'application/json' };
     const token = await getToken();
-    console.log(token)
     if (token && token !== 'jwtToken' && token.split('.').length === 3) {
         headers.Authorization = `Bearer ${token}`;
     }
@@ -241,8 +240,10 @@ export default function Plan() {
 
     // รับการเปลี่ยนแปลงจาก Field โดยตรง
     const handleDataChange = (updatedData) => {
-        // Normalize incoming updates (e.g., after save response merges _id/location)
-        const normalized = normalizeServerPlan(updatedData);
+        // Merge patch/full updates with current plan to avoid dropping unsaved fields
+        const base = currentData || {};
+        const merged = { ...base, ...(updatedData || {}) };
+        const normalized = normalizeServerPlan(merged);
         setCurrentData(normalized);
     };
 
