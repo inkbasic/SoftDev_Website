@@ -60,7 +60,7 @@ export function TripCard({ id, title, date, badges, description, budget, provinc
 
     const handleShare = async (e) => {
         e.stopPropagation();
-        const url = `${window.location.origin}/plans/${id}`;
+        const url = `${window.location.origin}/plan/${id}`;
         
         try {
             await navigator.clipboard.writeText(url);
