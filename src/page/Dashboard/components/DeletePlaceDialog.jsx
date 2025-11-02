@@ -4,6 +4,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
+import Cookies from "js-cookie";
 
 // shadcn/ui
 import {
@@ -30,10 +31,11 @@ const ENDPOINT_BASE = import.meta.env.VITE_PUBLIC_API_URL+"/places";
 
 // JWT สามารถกำหนดแบบฮาร์ดโค้ดหรือดึงจากแหล่งเก็บภายในเบราว์เซอร์ได้
 // ลำดับความสำคัญ: ENV (Vite) -> localStorage -> ค่าดีฟอลต์ (ตัวอย่าง)
-const JWT_TOKEN =
-    import.meta.env?.VITE_JWT_TOKEN ||
-    (typeof window !== "undefined" && window.localStorage ? localStorage.getItem("jwtToken") : null) ||
-    "jwtToken";
+
+const JWT_TOKEN = Cookies.get('jwtToken');
+    // import.meta.env?.VITE_JWT_TOKEN ||
+    // (typeof window !== "undefined" && window.localStorage ? localStorage.getItem("jwtToken") : null) ||
+    // "jwtToken";
 
 /**
  * DeletePlaceDialog (ลดพร็อพเหลือแค่ placeId)
@@ -88,6 +90,7 @@ export default function DeletePlaceDialog({ placeId }) {
             setError("ไม่มี placeId สำหรับลบ");
             return;
         }
+
         if (!JWT_TOKEN) {
             setError("ไม่พบโทเคนยืนยันตัวตน (JWT)");
             return;
@@ -100,6 +103,7 @@ export default function DeletePlaceDialog({ placeId }) {
         const controller = new AbortController();
         abortRef.current = controller;
 
+        console.log("handle delete",JWT_TOKEN);
         try {
             console.log("endpoint : ", endpoint);
 
@@ -111,6 +115,8 @@ export default function DeletePlaceDialog({ placeId }) {
                 },
                 signal: controller.signal,
             });
+
+            console.log(JWT_TOKEN);
 
             // window.location.reload();
             window.dispatchEvent(new CustomEvent("place-deleted", { detail: { placeId } }));

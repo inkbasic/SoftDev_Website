@@ -4,6 +4,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
+import Cookies from "js-cookie";
 
 // shadcn/ui
 import {
@@ -30,10 +31,7 @@ const ENDPOINT_BASE = import.meta.env.VITE_PUBLIC_API_URL+"/ad";
 
 // แหล่ง JWT: ENV (Vite) → localStorage → ค่า fallback (ตัวอย่าง)
 // หมายเหตุ: ในโปรดักชันควรหลีกเลี่ยง fallback ฮาร์ดโค้ด
-const JWT_TOKEN =
-    import.meta.env?.VITE_JWT_TOKEN ||
-    (typeof window !== "undefined" && window.localStorage ? localStorage.getItem("jwtToken") : null) ||
-    "jwtToken";
+const JWT_TOKEN = Cookies.get('jwtToken');
 
 // ป้ายบนปุ่มเปิดไดอะล็อก (ใช้ไอคอนแทนข้อความ)
 const TRIGGER_LABEL = "ลบโฆษณา";
